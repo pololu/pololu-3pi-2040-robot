@@ -6,7 +6,7 @@
 
 This repository includes example code and libraries for the Pololu 3pi+ 2040 Robot.
 
-The 3pi+ 2040 Robot is a complete, high-performance mobile platform based on the Raspberry Pi RP2040 microcontroller.  It has integrated motor drivers, encoders, a 128x64 graphical OLED display, six RGB LEDs, a buzzer, buttons, line sensors, front bump sensors, an LSM6DS33 accelerometer and gyro, and an LIS3MDL compass. See the [3pi+ 32U4 user's guide](https://www.pololu.com/docs/0J83) for more information.
+The 3pi+ 2040 Robot is a complete, high-performance mobile platform based on the Raspberry Pi RP2040 microcontroller.  It has integrated motor drivers, encoders, a 128x64 graphical OLED display, six RGB LEDs, a buzzer, buttons, line sensors, front bump sensors, an LSM6DS33 accelerometer and gyro, and an LIS3MDL compass. See the 3pi+ 2040 user's guide for more information.
 
 ## Micropython
 
