@@ -2,6 +2,7 @@ The following license applies to the quadrature counter library
 pio_quadrature_counter.py, which is derived from code available at
 https://github.com/raspberrypi/pico-examples/.
 
+Copyright (c) 2021 pmarques-dev @ github
 Copyright 2020 (c) 2020 Raspberry Pi (Trading) Ltd.
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
