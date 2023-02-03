@@ -9,7 +9,7 @@ uint32_t count;
 int main()
 {
   stdio_init_all();
-  rgb_init();
+  rgb_leds_init();
 
   while (true)
   {
@@ -26,13 +26,13 @@ int main()
     const uint8_t v = 128;
     count++;
     if (count >= 18) { count = 0; }
-    rgb_start_frame();
-    rgb_write((count == 0) * v, (count == 6) * v, (count == 12) * v, 1);
-    rgb_write((count == 1) * v, (count == 7) * v, (count == 13) * v, 1);
-    rgb_write((count == 2) * v, (count == 8) * v, (count == 14) * v, 1);
-    rgb_write((count == 3) * v, (count == 9) * v, (count == 15) * v, 1);
-    rgb_write((count == 4) * v, (count == 10) * v, (count == 16) * v, 1);
-    rgb_write((count == 5) * v, (count == 11) * v, (count == 17) * v, 1);
-    rgb_end_frame(6);
+    rgb_leds_start_frame();
+    rgb_leds_write((count == 0) * v, (count == 6) * v, (count == 12) * v, 1);
+    rgb_leds_write((count == 1) * v, (count == 7) * v, (count == 13) * v, 1);
+    rgb_leds_write((count == 2) * v, (count == 8) * v, (count == 14) * v, 1);
+    rgb_leds_write((count == 3) * v, (count == 9) * v, (count == 15) * v, 1);
+    rgb_leds_write((count == 4) * v, (count == 10) * v, (count == 16) * v, 1);
+    rgb_leds_write((count == 5) * v, (count == 11) * v, (count == 17) * v, 1);
+    rgb_leds_end_frame(6);
   }
 }
