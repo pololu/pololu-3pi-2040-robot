@@ -4,6 +4,8 @@
 #include <hardware/spi.h>
 #include <pololu_3pi_plus_2040_robot.h>
 
+// TODO: these names should start with "rgb_leds_"
+
 void rgb_start_frame(void)
 {
   gpio_set_function(6, GPIO_FUNC_SPI);
