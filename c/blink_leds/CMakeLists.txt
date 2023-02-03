@@ -1,9 +1,13 @@
+# You can move pico-sdk and the robot library into different locations, for
+# example making them subdirectories of your project.  If you do that, update
+# the paths starting with "../" here.
+
 cmake_minimum_required(VERSION 3.13)
 if (DEFINED ENV{PICO_SDK_PATH})
   include("$ENV{PICO_SDK_PATH}/external/pico_sdk_import.cmake")
 else ()
-  set(PICO_SDK_PATH "${CMAKE_SOURCE_DIR}/../pico-sdk")
-  include("../pico-sdk/external/pico_sdk_import.cmake")
+  set(PICO_SDK_PATH "../pico-sdk")
+  include("${PICO_SDK_PATH}/external/pico_sdk_import.cmake")
 endif()
 project(test_project C CXX ASM)
 add_compile_options(-Wall -Wextra)
