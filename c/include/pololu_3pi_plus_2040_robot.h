@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-void led_yellow(bool);
+void yellow_led(bool);
 
 void rgb_leds_start_frame(void);
 void rgb_leds_end_frame(size_t count);

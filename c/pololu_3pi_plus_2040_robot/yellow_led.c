@@ -3,7 +3,7 @@
 #include <pico/stdlib.h>
 #include <pololu_3pi_plus_2040_robot.h>
 
-void led_yellow(bool b)
+void yellow_led(bool b)
 {
   gpio_init(25);
   gpio_set_dir(25, GPIO_OUT);

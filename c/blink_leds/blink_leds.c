@@ -13,26 +13,31 @@ int main()
 
   while (true)
   {
-    // Blink the yellow LED with blocking code.
-    led_yellow(0);
+    yellow_led(0);
+
+    rgb_leds_start_frame();
+    rgb_leds_write(0x80, 0x00, 0x00, 1);  // red
+    rgb_leds_write(0x00, 0x80, 0x00, 1);  // green
+    rgb_leds_write(0x00, 0x00, 0x80, 1);  // blue
+    rgb_leds_write(0x80, 0x00, 0x00, 1);  // red
+    rgb_leds_write(0x00, 0x80, 0x00, 1);  // green
+    rgb_leds_write(0x00, 0x00, 0x80, 1);  // blue
+    rgb_leds_end_frame(6);
+
     sleep_ms(250);
-    led_yellow(1);
+
+    yellow_led(1);
+
+    rgb_leds_start_frame();
+    for (unsigned int i = 0; i < 6; i++)
+    {
+      rgb_leds_write(0x80, 0x40, 0x00, 1);  // yellow
+    }
+    rgb_leds_end_frame(6);
+
     sleep_ms(250);
 
     // It is also possible to blink the yellow LED without delays like this:
     //   led_yellow(time_us_32() >> 18 & 1);
-
-    // Blink the six RGB LEDs in sequence, with different colors.
-    const uint8_t v = 128;
-    count++;
-    if (count >= 18) { count = 0; }
-    rgb_leds_start_frame();
-    rgb_leds_write((count == 0) * v, (count == 6) * v, (count == 12) * v, 1);
-    rgb_leds_write((count == 1) * v, (count == 7) * v, (count == 13) * v, 1);
-    rgb_leds_write((count == 2) * v, (count == 8) * v, (count == 14) * v, 1);
-    rgb_leds_write((count == 3) * v, (count == 9) * v, (count == 15) * v, 1);
-    rgb_leds_write((count == 4) * v, (count == 10) * v, (count == 16) * v, 1);
-    rgb_leds_write((count == 5) * v, (count == 11) * v, (count == 17) * v, 1);
-    rgb_leds_end_frame(6);
   }
 }
