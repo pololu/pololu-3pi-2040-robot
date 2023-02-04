@@ -60,7 +60,7 @@ a simple binary image with a `.bin` extension, a `.uf2` file that works with
 the RP2040's USB bootloader, and a `.elf` file that includes debugging
 information.
 
-Connect your 3pi+ 2040 Robot to your computer via USB and get it into bootloader
+Connect your 3pi+ 2040 Robot to your computer via USB and get it into BOOTSEL
 mode by pressing and releasing the Reset button while holding down button B.
 In this mode, the RP2040 presents itself to the computer as a
 USB Mass Storage Device.  You can load the code you compiled onto the robot

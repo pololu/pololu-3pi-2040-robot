@@ -4,8 +4,6 @@
 #include <pico/stdlib.h>
 #include <pololu_3pi_plus_2040_robot.h>
 
-uint32_t count;
-
 int main()
 {
   stdio_init_all();
@@ -38,6 +36,6 @@ int main()
     sleep_ms(250);
 
     // It is also possible to blink the yellow LED without delays like this:
-    //   led_yellow(time_us_32() >> 18 & 1);
+    //   yellow_led(time_us_32() >> 18 & 1);
   }
 }
