@@ -40,9 +40,9 @@ finish:
   out pindirs, 7
 
   in y, 32          ; Send 0xFFFFFFFF to tell the CPU we are done.
-                    ; TODO: why is this not needed in the Python code,
-                    ; but somehow the CPU still receives 0xFFFFFFFF?
+
 .wrap_target
 
-; TODO: make the Python code the same as this; e.g. should use wrap_target
-; and accurate timing with delay slots
+; TODO: make the Python code the same as this; e.g. should use wrap_target,
+; accurate timing with delay slots, and we should figure out why the
+; final 'in y, 32' instruction is not needed.

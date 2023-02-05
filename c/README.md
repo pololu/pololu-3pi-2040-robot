@@ -98,8 +98,10 @@ if USB is disabled (i.e. call `pico_enable_stdio_usb` with an argument of 0).
 
 - [Pico SDK]
 - [Pico SDK documentation]
+- [RP2040 datasheet]
 
 [Pico SDK]: https://github.com/raspberrypi/pico-sdk
 [Pico SDK documentation]: https://raspberrypi.github.io/pico-sdk-doxygen/index.html
+[RP2040 datasheet]: https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf
 [picotool]: https://github.com/raspberrypi/picotool
 [MSYS2]: https://www.msys2.org/

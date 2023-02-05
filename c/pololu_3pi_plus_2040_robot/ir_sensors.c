@@ -1,15 +1,19 @@
+#include <stdio.h>  // tmphax
+#include <string.h>
+
 #include <pico/stdlib.h>
 #include <hardware/pio.h>
+
 #include <pololu_3pi_plus_2040_robot.h>
 #include <qtr_sensor_counter.pio.h>
-
-#include <stdio.h>  // tmphax
 
 #define IR_PIO pio1
 #define IR_FUNC GPIO_FUNC_PIO1
 
 static uint8_t counter_sm = 0xFF;
 static uint8_t counter_offset;
+
+uint16_t ir_sensor_values[7];
 
 void ir_sensors_run()
 {
@@ -22,8 +26,8 @@ void ir_sensors_run()
   // Put the emitters in the desired state.
   bool emitters_on = true;
   gpio_init(26);
-  gpio_set_dir(26, GPIO_OUT);
   gpio_put(26, emitters_on);
+  gpio_set_dir(26, GPIO_OUT);
 
   const uint32_t mask = 0x7F << 16;
 
@@ -62,15 +66,29 @@ void ir_sensors_run()
   pio_sm_restart(IR_PIO, counter_sm);
   pio_sm_set_enabled(IR_PIO, counter_sm, true);
 
-  // tmphax
+  memset(ir_sensor_values, 0, sizeof(ir_sensor_values));
+
+  uint8_t last_state = 0xFF;
   while (1)
   {
-    uint32_t value = pio_sm_get_blocking(IR_PIO, counter_sm);
-    printf("IR %08lx us: %08lx\n", time_us_32(), value);
-    if (value == 0xFFFFFFFF) { break; }
+    uint32_t data = pio_sm_get_blocking(IR_PIO, counter_sm);
+    // printf("IR %08lx us: %08lx\n", time_us_32(), value);
+    if (data == 0xFFFFFFFF) { break; }
+
+    uint16_t time = data >> 16;
+    uint8_t state = data & 0x7F;
+    uint8_t new_zeros = last_state & ~state;
+    if (new_zeros & (1 << 0)) { ir_sensor_values[0] = time; }
+    if (new_zeros & (1 << 1)) { ir_sensor_values[1] = time; }
+    if (new_zeros & (1 << 2)) { ir_sensor_values[2] = time; }
+    if (new_zeros & (1 << 3)) { ir_sensor_values[3] = time; }
+    if (new_zeros & (1 << 4)) { ir_sensor_values[4] = time; }
+    if (new_zeros & (1 << 5)) { ir_sensor_values[5] = time; }
+    if (new_zeros & (1 << 6)) { ir_sensor_values[6] = time; }
+    last_state = state;  // TODO: use &= so we detect the *first* 0 transition?
   }
 
-  pio_sm_set_enabled(IR_PIO, counter_sm, false);
+  pio_sm_set_enabled(IR_PIO, counter_sm, false);  // stop the state machine
 
   gpio_put(26, 0); // turn off emitters
 }

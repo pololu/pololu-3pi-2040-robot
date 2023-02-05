@@ -44,4 +44,5 @@ void sh1106_configure_default(void);
 void sh1106_init(void);
 
 // TODO: make the real IR sensors API
+extern uint16_t ir_sensor_values[];
 void ir_sensors_run(void);
