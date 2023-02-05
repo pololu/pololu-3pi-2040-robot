@@ -6,6 +6,6 @@
 void yellow_led(bool b)
 {
   gpio_init(25);
-  gpio_set_dir(25, GPIO_OUT);
   gpio_put(25, !b);
+  gpio_set_dir(25, GPIO_OUT);
 }

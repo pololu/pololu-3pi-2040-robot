@@ -42,3 +42,6 @@ void sh1106_start_page_write(uint8_t page);
 void sh1106_clear(void);
 void sh1106_configure_default(void);
 void sh1106_init(void);
+
+// TODO: make the real IR sensors API
+void ir_sensors_run(void);

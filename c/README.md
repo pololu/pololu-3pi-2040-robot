@@ -81,6 +81,25 @@ file (it doesn't matter which) onto the robot:
 After you load the code onto your robot using either of these methods, the
 robot will start executing the code.
 
+## Notes
+
+You can move pico-sdk and the pololu_3pi_plus_2040_robot library into
+different locations, for example making them subdirectories of your project.
+If you do that, update the paths starting with "../" in your CMakeLists.txt.
+
+All of the example projects set `CMAKE_BUILD_TYPE` to `Debug` in
+`CMakeLists.txt` because the optimizations in a release build seem to cause a
+bug somewhere that makes the code occasionally stop running.
+This bug seems to be related to the Pico SDK's USB stack because it go away
+if USB is disabled (i.e. call `pico_enable_stdio_usb` with an argument of 0).
+
+
+## See also
+
+- [Pico SDK]
+- [Pico SDK documentation]
+
 [Pico SDK]: https://github.com/raspberrypi/pico-sdk
+[Pico SDK documentation]: https://raspberrypi.github.io/pico-sdk-doxygen/index.html
 [picotool]: https://github.com/raspberrypi/picotool
 [MSYS2]: https://www.msys2.org/
