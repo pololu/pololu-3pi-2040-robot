@@ -21,26 +21,27 @@ int main()
 
   while (1)
   {
-    ir_sensors_run();
+    ir_sensors_read_line();
+    ir_sensors_read_bump();
 
     sh1106_transfer_start();
     for (uint8_t i = 0; i < 5; i++)
     {
-      uint8_t width = ir_sensor_values[2 + i] * 128 / 1024;
+      uint8_t width = line_sensors[i] * 128 / 1024;
       show_bar(i, width);
     }
-    show_bar(6, ir_sensor_values[0] * 128 / 1024);
-    show_bar(7, ir_sensor_values[1] * 128 / 1024);
+    show_bar(6, bump_sensor_left * 128 / 1024);
+    show_bar(7, bump_sensor_right * 128 / 1024);
     sh1106_transfer_end();
 
     printf("%4u %4u %4u %4u %4u %4u %4u\n",
-      ir_sensor_values[0],
-      ir_sensor_values[1],
-      ir_sensor_values[2],
-      ir_sensor_values[3],
-      ir_sensor_values[4],
-      ir_sensor_values[5],
-      ir_sensor_values[6]);
+      bump_sensor_left,
+      bump_sensor_right,
+      line_sensors[0],
+      line_sensors[1],
+      line_sensors[2],
+      line_sensors[3],
+      line_sensors[4]);
 
     yellow_led(time_us_32() >> 18 & 1);
   }

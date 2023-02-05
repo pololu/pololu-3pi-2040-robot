@@ -15,25 +15,15 @@
 static uint8_t counter_sm = 0xFF;
 static uint8_t counter_offset;
 
-uint16_t ir_sensor_values[7];
+uint16_t bump_sensor_left, bump_sensor_right, line_sensors[5];
 
-void ir_sensors_run()
+static void ir_sensors_read(uint16_t * output)
 {
   if (counter_sm == 0xFF)
   {
     counter_offset = pio_add_program(IR_PIO, &qtr_sensor_counter_program);
     counter_sm = pio_claim_unused_sm(IR_PIO, true);
   }
-
-  // Turn on the line sensor emitter.
-  gpio_init(26);
-  gpio_put(26, true);
-  gpio_set_dir(26, GPIO_OUT);
-
-  // Turn off the bump sensor emitter.
-  gpio_init(23);
-  gpio_put(23, false);
-  gpio_set_dir(23, GPIO_OUT);
 
   const uint32_t mask = 0x7F << 16;
 
@@ -59,6 +49,8 @@ void ir_sensors_run()
 
   sleep_us(10);
 
+  // TODO: run the state machine at 25 MHz with a higher timeout for more resolution?
+
   pio_sm_config cfg = qtr_sensor_counter_program_get_default_config(counter_offset);
   //sm_config_set_clkdiv_int_frac(&cfg, 15, 160);   // 125/(15+160/256) = 8 MHz
   sm_config_set_clkdiv(&cfg, 25);   // 125/25 = 5 MHz
@@ -71,7 +63,9 @@ void ir_sensors_run()
   pio_sm_clear_fifos(IR_PIO, counter_sm);
   pio_sm_restart(IR_PIO, counter_sm);
 
-  // Set the counter (y) to 1023 (10 ones).
+  const uint16_t timeout = 1023;
+
+  // Set the counter (y) to the timeout (10 ones).
   pio_sm_exec_wait_blocking(IR_PIO, counter_sm, 0xA0EB);  // mov osr, !null
   pio_sm_exec_wait_blocking(IR_PIO, counter_sm, 0x604A);  // out y, 10
 
@@ -79,7 +73,7 @@ void ir_sensors_run()
 
   pio_sm_set_enabled(IR_PIO, counter_sm, true);
 
-  memset(ir_sensor_values, 0, sizeof(ir_sensor_values));
+  for (uint8_t i = 0; i < 7; i++) { output[i] = timeout; }
 
   uint8_t last_state = 0xFF;
   while (1)
@@ -88,22 +82,50 @@ void ir_sensors_run()
     //printf("IR %08lx us: %08lx\n", time_us_32(), data);
     if (data == 0xFFFFFFFF) { break; }
 
-    uint16_t time = data;
+    uint16_t time_left = data & 0xFFFF;
     uint8_t state = data >> 16 & 0x7F;
     uint8_t new_zeros = last_state & ~state;
-    if (new_zeros & (1 << 0)) { ir_sensor_values[0] = time; }
-    if (new_zeros & (1 << 1)) { ir_sensor_values[1] = time; }
-    if (new_zeros & (1 << 2)) { ir_sensor_values[2] = time; }
-    if (new_zeros & (1 << 3)) { ir_sensor_values[3] = time; }
-    if (new_zeros & (1 << 4)) { ir_sensor_values[4] = time; }
-    if (new_zeros & (1 << 5)) { ir_sensor_values[5] = time; }
-    if (new_zeros & (1 << 6)) { ir_sensor_values[6] = time; }
+    if (new_zeros & (1 << 0)) { output[0] = timeout - time_left; }
+    if (new_zeros & (1 << 1)) { output[1] = timeout - time_left; }
+    if (new_zeros & (1 << 2)) { output[2] = timeout - time_left; }
+    if (new_zeros & (1 << 3)) { output[3] = timeout - time_left; }
+    if (new_zeros & (1 << 4)) { output[4] = timeout - time_left; }
+    if (new_zeros & (1 << 5)) { output[5] = timeout - time_left; }
+    if (new_zeros & (1 << 6)) { output[6] = timeout - time_left; }
     last_state = state;  // TODO: use &= so we detect the *first* 0 transition?
   }
 
   pio_sm_set_enabled(IR_PIO, counter_sm, false);  // stop the state machine
+}
+
+void ir_sensors_read_bump()
+{
+  // Turn on the bump sensor emitter.
+  gpio_init(23);
+  gpio_put(23, true);
+  gpio_set_dir(23, GPIO_OUT);
+
+  uint16_t output[7];
+  ir_sensors_read(output);
+  bump_sensor_left = output[0];
+  bump_sensor_right = output[1];
+
+  gpio_put(23, 0);
+}
+
+void ir_sensors_read_line()
+{
+  // Turn on the line sensor emitter.
+  gpio_init(26);
+  gpio_put(26, true);
+  gpio_set_dir(26, GPIO_OUT);
+
+  uint16_t output[7];
+  ir_sensors_read(output);
+  for (uint8_t i = 0; i < 5; i++) { line_sensors[i] = output[i + 2]; }
 
   // turn off emitters
   gpio_put(26, 0);
-  gpio_put(23, 0);
 }
+
+
