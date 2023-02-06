@@ -7,8 +7,8 @@ class IRSensors():
         self.ir_bump = Pin(23, Pin.IN)
         self.qtr = QTRSensors(4, 16)
         # TODO: actual calibration
-        self.cal_min = array.array('H', [250,250,250,250,250,250,250])
-        self.cal_max = array.array('H', [700,800,800,800,800,800,700])
+        self.cal_min = array.array('H', [0,600,400,350,400,600,0])
+        self.cal_max = array.array('H', [1024,1024,1024,1024,1024,1024,1024])
     
     def read_bump_sensors(self):
         self.ir_bump.init(Pin.OUT, value=1)
@@ -23,7 +23,7 @@ class IRSensors():
         self.qtr.run()
 
     def read_line_sensors(self):
-        self.data = self.qtr.read()[2:8]
+        self.data = self.qtr.read()[2:]
         self.ir_down.init(Pin.IN)
         return self.data
     
@@ -31,5 +31,5 @@ class IRSensors():
         ret = array.array('H', [0,0,0,0,0])
         data = self.data
         for i in range(5):
-            ret[i] = (min(max(data[i],self.cal_min[i]),self.cal_max[i]) - self.cal_min[i])*1000//(self.cal_max[i] - self.cal_min[i])
+            ret[i] = (min(max(data[i],self.cal_min[i+1]),self.cal_max[i+1]) - self.cal_min[i+1])*1000//(self.cal_max[i+1] - self.cal_min[i+1])
         return ret
