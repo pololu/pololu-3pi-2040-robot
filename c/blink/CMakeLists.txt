@@ -5,7 +5,7 @@ if (DEFINED ENV{PICO_SDK_PATH})
 else ()
   include("../pico-sdk/pico_sdk_init.cmake")
 endif()
-project(test_project C CXX ASM)
+project(project C CXX ASM)
 add_compile_options(-Wall -Wextra)
 pico_sdk_init()
 
