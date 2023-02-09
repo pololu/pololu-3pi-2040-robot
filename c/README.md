@@ -7,10 +7,9 @@
 This directory contains example code for the Pololu 3pi+ 2040 Robot written in
 C.  Most of the code depends on the [Pico SDK].
 
-- The `blink_leds` example blinks the yellow LED and the six RGB LEDs.
-- The `pololu_3pi_plus_2040_robot` is a library that makes it easier
-  to control the robot.
-- The `include` directory holds the include files for the library.
+The `pololu_3pi_plus_2040_robot` directory contains a library of functions
+that help access various components of the robot.
+The `include` directory holds the include files for the library.
 
 ## Getting started
 
