@@ -154,15 +154,15 @@ class LSM6DSO(imu_sensor.IMUSensor):
         # CTRL3_C.BOOT
         self._write_reg_masked(_CTRL3_C, 0x80, 0x80)
         while self._read_reg(_CTRL3_C) & 0x80: pass
-        
+
         # CTRL3_C.SW_RESET
         self._write_reg_masked(_CTRL3_C, 0x01, 0x01)
         while self._read_reg(_CTRL3_C) & 0x01: pass
-    
+
     def config_default(self):
         # CTRL3_C.BDU = 1: block data update
         self._write_reg_masked(_CTRL3_C, 0x40, 0x40)
-    
+
     def enable_default(self):
         self.config_default()
         self.acc.enable_default()

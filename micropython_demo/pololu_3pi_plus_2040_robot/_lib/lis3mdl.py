@@ -44,7 +44,7 @@ class LIS3MDL(imu_sensor.IMUSensor):
         # CTRL_REG2.REBOOT
         self._write_reg_masked(_CTRL_REG2, 0x08, 0x08)
         while self._read_reg(_CTRL_REG2) & 0x08: pass
-        
+
         # CTRL_REG2.SOFT_RST
         self._write_reg_masked(_CTRL_REG2, 0x04, 0x04)
         while self._read_reg(_CTRL_REG2) & 0x04: pass
@@ -52,7 +52,7 @@ class LIS3MDL(imu_sensor.IMUSensor):
     def config_default(self):
         # CTRL_REG3.MD = 00: continuous-conversion mode
         self._write_reg_masked(_CTRL_REG3, 0x00, 0x03)
-        
+
         # CTRL_REG5.BDU = 1: block data update
         self._write_reg_masked(_CTRL_REG5, 0x40, 0x40)
 
