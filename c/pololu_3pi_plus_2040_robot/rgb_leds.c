@@ -50,11 +50,7 @@ void rgb_leds_init()
   // Note: We'd have to rethink how we are initializing things here if we
   // want the OLED to also use hardware SPI.
 
-  // Drive the clock line low.
-  gpio_init(6);
-  gpio_set_dir(6, GPIO_OUT);
-
-  spi_init(spi0, 4000000);
+  spi_init(spi0, 20000000);
   spi_set_format(spi0, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_LSB_FIRST);
 
   rgb_leds_off();
