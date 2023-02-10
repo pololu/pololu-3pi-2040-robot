@@ -3,10 +3,9 @@ import rp2
 from machine import Pin
 
 led = Pin(25, Pin.OUT)
-button_b = Pin(3, Pin.IN, Pin.PULL_UP)
 
 while True:
-    led.off()
+    led.value(0)  # yellow LED on
     time.sleep_ms(100)
-    led.on()
+    led.value(1)  # yellow LED off
     time.sleep_ms(600)
