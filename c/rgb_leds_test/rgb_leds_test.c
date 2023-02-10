@@ -11,7 +11,10 @@ int main()
 
   while (true)
   {
+    // Start sending an update to the RGB LEDs.
     rgb_leds_start_frame();
+
+    // The fourth parameter below is a brightness value from 1 to 31.
 
     rgb_leds_write(0x80, 0x00, 0x00, 1);  // red
     rgb_leds_write(0x00, 0x80, 0x00, 1);  // green
