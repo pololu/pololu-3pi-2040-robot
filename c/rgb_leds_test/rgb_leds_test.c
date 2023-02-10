@@ -4,6 +4,8 @@
 #include <pico/stdlib.h>
 #include <pololu_3pi_plus_2040_robot.h>
 
+rgb_color colors[6];
+
 int main()
 {
   stdio_init_all();
@@ -11,29 +13,25 @@ int main()
 
   while (true)
   {
-    // Start sending an update to the RGB LEDs.
-    rgb_leds_start_frame();
+    colors[0] = (rgb_color){ 0x40, 0x00, 0x00 };  // red
+    colors[1] = (rgb_color){ 0x00, 0x40, 0x00 };  // green
+    colors[2] = (rgb_color){ 0x00, 0x00, 0x40 };  // blue
 
-    // The fourth parameter below is a brightness value from 1 to 31.
-
-    rgb_leds_write(0x80, 0x00, 0x00, 1);  // red
-    rgb_leds_write(0x00, 0x80, 0x00, 1);  // green
-    rgb_leds_write(0x00, 0x00, 0x80, 1);  // blue
-    rgb_leds_write(0x80, 0x00, 0x00, 1);  // red
-    rgb_leds_write(0x00, 0x80, 0x00, 1);  // green
+    colors[3] = (rgb_color){ 0x40, 0x00, 0x00 };  // red
+    colors[4] = (rgb_color){ 0x00, 0x40, 0x00 };  // green
 
     // blue, blinking on and off
     if (time_us_32() >> 18 & 1)
     {
-      rgb_leds_write(0, 0, 0, 1);  // off
+      colors[5] = (rgb_color){ 0, 0, 0 };  // off
     }
     else
     {
-      rgb_leds_write(0x00, 0x00, 0x80, 1);  // blue
+      colors[5] = (rgb_color){ 0x00, 0x00, 0x40 };  // blue
     }
 
-    // This makes all the LEDs use their new colors immediately.  It is not
-    // strictly necessary for this demo.
-    rgb_leds_end_frame(6);
+    // This command sends the colors to the RGB LEDs, making them update.
+    // The third parameter below is a brightness value from 1 to 31.
+    rgb_leds_write(colors, 6, 2);
   }
 }

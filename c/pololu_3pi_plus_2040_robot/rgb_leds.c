@@ -4,7 +4,7 @@
 #include <hardware/spi.h>
 #include <pololu_3pi_plus_2040_robot.h>
 
-void rgb_leds_start_frame()
+static void rgb_leds_start_frame()
 {
   gpio_set_function(6, GPIO_FUNC_SPI);
   gpio_set_function(3, GPIO_FUNC_SPI);
@@ -13,7 +13,7 @@ void rgb_leds_start_frame()
   spi_write_blocking(spi0, start_frame, sizeof(start_frame));
 }
 
-void rgb_leds_end_frame(size_t count)
+static void rgb_leds_end_frame(size_t count)
 {
   uint8_t zero = 0;
   for (size_t i = 0; i < (count + 14)/16; i++)
@@ -25,17 +25,24 @@ void rgb_leds_end_frame(size_t count)
   gpio_deinit(3);
 }
 
-void rgb_leds_write(uint8_t red, uint8_t green, uint8_t blue, uint8_t brightness)
+void rgb_leds_write(rgb_color * colors, size_t count, uint8_t brightness)
 {
-  uint8_t frame[] = { 0xE0 | (brightness & 0x1F), blue, green, red };
-  spi_write_blocking(spi0, frame, sizeof(frame));
+  rgb_leds_start_frame();
+  uint8_t frame[4] = { 0xE0 | (brightness & 0x1F) };
+  for (size_t i = 0; i < count; i++)
+  {
+    frame[1] = colors[i].blue;
+    frame[2] = colors[i].green;
+    frame[3] = colors[i].red;
+    spi_write_blocking(spi0, frame, sizeof(frame));
+  }
+  rgb_leds_end_frame(count);
 }
 
 void rgb_leds_off()
 {
-  rgb_leds_start_frame();
-  for (size_t i = 0; i < 6; i++) { rgb_leds_write(0, 0, 0, 0); }
-  rgb_leds_end_frame(6);
+  rgb_color blank[6] = { 0 };
+  rgb_leds_write(blank, 6, 0);
 }
 
 void rgb_leds_init()
