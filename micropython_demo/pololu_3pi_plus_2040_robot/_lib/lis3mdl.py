@@ -40,6 +40,9 @@ class LIS3MDL(imu_sensor.IMUSensor):
     def __init__(self, i2c):
         super().__init__(i2c, _DEFAULT_ADDR)
 
+    def detect(self):
+        return bool(self._read_reg(_WHO_AM_I) == 0x3D)
+
     def reset(self):
         # CTRL_REG2.REBOOT
         self._write_reg_masked(_CTRL_REG2, 0x08, 0x08)

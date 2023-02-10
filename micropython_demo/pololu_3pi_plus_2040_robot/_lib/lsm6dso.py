@@ -150,6 +150,9 @@ class LSM6DSO(imu_sensor.IMUSensor):
         self.acc.addr = addr
         self.gyro.addr = addr
 
+    def detect(self):
+        return bool(self._read_reg(_WHO_AM_I) == 0x6C)
+
     def reset(self):
         # CTRL3_C.BOOT
         self._write_reg_masked(_CTRL3_C, 0x80, 0x80)
