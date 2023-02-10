@@ -3,8 +3,8 @@ from machine import Pin, SPI
 class RGBLEDs():
     def __init__(self):
         self.sck_pin = Pin(6)
-        self.spi = SPI(id=0, baudrate=20000000, polarity=0, phase=0, \
-          sck=self.sck_pin, mosi=Pin(3), miso=Pin(0))
+        self.spi = SPI(id=0, baudrate=20000000, polarity=0, phase=0,
+                       sck=self.sck_pin, mosi=Pin(3), miso=Pin(0))
         
         # fix the mode of Pin 0
         Pin(0).init(Pin.OUT, value=0)
