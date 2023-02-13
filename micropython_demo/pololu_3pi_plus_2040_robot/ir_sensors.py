@@ -1,8 +1,11 @@
 from machine import Pin
-from .._lib.qtr_sensors import *
 
 class IRSensors():
     def __init__(self):
+
+        from ._lib.qtr_sensors import QTRSensors
+        import array
+
         self.ir_down = Pin(26, Pin.IN)
         self.ir_bump = Pin(23, Pin.IN)
         self.qtr = QTRSensors(4, 16)
@@ -13,7 +16,6 @@ class IRSensors():
     def read_bump_sensors(self):
         self.ir_bump.init(Pin.OUT, value=1)
         self.qtr.run()
-        sleep_us(1024)
         data = self.qtr.read()
         self.ir_bump.init(Pin.IN)
         return data[0:2]

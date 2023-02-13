@@ -1,4 +1,4 @@
-from .._lib import sh1106_shared_spi
+from ._lib import sh1106_shared_spi
 from machine import Pin, SPI
 import framebuf
 

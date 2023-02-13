@@ -118,11 +118,10 @@ def song():
            "t220 e6f12 ga6g12e>c g2.r > c6b12aba6b12>c2r"
     buzzer.setCallback(set_leds)
     bright()
-    buzzer.playInBackground(snow)
+    buzzer.play_in_background(snow)
 
 dim()
 
-buzzer.hello()
 pulse = [0,1,1,1,2,2,4,6,9,12,16,20,25,30,36,49,56,64,72,81,90,100,110,121,131,144,169,180,196,210,225,240,255]
 pulse = pulse + pulse[::-1]
 
@@ -135,7 +134,7 @@ def update():
 
     display.fill(0)
     display.text('3pi+ 2040 OLED!', 0, 0)
-    display.text('Buttons: ' + ('A' if button_a.isPressed() else '_') + ' ' + ('B' if button_b.isPressed() else '_') + ' ' + ('C' if button_c.isPressed() else '_'), 0, 10)
+    display.text('Buttons: ' + ('A' if button_a.is_pressed() else '_') + ' ' + ('B' if button_b.is_pressed() else '_') + ' ' + ('C' if button_c.is_pressed() else '_'), 0, 10)
     display.text('VBAT: '+str(battery.get_level_millivolts())+'    ', 0, 20)
     c = encoders.get_counts()
     display.text('Enc: '+str(c[0])+' '+str(c[1]), 0, 30)
@@ -158,11 +157,11 @@ def update():
     display.fill_rect(120, 64-int(bump[0]*scale), 8, int(bump[0]*scale), 1)
     display.show()
     
-    if not buzzer.isPlaying():
+    if not buzzer.is_playing():
         dim()
-        rgb_leds.set(0, [255, 255, 0] if button_a.isPressed() else [0, 0, 0])
-        rgb_leds.set(1, [0, 255, 255] if button_b.isPressed() else [0, 0, 0])
-        rgb_leds.set(2, [255, 0, 255] if button_c.isPressed() else [0, 0, 0])
+        rgb_leds.set(0, [255, 255, 0] if button_a.is_pressed() else [0, 0, 0])
+        rgb_leds.set(1, [0, 255, 255] if button_b.is_pressed() else [0, 0, 0])
+        rgb_leds.set(2, [255, 0, 255] if button_c.is_pressed() else [0, 0, 0])
 
         b = pulse[int(time.ticks_ms()/50)%len(pulse)]
         rgb_leds.set(3, [b,b,b])
@@ -170,22 +169,22 @@ def update():
         rgb_leds.set(5, [b,b,b])
         rgb_leds.show()
     
-    if button_a.isPressed():
+    if button_a.is_pressed():
         spin()
         
-    if button_b.isPressed():
+    if button_b.is_pressed():
         bright()
         display.text('_', 88, 10, 0) # erase the _
         display.text('B', 88, 10)
         display.show()
         
         buzzer.off()
-        while(button_b.isPressed()):
+        while(button_b.is_pressed()):
             siren1()
         dim()
         buzzer.off()
         
-    if button_c.isPressed() and not buzzer.isPlaying():
+    if button_c.is_pressed() and not buzzer.is_playing():
         song()
 
 def nullCallback(v, f):
@@ -219,7 +218,7 @@ def spin():
     rgb_leds.set(5, [128, 0, 128])
     rgb_leds.show()
     
-    buzzer.playInBackground(circus)
+    buzzer.play_in_background(circus)
     
     global motors, led
     led.on()
