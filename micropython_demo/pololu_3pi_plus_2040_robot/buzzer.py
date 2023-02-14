@@ -16,11 +16,11 @@ class Buzzer:
         is_playing = False
         self.off()
         
-    def isPlaying(self):
+    def is_playing(self):
         global is_playing
         return is_playing
     
-    def setCallback(self, f):
+    def set_callback(self, f):
         global user_callback
         user_callback = f
 
@@ -29,9 +29,6 @@ class Buzzer:
         self.pwm.duty_u16(32767)
         time.sleep_ms(100)
         self.pwm.duty_u16(0)
-
-    def hello(self):
-        self.playInBackground("O5e32a16")
         
     def on(self):
         self.pwm.freq(200)
@@ -46,12 +43,12 @@ class Buzzer:
         
     def play(self, notes):
         global is_playing
-        self.playInBackground(notes)
+        self.play_in_background(notes)
         while is_playing:
             pass
     
         
-    def playInBackground(self, notes):
+    def play_in_background(self, notes):
         global i, f, v, d, n, timer, is_playing
         notes = notes.lower()
         n = 0

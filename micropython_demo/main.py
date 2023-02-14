@@ -25,7 +25,7 @@
 # replace this script with your own main.py.
 
 try:    
-    from pololu_3pi_plus_2040_robot.splash_loader import splash_loader
+    from pololu_3pi_plus_2040_robot.extras.splash_loader import splash_loader
     splash_loader(
         default_program = "blink.py",
         splash_delay_s = 6, # delay while waiting for a button

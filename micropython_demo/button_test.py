@@ -9,9 +9,9 @@ buffer = ""
 
 while True:
     display.fill(0)
-    display.text("A: "+str(button_a.isPressed()), 0, 0)
-    display.text("B: "+str(button_b.isPressed()), 0, 8)
-    display.text("C: "+str(button_c.isPressed()), 0, 16)
+    display.text("A: "+str(button_a.is_pressed()), 0, 0)
+    display.text("B: "+str(button_b.is_pressed()), 0, 8)
+    display.text("C: "+str(button_c.is_pressed()), 0, 16)
     
     if button_a.check():
         buffer += "A"
