@@ -1,6 +1,5 @@
 // Copyright (C) Pololu Corporation.  See LICENSE.txt for details.
 
-#include <stdio.h>  // tmphax
 #include <string.h>
 
 #include <pico/stdlib.h>

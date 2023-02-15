@@ -2,6 +2,7 @@ add_library(pololu_3pi_plus_2040_robot
   battery.c
   button.c
   ir_sensors.c
+  motors.c
   rgb_leds.c
   sh1106.c
   yellow_led.c
@@ -14,5 +15,6 @@ target_link_libraries(pololu_3pi_plus_2040_robot
   pico_stdlib
   hardware_adc
   hardware_pio
+  hardware_pwm
   hardware_spi
 )

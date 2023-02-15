@@ -49,3 +49,8 @@ void sh1106_init(void);
 extern uint16_t bump_sensor_left, bump_sensor_right, line_sensors[5];
 void ir_sensors_read_bump(void);
 void ir_sensors_read_line(void);
+
+#define MOTORS_MAX_SPEED 6000
+void motors_init(void);
+void motors_flip(bool flip_left, bool flip_right);
+void motors_set_speeds(int32_t left_speed, int32_t right_speed);

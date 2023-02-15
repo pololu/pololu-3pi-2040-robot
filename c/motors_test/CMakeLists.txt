@@ -1,0 +1,17 @@
+cmake_minimum_required(VERSION 3.13)
+set(CMAKE_BUILD_TYPE Debug)  # bug workaround
+if (DEFINED ENV{PICO_SDK_PATH})
+  include("$ENV{PICO_SDK_PATH}/pico_sdk_init.cmake")
+else ()
+  include("../pico-sdk/pico_sdk_init.cmake")
+endif()
+project(project C CXX ASM)
+add_compile_options(-Wall -Wextra)
+pico_sdk_init()
+add_subdirectory(../pololu_3pi_plus_2040_robot pololu_3pi_plus_2040_robot)
+
+add_executable(motors_test motors_test.c)
+pico_enable_stdio_usb(motors_test 1)
+pico_enable_stdio_uart(motors_test 0)
+pico_add_extra_outputs(motors_test)
+target_link_libraries(motors_test pololu_3pi_plus_2040_robot)

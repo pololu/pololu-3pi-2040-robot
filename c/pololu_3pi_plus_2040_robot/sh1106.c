@@ -2,8 +2,9 @@
 
 // Low-level library for the SH1106 OLED display.
 
+// TODO: Use hardware SPI instead of GPIO
+
 #include <pico/stdlib.h>
-// TODO: #include <hardware/spi.h>
 #include <pololu_3pi_plus_2040_robot.h>
 
 #define SH1106_DC_PIN 0

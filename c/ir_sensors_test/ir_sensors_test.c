@@ -1,4 +1,6 @@
-// TODO
+// This shows how to read the IR sensors (5 line sensors and 2 bump sensors)
+// on the Pololu 3p+ 2040 Robot.  The readings are displayed on the OLED and
+// printed to the USB virtual serial port.
 
 #include <stdio.h>
 #include <pico/stdlib.h>
@@ -12,7 +14,6 @@ void show_bar(uint8_t page, uint8_t width)
     sh1106_write(x < width ? 0xFE : 0x00);
   }
 }
-
 
 int main()
 {

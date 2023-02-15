@@ -26,6 +26,3 @@ finish:
   in y, 32           ; Send 0xFFFFFFFF to tell the CPU we are done.
 
 .wrap_target
-
-; TODO: make the Python code the same as this.  Also, I'm not sure why the
-; Python code doesn't need an explicit "in y, 32".
