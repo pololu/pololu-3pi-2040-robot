@@ -16,3 +16,8 @@ class IMU:
     def enable_default(self):
         self._lsm6.enable_default()
         self.mag.enable_default()
+
+    def read(self):
+        self.gyro.read()
+        self.acc.read()
+        self.mag.read()

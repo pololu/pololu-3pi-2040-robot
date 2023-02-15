@@ -92,9 +92,7 @@ class LSM6DSOAcc(imu_sensor.IMUSensor):
 
     def read(self):
         self.last_reading_raw = self._read_axes16(_OUTX_L_XL)
-        self.last_reading = self.to_g(self.last_reading_raw)
-        return self.last_reading
-
+        self.last_reading_g = self.to_g(self.last_reading_raw)
 
 class LSM6DSOGyro(imu_sensor.IMUSensor):
     def set_output_data_rate(self, hz):
@@ -131,8 +129,7 @@ class LSM6DSOGyro(imu_sensor.IMUSensor):
 
     def read(self):
         self.last_reading_raw = self._read_axes16(_OUTX_L_G)
-        self.last_reading = self.to_dps(self.last_reading_raw)
-        return self.last_reading
+        self.last_reading_dps = self.to_dps(self.last_reading_raw)
 
 class LSM6DSO(imu_sensor.IMUSensor):
     def __init__(self, i2c):
@@ -170,3 +167,7 @@ class LSM6DSO(imu_sensor.IMUSensor):
         self.config_default()
         self.acc.enable_default()
         self.gyro.enable_default()
+
+    def read(self):
+        self.acc.read()
+        self.gyro.read()
