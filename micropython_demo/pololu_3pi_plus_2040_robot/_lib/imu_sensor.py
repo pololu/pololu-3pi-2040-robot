@@ -10,7 +10,6 @@ class IMUSensor:
 
     def _write_reg(self, reg, val):
         self.i2c.writeto_mem(self.addr, reg, bytes([val]))
-        r = self._read_reg(reg)
 
     def _write_reg_masked(self, reg, val, mask):
         self._write_reg(reg, (self._read_reg(reg) & ~mask) | (val & mask))
