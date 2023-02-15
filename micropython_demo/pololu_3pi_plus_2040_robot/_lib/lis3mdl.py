@@ -98,5 +98,5 @@ class LIS3MDL(imu_sensor.IMUSensor):
         return [x / self._sensitivity for x in raw]
 
     def read(self):
-        self.last_reading_raw = self._read_axes16(_OUT_X_L)
+        self.last_reading_raw = self._read_axes_s16(_OUT_X_L)
         self.last_reading_gauss = self.to_gauss(self.last_reading_raw)

@@ -15,6 +15,6 @@ class IMUSensor:
     def _write_reg_masked(self, reg, val, mask):
         self._write_reg(reg, (self._read_reg(reg) & ~mask) | (val & mask))
 
-    def _read_axes16(self, first_reg):
+    def _read_axes_s16(self, first_reg):
         buf = self.i2c.readfrom_mem(self.addr, first_reg, 6)
         return list(struct.unpack('<3h', buf))

@@ -91,7 +91,7 @@ class LSM6DSOAcc(imu_sensor.IMUSensor):
         return [x * self._sensitivity / 1000 for x in raw]
 
     def read(self):
-        self.last_reading_raw = self._read_axes16(_OUTX_L_XL)
+        self.last_reading_raw = self._read_axes_s16(_OUTX_L_XL)
         self.last_reading_g = self.to_g(self.last_reading_raw)
 
 class LSM6DSOGyro(imu_sensor.IMUSensor):
@@ -128,7 +128,7 @@ class LSM6DSOGyro(imu_sensor.IMUSensor):
         return [x * self._sensitivity / 1000 for x in raw]
 
     def read(self):
-        self.last_reading_raw = self._read_axes16(_OUTX_L_G)
+        self.last_reading_raw = self._read_axes_s16(_OUTX_L_G)
         self.last_reading_dps = self.to_dps(self.last_reading_raw)
 
 class LSM6DSO(imu_sensor.IMUSensor):
