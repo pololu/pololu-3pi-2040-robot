@@ -12,10 +12,9 @@ int main()
   motors_init();
 
   // If a motor on your 3pi+ is installed in a flipped orienation, you can
-  // uncomment a line below to have the library correct for it.
-  //motors_flip(true, false);  // left motor flipped
-  //motors_flip(false, true);  // right motor flipped
-  //motors_flip(true, true);   // both motors flipped
+  // uncomment one or two lines below to have the library correct for it.
+  //motors_flip_left(true);
+  //motors_flip_right(true);
 
   while (1)
   {
@@ -25,13 +24,13 @@ int main()
     speed = 0;
     while (speed <= MOTORS_MAX_SPEED)
     {
-      motors_set_speeds(speed, 0);
+      motors_set_left_speed(speed);
       sleep_ms(1);
       speed += 10;
     }
     while (speed >= 0)
     {
-      motors_set_speeds(speed, 0);
+      motors_set_left_speed(speed);
       sleep_ms(1);
       speed -= 10;
     }
@@ -42,13 +41,13 @@ int main()
     speed = 0;
     while (speed >= -MOTORS_MAX_SPEED)
     {
-      motors_set_speeds(speed, 0);
+      motors_set_left_speed(speed);
       sleep_ms(1);
       speed -= 10;
     }
     while (speed <= 0)
     {
-      motors_set_speeds(speed, 0);
+      motors_set_left_speed(speed);
       sleep_ms(1);
       speed += 10;
     }
@@ -59,13 +58,13 @@ int main()
     speed = 0;
     while (speed <= MOTORS_MAX_SPEED)
     {
-      motors_set_speeds(0, speed);
+      motors_set_right_speed(speed);
       sleep_ms(1);
       speed += 10;
     }
     while (speed >= 0)
     {
-      motors_set_speeds(0, speed);
+      motors_set_right_speed(speed);
       sleep_ms(1);
       speed -= 10;
     }
@@ -76,13 +75,13 @@ int main()
     speed = 0;
     while (speed >= -MOTORS_MAX_SPEED)
     {
-      motors_set_speeds(0, speed);
+      motors_set_right_speed(speed);
       sleep_ms(1);
       speed -= 10;
     }
     while (speed <= 0)
     {
-      motors_set_speeds(0, speed);
+      motors_set_right_speed(speed);
       sleep_ms(1);
       speed += 10;
     }

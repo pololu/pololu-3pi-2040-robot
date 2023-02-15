@@ -52,5 +52,8 @@ void ir_sensors_read_line(void);
 
 #define MOTORS_MAX_SPEED 6000
 void motors_init(void);
-void motors_flip(bool flip_left, bool flip_right);
+void motors_flip_left(bool flip);
+void motors_flip_right(bool flip);
+void motors_set_left_speed(int32_t speed);
+void motors_set_right_speed(int32_t speed);
 void motors_set_speeds(int32_t left_speed, int32_t right_speed);

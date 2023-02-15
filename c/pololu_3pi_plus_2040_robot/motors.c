@@ -4,8 +4,8 @@
 #include <hardware/gpio.h>
 #include <hardware/pwm.h>
 
-static bool motors_flip_left = false;
-static bool motors_flip_right = false;
+static bool flip_left_motor = false;
+static bool flip_right_motor = false;
 
 void motors_init()
 {
@@ -23,37 +23,61 @@ void motors_init()
   pwm_set_enabled(7, true);
 }
 
-void motors_flip(bool flip_left, bool flip_right)
+void motors_flip_left(bool flip)
 {
-  motors_flip_left = flip_left;
-  motors_flip_right = flip_right;
+  flip_left_motor = flip;
+}
+
+void motors_flip_right(bool flip)
+{
+  flip_right_motor = flip;
+}
+
+static uint16_t set_dir_left(int32_t speed)
+{
+  if (speed < 0)
+  {
+    if (speed < -MOTORS_MAX_SPEED) { speed = -MOTORS_MAX_SPEED; }
+    gpio_put(11, !flip_left_motor);
+    return -speed;
+  }
+  else if (speed > 0)
+  {
+    if (speed > MOTORS_MAX_SPEED) { speed = MOTORS_MAX_SPEED; }
+    gpio_put(11, flip_left_motor);
+    return speed;
+  }
+  return 0;
+}
+
+static uint16_t set_dir_right(int32_t speed)
+{
+  if (speed < 0)
+  {
+    if (speed < -MOTORS_MAX_SPEED) { speed = -MOTORS_MAX_SPEED; }
+    gpio_put(10, !flip_right_motor);
+    return -speed;
+  }
+  else if (speed > 0)
+  {
+    if (speed > MOTORS_MAX_SPEED) { speed = MOTORS_MAX_SPEED; }
+    gpio_put(10, flip_right_motor);
+    return speed;
+  }
+  return 0;
+}
+
+void motors_set_left_speed(int32_t speed)
+{
+  pwm_set_chan_level(7, 1, set_dir_left(speed));
+}
+
+void motors_set_right_speed(int32_t speed)
+{
+  pwm_set_chan_level(7, 0, set_dir_right(speed));
 }
 
 void motors_set_speeds(int32_t left_speed, int32_t right_speed)
 {
-  if (left_speed < 0)
-  {
-    if (left_speed < -MOTORS_MAX_SPEED) { left_speed = -MOTORS_MAX_SPEED; }
-    gpio_put(11, !motors_flip_left);
-    left_speed = -left_speed;
-  }
-  else
-  {
-    if (left_speed > MOTORS_MAX_SPEED) { left_speed = MOTORS_MAX_SPEED; }
-    gpio_put(11, motors_flip_left);
-  }
-
-  if (right_speed < 0)
-  {
-    if (right_speed < -MOTORS_MAX_SPEED) { right_speed = -MOTORS_MAX_SPEED; }
-    gpio_put(10, !motors_flip_right);
-    right_speed = -right_speed;
-  }
-  else
-  {
-    if (right_speed > MOTORS_MAX_SPEED) { right_speed = MOTORS_MAX_SPEED; }
-    gpio_put(10, motors_flip_right);
-  }
-
-  pwm_set_both_levels(7, right_speed, left_speed);
+  pwm_set_both_levels(7, set_dir_right(right_speed), set_dir_left(left_speed));
 }
