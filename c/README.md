@@ -66,14 +66,13 @@ USB Mass Storage Device.  You can load the code you compiled onto the robot
 by copying the `.uf2` file to the RP2040, the same way you could copy a file
 onto a USB thumb drive.
 
-For efficiency while developing your code, it is best to program the robot
-from the command line, without using the mouse.  You might use the `cp` utility
-to copy the file:
+For example, a complete command for building and loading the code might be:
 
-    cp blink_leds.uf2 /path/to/robot/
+    cmake --build . && cp blink_leds.uf2 /e
 
-If you have [picotool], you can use it to load the `.bin`, `.uf2`, or `.elf`
-file (it doesn't matter which) onto the robot:
+For more control over the upload process, you can install [picotool]
+and use it to load the `.bin`, `.uf2`, or `.elf` file (it doesn't matter which)
+onto the robot:
 
     picotool load -x blink_leds.uf2
 
