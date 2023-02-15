@@ -1,8 +1,8 @@
-from ._lib import lis3mdl, lsm6dso
-from machine import I2C, Pin
-
 class IMU:
     def __init__(self):
+        from ._lib import lis3mdl, lsm6dso
+        from machine import I2C, Pin
+
         i2c = I2C(id=0, scl=Pin(5), sda=Pin(4), freq=400_000)
         self._lsm6 = lsm6dso.LSM6DSO(i2c)
         self.gyro = self._lsm6.gyro
