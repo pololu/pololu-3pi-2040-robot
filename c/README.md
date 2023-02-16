@@ -107,7 +107,7 @@ If you do that, update the paths starting with "../" in your CMakeLists.txt.
 All of the example projects set `CMAKE_BUILD_TYPE` to `Debug` in
 `CMakeLists.txt` because the optimizations in a release build seem to cause a
 bug somewhere that makes the code occasionally stop running.
-This bug seems to be related to the Pico SDK's USB stack because it go away
+This bug seems to be related to the Pico SDK's USB stack because it goes away
 if USB is disabled (i.e. call `pico_enable_stdio_usb` with an argument of 0).
 
 
