@@ -9,17 +9,24 @@ _CH7_TOP = const(_PWM_BASE + 0x9c)
 
 class Motors:
     def __init__(self):
-        self.right_motor_dir = Pin(10, Pin.OUT, value=0)
-        self.left_motor_dir = Pin(11, Pin.OUT, value=0)
-        self.right_motor_pwm_pin = Pin(14, Pin.ALT, alt=Pin.ALT_PWM)
-        self.left_motor_pwm_pin = Pin(15, Pin.ALT, alt=Pin.ALT_PWM)
+        self.right_motor_dir = Pin(10, Pin.OUT)
+        self.left_motor_dir = Pin(11, Pin.OUT)
+        self.right_motor_pwm_pin = Pin(14, Pin.OUT)
+        self.left_motor_pwm_pin = Pin(15, Pin.OUT)
         self.right_motor_pwm = PWM(self.right_motor_pwm_pin)
         self.left_motor_pwm = PWM(self.left_motor_pwm_pin)
+        
+        # Enable PWM with standard commands, then set it up
+        # exactly how we want by writing the registers directly.
+        self.left_motor_pwm.duty_u16(0)
+        self.right_motor_pwm.duty_u16(0)
+        
         mem32[_CH7_DIV] = 16 # do not divide clock
         mem32[_CH7_TOP] = _MAX_SPEED-1 # 6000 different speed settings, 20.833
+        
+        # You can edit these lines if you want to
         self._flip_left_motor = False
         self._flip_right_motor = False
-        self.off()
         
     def flip_left(self, flip):
         self._flip_left_motor = flip

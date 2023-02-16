@@ -1,3 +1,6 @@
+# Run this test with power off to verify that the Motor
+# class does the right thing with the PWM registers.
+
 import pololu_3pi_plus_2040_robot as robot
 
 motors = robot.Motors()
@@ -45,3 +48,7 @@ assert right_dir.value() == 1, "right: do not change dir on zero"
 motors.set_left_speed(600)
 assert left.duty_u16() == 6554, "left: single motor"
 assert right.duty_u16() == 0, "right: still off"
+
+motors.off()
+assert left.duty_u16() == 0
+assert right.duty_u16() == 0
