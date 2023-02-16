@@ -15,7 +15,7 @@ display.text("WATCH OUT", 27, 30, 0)
 display.show()
     
 rgb_leds.off()
-    
+
 buzzer.play("L16 o4 cfa>cra>c4r4")
 
 circus =\
@@ -35,19 +35,26 @@ rgb_leds.show()
 
 buzzer.play_in_background(circus)
 
-for i in range(0, 6000, 60):
+max = motors.MAX_SPEED
+step = max // 100
+
+for i in range(0, max, step):
     motors.set_speeds(i, -i)
     time.sleep_ms(10)
+
 time.sleep_ms(500)
-for i in range(6000, 0, -60):
+
+for i in range(max, 0, -step):
     motors.set_speeds(i, -i)
     time.sleep_ms(15)
 
-for i in range(0, -6000, -60):
+for i in range(0, -max, -step):
     motors.set_speeds(i, -i)
     time.sleep_ms(15)
+
 time.sleep_ms(500)
-for i in range(-6000, 0, 60):
+
+for i in range(-max, 0, step):
     motors.set_speeds(i, -i)
     time.sleep_ms(10)
 
