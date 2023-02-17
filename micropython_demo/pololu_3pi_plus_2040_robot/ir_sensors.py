@@ -1,8 +1,11 @@
 from machine import Pin
 
+_DONE = const(0)
+_READ_LINE = const(1)
+_READ_BUMP = const(2)
+
 class IRSensors():
     def __init__(self):
-
         from ._lib.qtr_sensors import QTRSensors
         import array
 
@@ -12,22 +15,39 @@ class IRSensors():
         # TODO: actual calibration
         self.cal_min = array.array('H', [0,600,400,350,400,600,0])
         self.cal_max = array.array('H', [1024,1024,1024,1024,1024,1024,1024])
+        self._state = _DONE
+   
+    def start_read_line_sensors(self):
+        self.ir_bump.init(Pin.IN)
+        self.ir_down.init(Pin.OUT, value=1)
+        self._state = _READ_LINE
+        self.qtr.run()
+        
+    def start_read_bump_sensors(self):
+        self.ir_down.init(Pin.IN)
+        self.ir_bump.init(Pin.OUT, value=1)
+        self._state = _READ_BUMP
+        self.qtr.run()
+    
+    def read_line_sensors(self):
+        if self._state != _READ_LINE:
+            self.start_read_line_sensors()
+        data = self.qtr.read()
+        
+        self.ir_down.init(Pin.IN)
+        self.ir_bump.init(Pin.IN)
+        self._state = _DONE
+        return data[2:]
     
     def read_bump_sensors(self):
-        self.ir_bump.init(Pin.OUT, value=1)
-        self.qtr.run()
+        if self._state != _READ_BUMP:
+            self.start_read_bump_sensors()
         data = self.qtr.read()
-        self.ir_bump.init(Pin.IN)
-        return data[0:2]
-    
-    def run_line_sensors(self):
-        self.ir_down.init(Pin.OUT, value=1)
-        self.qtr.run()
-
-    def read_line_sensors(self):
-        self.data = self.qtr.read()[2:]
+        
         self.ir_down.init(Pin.IN)
-        return self.data
+        self.ir_bump.init(Pin.IN)
+        self._state = _DONE
+        return data[0:2]
     
     def compute_line_calibrated(self):
         ret = array.array('H', [0,0,0,0,0])

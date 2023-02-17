@@ -9,7 +9,7 @@ while True:
     display.text('IR Sensor Test', 0, 0)
     
     bump = ir_sensors.read_bump_sensors()
-    ir_sensors.run_line_sensors()
+    ir_sensors.start_read_line_sensors()
     time.sleep_ms(1)
     
     start = time.ticks_us()

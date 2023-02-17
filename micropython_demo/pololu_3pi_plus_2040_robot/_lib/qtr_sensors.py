@@ -83,7 +83,6 @@ class QTRSensors:
         
         self.sm = rp2.StateMachine(id, self.counter, freq=8000000, in_base=p, out_base=p)
         self.data = array.array('H', [0,0,0,0,0,0,0])
-        self.run()
         
     def run(self):
         for i in range(7):
@@ -119,6 +118,4 @@ class QTRSensors:
             if new_zeros & 0x400000:
                 data[6] = TIMEOUT - val
             last_states = val
-        
         return self.data
-
