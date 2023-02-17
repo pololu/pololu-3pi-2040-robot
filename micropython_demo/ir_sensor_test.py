@@ -1,7 +1,8 @@
 import time
 import pololu_3pi_plus_2040_robot as robot
 
-ir_sensors = robot.IRSensors()
+line_sensors = robot.LineSensors()
+bump_sensors = robot.BumpSensors()
 display = robot.Display()
 last_update = 0
 button_a = robot.ButtonA()
@@ -13,26 +14,31 @@ use_calibrated_read = False
 
 while True:
     if use_calibrated_read and not calibrate:
-        bump = ir_sensors.read_bump_sensors_calibrated()
+        bump = bump_sensors.read_calibrated()
     else:
-        bump = ir_sensors.read_bump_sensors()
+        bump = bump_sensors.read()
     
-    ir_sensors.start_read_line_sensors()
-    time.sleep_ms(1)
+    # Start a background read; we'll time how long the
+    # non-blocking part takes alter.
+    line_sensors.start_read()
+    
+    # In a real program you could do slow things while
+    # waiting for the sensors.
+    time.sleep_ms(2)
     
     if use_calibrated_read and not calibrate:
         start = time.ticks_us()
-        line = ir_sensors.read_line_sensors_calibrated()
+        line = line_sensors.read_calibrated()
         stop = time.ticks_us()
     else:
         start = time.ticks_us()
-        line = ir_sensors.read_line_sensors()
+        line = line_sensors.read()
         stop = time.ticks_us()
     
     if calibrate == 1:
-        ir_sensors.calibrate_line_sensors()
+        line_sensors.calibrate()
     if calibrate == 2:
-        ir_sensors.calibrate_bump_sensors()
+        bump_sensors.calibrate()
     
     if stop - last_update > 200000:
         last_update = stop
