@@ -1,5 +1,6 @@
 class Menu:
     def __init__(self, options):
+        self.top_message = "Select:"
         self.options = options
         self.display = None
         self.buzzer = None
@@ -41,7 +42,7 @@ class Menu:
                 
             self.display.fill_rect(0, 0, 127, 10, 0)
             self.display.line(0, 10, 127, 10, 1)
-            self.display.text("Run: (^A *B Cv)", 0, 0)
+            self.display.text(self.top_message, 0, 0)
         
             self.display.show()
         if self.next_button and self.next_button.check():

@@ -4,4 +4,8 @@ class Battery:
         self.adc = ADC(Pin(26))
 
     def get_level_millivolts(self):
-        return int(3300 * self.adc.read_u16() * 11 / 65536)
+        sum = 0
+        for i in range(10):
+            sum += self.adc.read_u16()
+        avg = sum / 10
+        return int(3300 * avg * 11 / 65536)

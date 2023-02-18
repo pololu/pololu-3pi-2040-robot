@@ -12,13 +12,14 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
     button_a = robot.ButtonA()
     button_b = robot.ButtonB()
     button_c = robot.ButtonC()
+    battery = robot.Battery()
     buzzer = robot.Buzzer()
     buzzer.off()
     robot.RGBLEDs().off()
     robot.YellowLED().off()
    
     def del_vars():
-        nonlocal display, button_a, button_b, button_c, buzzer
+        nonlocal display, button_a, button_b, button_c, buzzer, battery
         del display
         del button_a
         del button_b
@@ -74,6 +75,7 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
     def menu():
         from pololu_3pi_plus_2040_robot.extras.menu import Menu
         import os
+        start_ms = time.ticks_ms()
         options = list(filter(lambda f: f.endswith(".py") and f != "main.py", os.listdir()))
         options += ["bootloader", "exit to REPL"]
         
@@ -84,7 +86,16 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
         menu.select_button = button_b
         menu.next_button = button_c
         i = None
+        mv = None
         while i == None:
+            t = time.ticks_ms()
+            if not mv or time.ticks_diff(t, mv_time) > 200:
+                mv = battery.get_level_millivolts()
+                mv_time = t
+            if time.ticks_diff(t, start_ms) % 4000 < 2000:
+                menu.top_message = "Run: (^A *B Cv)"
+            else:
+                menu.top_message = "Battery: {:.2f} V".format(mv/1000)
             i = menu.update()
         option = options[i]
         if option == "bootloader":
