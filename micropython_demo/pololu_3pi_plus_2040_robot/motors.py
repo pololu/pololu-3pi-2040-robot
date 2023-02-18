@@ -9,9 +9,6 @@ _CH7_TOP = const(_PWM_BASE + 0x9c)
 
 class Motors:
     def __init__(self):
-        # For convenient access to this constant.
-        self.MAX_SPEED = MAX_SPEED
-        
         self.right_motor_dir = Pin(10, Pin.OUT, value=0)
         self.left_motor_dir = Pin(11, Pin.OUT, value=0)
         self.right_motor_pwm_pin = Pin(14, Pin.OUT, value=0)
@@ -25,8 +22,8 @@ class Motors:
         self.right_motor_pwm.duty_u16(0)
         
         mem32[_CH7_DIV] = 16 # do not divide clock
-        mem32[_CH7_TOP] = MAX_SPEED-1 # 6000 different speed settings, 20833 Hz
-        
+        mem32[_CH7_TOP] = MAX_SPEED - 1 # 6000 different speeds, 20833 Hz
+
         # You can edit these lines if your motors are reversed.
         self._flip_left_motor = False
         self._flip_right_motor = False
@@ -38,27 +35,25 @@ class Motors:
         self._flip_right_motor = flip
         
     def _set_dir_left(self, speed):
-        if(speed < 0):
-            if speed < -MAX_SPEED:
-                speed = -MAX_SPEED
+        speed = round(speed)
+        if speed < 0:
+            if speed < -MAX_SPEED: speed = -MAX_SPEED
             self.left_motor_dir.value(not self._flip_left_motor)
             return -speed
-        elif(speed > 0):
-            if speed > MAX_SPEED:
-                speed = MAX_SPEED
+        elif speed > 0:
+            if speed > MAX_SPEED: speed = MAX_SPEED
             self.left_motor_dir.value(self._flip_left_motor)
             return speed
         return 0
         
     def _set_dir_right(self, speed):
-        if(speed < 0):
-            if speed < -MAX_SPEED:
-                speed = -MAX_SPEED
+        speed = round(speed)
+        if speed < 0:
+            if speed < -MAX_SPEED: speed = -MAX_SPEED
             self.right_motor_dir.value(not self._flip_right_motor)
             return -speed
-        elif(speed > 0):
-            if speed > MAX_SPEED:
-                speed = MAX_SPEED
+        elif speed > 0:
+            if speed > MAX_SPEED: speed = MAX_SPEED
             self.right_motor_dir.value(self._flip_right_motor)
             return speed
         return 0
@@ -66,10 +61,9 @@ class Motors:
     def set_speeds(self, left, right):
         left = self._set_dir_left(left)
         right = self._set_dir_right(right)
-        
-        cc = (left << 16) + right
+        cc = (left << 16) | right
         mem32[_CH7_CC] = cc
-        
+
     def set_left_speed(self, speed):
         speed = self._set_dir_left(speed)
         mem32[_CH7_CC] = (speed << 16) | (mem32[_CH7_CC] & 0xffff)
@@ -80,3 +74,6 @@ class Motors:
 
     def off(self):
         self.set_speeds(0, 0)
+
+# For convenient access to this constant.
+Motors.MAX_SPEED = MAX_SPEED
