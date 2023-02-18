@@ -8,23 +8,71 @@ from array import *
 
 display = robot.Display()
 motors = robot.Motors()
-ir_sensors = robot.IRSensors()
+line_sensors = robot.LineSensors()
+
+# Note: It's not safe to use Button B in a
+# multi-core program.
+button_a = robot.ButtonA()
+
+display.fill(0)
+display.text("Line Follower", 0, 0)
+display.text("Place on line", 0, 20)
+display.text("and press A to", 0, 30)
+display.text("calibrate.", 0, 40)
+display.show()
+
+while not button_a.check():
+    pass
+    
+display.fill(0)
+display.show()
+time.sleep_ms(500)
+
+motors.set_speeds(2000, -2000)
+for i in range(50):
+    line_sensors.calibrate()
+    time.sleep_ms(20)
+
+motors.off()
+time.sleep_ms(200)
+
+motors.set_speeds(-2000, 2000)
+for i in range(100):
+    line_sensors.calibrate()
+    time.sleep_ms(20)
+
+motors.off()
+time.sleep_ms(200)
+
+motors.set_speeds(2000, -2000)
+for i in range(50):
+    line_sensors.calibrate()
+    time.sleep_ms(20)
+
+motors.off()
 
 t1 = 0
 t2 = time.ticks_us()
 p = 0
+max_speed = 0
 line = []
+starting = False
+last_update_ms = 0
 
 def updateDisplay():
     global display
-    global ir_sensors
+    global line_sensors
     global t1, t2
     global c
     global p
     global line
+    global starting
     
     display.fill(0)
-    display.text("Line Follower", 0, 0)
+    if starting:
+        display.text("Line Follower", 0, 0)
+    else:
+        display.text("Press A", 0, 0)
     display.text("Main loop: "+str((t2-t1)//1000)+'.'+str((t2-t1)//100%10)+ 'ms', 0, 20)
     display.text('p = '+str(p), 0, 30)
     
@@ -41,14 +89,12 @@ def updateDisplay():
 
 def follow_line():
     last_p = 0
-    global p, ir, t1, t2, line
-    ir_sensors.run_line_sensors()
+    global p, ir, t1, t2, line, max_speed
     while True:
-        ir_sensors.read_line_sensors()
-        ir_sensors.run_line_sensors()
+        line = line_sensors.read_calibrated()
+        line_sensors.start_read()
         t1 = t2
         t2 = time.ticks_us()
-        line = ir_sensors.compute_line_calibrated()
         
         # postive p means robot is to right of line
         if line[1] < 700 and line[2] < 700 and line[3] < 700:
@@ -65,19 +111,24 @@ def follow_line():
         d = p - last_p
         last_p = p
         pid = p*90 + d*2000
-        max_speed = 40000
+
         min_speed = 0
         left = max(min_speed, min(max_speed, max_speed - pid))
         right = max(min_speed, min(max_speed, max_speed + pid))
         motors.set_speeds(left, right)
-    
-display.fill(0)
-display.text("Line Follower", 0, 0)
-display.text("GET READY!!!", 0, 30)
-display.show()
 
 _thread.start_new_thread(follow_line, ())
 
 while True:
-    updateDisplay()
-    time.sleep_ms(200)
+    t = time.ticks_ms()
+
+    if time.ticks_diff(t, last_update_ms) > 200:
+        last_update_ms = t
+        updateDisplay()
+
+    if button_a.check():
+        starting = True
+        start_ms = t
+
+    if starting and time.ticks_diff(t, start_ms) > 1000:
+        max_speed = 6000
