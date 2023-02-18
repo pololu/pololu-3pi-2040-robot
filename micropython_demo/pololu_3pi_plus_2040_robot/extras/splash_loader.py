@@ -27,16 +27,16 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
 
     def initial_screen():
         start = time.ticks_us()
-        splash = display.load_pbm("pololu_3pi_plus_2040_robot/splash.pbm")
+        splash = display.load_pbm("pololu_3pi_plus_2040_robot/extras/splash.pbm")
         while True:
-            if button_a.isPressed():
-                buzzer.playInBackground(button_a_beep)
+            if button_a.is_pressed():
+                buzzer.play_in_background(button_a_beep)
                 return "A"
-            if button_b.isPressed():
-                buzzer.playInBackground(button_b_beep)
+            if button_b.is_pressed():
+                buzzer.play_in_background(button_b_beep)
                 return "B"
-            if button_c.isPressed():
-                buzzer.playInBackground(button_c_beep)
+            if button_c.is_pressed():
+                buzzer.play_in_background(button_c_beep)
                 return "C"
             
             elapsed = time.ticks_us() - start
@@ -72,7 +72,7 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
         run_file(filename)
 
     def menu():
-        from pololu_3pi_plus_2040_robot.menu import Menu
+        from pololu_3pi_plus_2040_robot.extras.menu import Menu
         import os
         options = list(filter(lambda f: f.endswith(".py") and f != "main.py", os.listdir()))
         options += ["bootloader", "exit to REPL"]
@@ -113,7 +113,7 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
         display.show()
 
     if splash_delay_s != 0:
-        buzzer.playInBackground(welcome_song)
+        buzzer.play_in_background(welcome_song)
     button = initial_screen()
 
     if button == None:

@@ -1,7 +1,6 @@
 from machine import Pin
 import machine
-from time import *
-from .._lib.read_bootsel import read_bootsel
+from time import ticks_us, sleep_us
 
 class Button():
     def __init__(self):
@@ -10,7 +9,7 @@ class Button():
         self.debounce_ms = 10 # configurable
         
     def check(self):
-        s = self.isPressed()
+        s = self.is_pressed()
         t = ticks_us()
         if s != self.last_event and t - self.last_t > self.debounce_ms*1000:
             self.last_event = s
@@ -18,7 +17,7 @@ class Button():
             return s
 
 class ButtonA(Button):
-    def isPressed(self):
+    def is_pressed(self):
         ctrl = machine.mem32[0x400140cc]
         machine.mem32[0x400140cc] = ctrl & ~(0x1 << 12) | 0x1 << 13
         sleep_us(1)
@@ -27,7 +26,8 @@ class ButtonA(Button):
         return not ret
     
 class ButtonB(Button):
-    def isPressed(self):
+    def is_pressed(self):
+        from ._lib.read_bootsel import read_bootsel
         return not read_bootsel()
         
 class ButtonC(Button):
@@ -35,7 +35,7 @@ class ButtonC(Button):
         self.pin = Pin(0)
         super().__init__()
     
-    def isPressed(self):
+    def is_pressed(self):
         self.pin.init(Pin.IN, Pin.PULL_UP)
         ret = self.pin.value()
         

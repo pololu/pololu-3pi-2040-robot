@@ -1,10 +1,10 @@
-from ._features.battery import Battery
-from ._features.buttons import ButtonA, ButtonB, ButtonC
-from ._features.buzzer import Buzzer
-from ._features.display import Display
-from ._features.encoders import Encoders
-from ._features.ir_sensors import IRSensors
-from ._features.motors import Motors
-from ._features.rgb_leds import RGBLEDs
-from ._features.yellow_led import YellowLED
+from .battery import Battery
+from .buttons import ButtonA, ButtonB, ButtonC
+from .buzzer import Buzzer
+from .display import Display
+from .encoders import Encoders
+from .ir_sensors import IRSensors
+from .motors import Motors
+from .rgb_leds import RGBLEDs
+from .yellow_led import YellowLED
 
