@@ -61,7 +61,7 @@ environment variable to point to a copy of the Pico SDK somewhere else.)
 Make a build directory and use CMake to configure and build one of the
 example projects in it:
 
-    cd blink_leds
+    cd blink
     mkdir build
     cd build
     cmake ..
@@ -87,13 +87,13 @@ onto a USB thumb drive.
 
 For example, a complete command for building and loading the code might be:
 
-    cmake --build . && cp blink_leds.uf2 /e
+    cmake --build . && cp blink.uf2 /e
 
 For more control over the upload process, you can install [picotool]
 and use it to load the `.bin`, `.uf2`, or `.elf` file (it doesn't matter which)
 onto the robot:
 
-    picotool load -x blink_leds.uf2
+    picotool load -x blink.uf2
 
 After you load the code onto your robot using either of these methods, the
 robot will start executing the code.
