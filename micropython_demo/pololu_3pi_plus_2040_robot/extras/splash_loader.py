@@ -1,21 +1,28 @@
 def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
+    from pololu_3pi_plus_2040_robot.display import Display
+    display = Display()
+    splash = display.load_pbm("pololu_3pi_plus_2040_robot/extras/splash.pbm")
+    display.blit(splash, 0, 0)
+    display.show()
+
     welcome_song = "O5e32a16"
     button_a_beep = "!c32"
     button_b_beep = "!e32"
     button_c_beep = "!g32"
 
-    import pololu_3pi_plus_2040_robot as robot
+    from pololu_3pi_plus_2040_robot.buttons import ButtonA, ButtonB, ButtonC
+    from pololu_3pi_plus_2040_robot.buzzer import Buzzer
+    from pololu_3pi_plus_2040_robot.rgb_leds import RGBLEDs
+    from pololu_3pi_plus_2040_robot.yellow_led import YellowLED
     import time
     import framebuf
 
-    display = robot.Display()
-    button_a = robot.ButtonA()
-    button_b = robot.ButtonB()
-    button_c = robot.ButtonC()
-    buzzer = robot.Buzzer()
-    buzzer.off()
-    robot.RGBLEDs().off()
-    robot.YellowLED().off()
+    button_a = ButtonA()
+    button_b = ButtonB()
+    button_c = ButtonC()
+    buzzer = Buzzer()
+    RGBLEDs()    # turn off RGB LEDs
+    YellowLED()  # turn off yellow LED
    
     def del_vars():
         nonlocal display, button_a, button_b, button_c, buzzer
@@ -27,7 +34,6 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
 
     def initial_screen():
         start = time.ticks_us()
-        splash = display.load_pbm("pololu_3pi_plus_2040_robot/extras/splash.pbm")
         while True:
             if button_a.is_pressed():
                 buzzer.play_in_background(button_a_beep)

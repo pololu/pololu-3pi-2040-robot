@@ -24,8 +24,6 @@
 # If you don't need these features, you can of course
 # replace this script with your own main.py.
 
-import pololu_3pi_plus_2040_robot as robot
-
 try:
     from pololu_3pi_plus_2040_robot.extras.splash_loader import splash_loader
     splash_loader(
@@ -35,11 +33,15 @@ try:
         )
 
 except Exception as e:
-    robot.Motors()   # turn off Motors ASAP
-    robot.RGBLEDs()  # turn off RGB LEDs
-    buzzer = robot.Buzzer()
+    from pololu_3pi_plus_2040_robot.motors import Motors
+    Motors()   # turn off Motors ASAP
+    from pololu_3pi_plus_2040_robot.rgb_leds import RGBLEDs
+    RGBLEDs()  # turn off RGB LEDs
+    from pololu_3pi_plus_2040_robot.buzzer import Buzzer
+    buzzer = Buzzer()
     
-    display = robot.Display()
+    from pololu_3pi_plus_2040_robot.display import Display
+    display = Display()
     display.text(type(e).__name__+":", 0, 0, 1)
     msg = str(e)
     msglines = [msg[i:i+16] for i in range(0, len(msg), 16)]
@@ -50,6 +52,12 @@ except Exception as e:
     raise
 
 finally:
-    robot.Motors()   # turn off Motors ASAP
-    robot.Buzzer()   # turn off Buzzer
-    robot.RGBLEDs()  # turn off RGBLEDs
+    from pololu_3pi_plus_2040_robot.motors import Motors
+    Motors()   # turn off Motors ASAP
+    from pololu_3pi_plus_2040_robot.buzzer import Buzzer
+    Buzzer()   # turn off Buzzer
+    from pololu_3pi_plus_2040_robot.rgb_leds import RGBLEDs
+    RGBLEDs()  # turn off RGB LEDs
+
+    # make the REPL friendlier, if you enter it the right way
+    from pololu_3pi_plus_2040_robot import robot

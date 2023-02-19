@@ -1,4 +1,4 @@
-import pololu_3pi_plus_2040_robot as robot
+from pololu_3pi_plus_2040_robot import robot
 display = robot.Display()
 button_a = robot.ButtonA()
 button_a.debounce_ms = 500

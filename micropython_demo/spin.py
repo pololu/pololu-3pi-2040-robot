@@ -2,7 +2,7 @@ import time
 import random
 import rp2
 from machine import Pin
-import pololu_3pi_plus_2040_robot as robot
+from pololu_3pi_plus_2040_robot import robot
 
 rgb_leds = robot.RGBLEDs()
 motors = robot.Motors()

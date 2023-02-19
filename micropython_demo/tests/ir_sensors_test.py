@@ -2,7 +2,7 @@
 # such as a piece of paper to verify that the
 # library works.
 
-import pololu_3pi_plus_2040_robot as robot
+from pololu_3pi_plus_2040_robot import robot
 import time
 import array
 
