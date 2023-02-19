@@ -3,9 +3,9 @@
 # This script displays the logo screen and gives you
 # several options to proceed:
 #
-# Button A: select a top-level Python file to run
+# Button A: exit (and return to the REPL)
 # Button B: launch the built-in UF2 bootloader
-# Button C: exit (and return to the REPL)
+# Button C: select a top-level Python file to run
 #
 # If nothing is pressed, after a specified delay time,
 # a default program runs.  You can customize the
