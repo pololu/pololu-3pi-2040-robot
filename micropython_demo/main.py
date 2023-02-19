@@ -24,7 +24,9 @@
 # If you don't need these features, you can of course
 # replace this script with your own main.py.
 
-try:    
+import pololu_3pi_plus_2040_robot as robot
+
+try:
     from pololu_3pi_plus_2040_robot.extras.splash_loader import splash_loader
     splash_loader(
         default_program = "blink.py",
@@ -32,22 +34,12 @@ try:
         run_file_delay_ms = 700 # extra delay to show the action 
         )
 
-except KeyboardInterrupt as e:
-    import pololu_3pi_plus_2040_robot as robot
-    robot.Buzzer().off()
-    robot.RGBLEDs().off()
-    robot.Motors().off()
-    del robot
-    raise e
-
-except BaseException as e:
-    import pololu_3pi_plus_2040_robot as robot
+except Exception as e:
+    robot.Motors()   # turn off Motors ASAP
+    robot.RGBLEDs()  # turn off RGB LEDs
     buzzer = robot.Buzzer()
-    robot.RGBLEDs().off()
-    robot.Motors().off()
     
     display = robot.Display()
-    display.fill(0)
     display.text(type(e).__name__+":", 0, 0, 1)
     msg = str(e)
     msglines = [msg[i:i+16] for i in range(0, len(msg), 16)]
@@ -55,12 +47,9 @@ except BaseException as e:
         display.text(msglines[i], 0, 8*(i+1), 1)
     display.show()
     buzzer.play("O2c4")
-    del display, msg, msglines, robot
-    raise e
+    raise
 
-# Turn off annoying things if we get here
-import pololu_3pi_plus_2040_robot as robot
-robot.Buzzer().off()
-robot.RGBLEDs().off()
-robot.Motors().off()
-del robot
+finally:
+    robot.Motors()   # turn off Motors ASAP
+    robot.Buzzer()   # turn off Buzzer
+    robot.RGBLEDs()  # turn off RGBLEDs
