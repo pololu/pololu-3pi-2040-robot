@@ -29,15 +29,15 @@ class RGBLEDs():
 
     def set_brightness(self, value, led=None):
         if led != None:
-            self.data[4 + led*4] = 0xe0 | (value & 0x1f)
+            self.data[4 + led*4] = 0xe0 | (round(value) & 0x1f)
         else:
             for l in range(self._led_count):
                 self.set_brightness(value, led=l)
 
     def set(self, led, rgb):
-        self.data[4 + led*4 + 1] = rgb[2]
-        self.data[4 + led*4 + 2] = rgb[1]
-        self.data[4 + led*4 + 3] = rgb[0]
+        self.data[4 + led*4 + 1] = round(rgb[2])
+        self.data[4 + led*4 + 2] = round(rgb[1])
+        self.data[4 + led*4 + 3] = round(rgb[0])
     
     def set_hsv(self, led, hsv, h_scale = 360):
         self.set(self, led, self.hsv2rgb(led, hsv[0], hsv[1], hsv[2], h_scale))
