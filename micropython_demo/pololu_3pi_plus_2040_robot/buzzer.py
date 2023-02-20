@@ -2,24 +2,23 @@ from machine import Pin, PWM
 import machine
 import time
 
-pwm = PWM(Pin(7, Pin.OUT))
-
 def nullCallback(v, f):
     pass
 
+pwm = PWM(Pin(7, Pin.OUT))
 user_callback = nullCallback
+is_playing = False
 
 class Buzzer:
     def __init__(self):
-        global pwm, is_playing
+        global pwm
         self.pwm = pwm
-        is_playing = False
         self.off()
-        
+
     def is_playing(self):
         global is_playing
         return is_playing
-    
+
     def set_callback(self, f):
         global user_callback
         user_callback = f
