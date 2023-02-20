@@ -9,6 +9,8 @@ left = motors.left_motor_pwm
 right_dir = motors.right_motor_dir
 left_dir = motors.left_motor_dir
 
+assert robot.motors.MAX_SPEED == robot.Motors.MAX_SPEED == motors.MAX_SPEED == 6000
+
 assert left.freq() == 20833
 assert right.freq() == 20833
 
@@ -27,6 +29,10 @@ assert left.duty_u16() == 65535, "left: -100% duty"
 assert left_dir.value() == 1
 assert right.duty_u16() == 32768, "right: -50% duty"
 assert left_dir.value() == 1
+
+motors.set_speeds(-2999.6, 2999.9)
+assert left.duty_u16() == 32768, "left: rounding"
+assert right.duty_u16() == 32768, "right: rounding"
 
 motors.flip_left(True)
 motors.set_speeds(-1, -1) # so it will really be 1, -1
@@ -60,3 +66,5 @@ assert right.duty_u16() == 11
 motors.off()
 assert left.duty_u16() == 0
 assert right.duty_u16() == 0
+
+print("Motors test passed")
