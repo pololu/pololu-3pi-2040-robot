@@ -1,5 +1,5 @@
 import time
-import pololu_3pi_plus_2040_robot as robot
+from pololu_3pi_plus_2040_robot import robot
 
 line_sensors = robot.LineSensors()
 bump_sensors = robot.BumpSensors()

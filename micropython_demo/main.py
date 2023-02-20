@@ -3,9 +3,9 @@
 # This script displays the logo screen and gives you
 # several options to proceed:
 #
-# Button A: select a top-level Python file to run
+# Button A: exit (and return to the REPL)
 # Button B: launch the built-in UF2 bootloader
-# Button C: exit (and return to the REPL)
+# Button C: select a top-level Python file to run
 #
 # If nothing is pressed, after a specified delay time,
 # a default program runs.  You can customize the
@@ -24,7 +24,7 @@
 # If you don't need these features, you can of course
 # replace this script with your own main.py.
 
-try:    
+try:
     from pololu_3pi_plus_2040_robot.extras.splash_loader import splash_loader
     splash_loader(
         default_program = "blink.py",
@@ -32,22 +32,16 @@ try:
         run_file_delay_ms = 700 # extra delay to show the action 
         )
 
-except KeyboardInterrupt as e:
-    import pololu_3pi_plus_2040_robot as robot
-    robot.Buzzer().off()
-    robot.RGBLEDs().off()
-    robot.Motors().off()
-    del robot
-    raise e
-
-except BaseException as e:
-    import pololu_3pi_plus_2040_robot as robot
-    buzzer = robot.Buzzer()
-    robot.RGBLEDs().off()
-    robot.Motors().off()
+except Exception as e:
+    from pololu_3pi_plus_2040_robot.motors import Motors
+    Motors()   # turn off Motors ASAP
+    from pololu_3pi_plus_2040_robot.rgb_leds import RGBLEDs
+    RGBLEDs()  # turn off RGB LEDs
+    from pololu_3pi_plus_2040_robot.buzzer import Buzzer
+    buzzer = Buzzer()
     
-    display = robot.Display()
-    display.fill(0)
+    from pololu_3pi_plus_2040_robot.display import Display
+    display = Display()
     display.text(type(e).__name__+":", 0, 0, 1)
     msg = str(e)
     msglines = [msg[i:i+16] for i in range(0, len(msg), 16)]
@@ -55,12 +49,15 @@ except BaseException as e:
         display.text(msglines[i], 0, 8*(i+1), 1)
     display.show()
     buzzer.play("O2c4")
-    del display, msg, msglines, robot
-    raise e
+    raise
 
-# Turn off annoying things if we get here
-import pololu_3pi_plus_2040_robot as robot
-robot.Buzzer().off()
-robot.RGBLEDs().off()
-robot.Motors().off()
-del robot
+finally:
+    from pololu_3pi_plus_2040_robot.motors import Motors
+    Motors()   # turn off Motors ASAP
+    from pololu_3pi_plus_2040_robot.buzzer import Buzzer
+    Buzzer()   # turn off Buzzer
+    from pololu_3pi_plus_2040_robot.rgb_leds import RGBLEDs
+    RGBLEDs()  # turn off RGB LEDs
+
+    # make the REPL friendlier, if you enter it the right way
+    from pololu_3pi_plus_2040_robot import robot
