@@ -1,5 +1,5 @@
 from machine import Pin
-import array
+from array import array
 
 _DONE = const(0)
 _READ_LINE = const(1)
@@ -29,8 +29,8 @@ class LineSensors(_IRSensors):
         return _state
     
     def reset_calibration(self):
-        self.cal_min = array.array('H', [1024,1024,1024,1024,1024])
-        self.cal_max = array.array('H', [0,0,0,0,0])
+        self.cal_min = array('H', [1024,1024,1024,1024,1024])
+        self.cal_max = array('H', [0,0,0,0,0])
         
     def calibrate(self):
         data = self.read()
@@ -45,18 +45,20 @@ class LineSensors(_IRSensors):
         self.ir_down.init(Pin.OUT, value=1)
         _state = _READ_LINE
         self.qtr.run()
-    
+
+    @micropython.viper
     def read(self):
         global _state
-        if _state != _READ_LINE:
+        if uint(_state) != uint(_READ_LINE):
             self.start_read()
-        data = self.qtr.read()
-        
+        data = self.qtr.read_line()
+
         self.ir_down.init(Pin.IN)
         self.ir_bump.init(Pin.IN)
         _state = _DONE
-        return data[2:]
-    
+        return data
+        #return array('H', [data[6], data[5], data[4], data[3], data[2]])
+
     @micropython.viper
     def read_calibrated(self):
         data = self.read()
@@ -79,8 +81,8 @@ class BumpSensors(_IRSensors):
         return _state
         
     def reset_calibration(self):
-        self.cal_min = array.array('H', [1024,1024])
-        self.cal_max = array.array('H', [0,0])
+        self.cal_min = array('H', [1024,1024])
+        self.cal_max = array('H', [0,0])
             
     def calibrate(self):
         data = self.read()
@@ -95,18 +97,19 @@ class BumpSensors(_IRSensors):
         self.ir_bump.init(Pin.OUT, value=1)
         _state = _READ_BUMP
         self.qtr.run()
-    
+
+    @micropython.viper
     def read(self):
         global _state
-        if _state != _READ_BUMP:
+        if uint(_state) != uint(_READ_BUMP):
             self.start_read()
-        data = self.qtr.read()
-        
+        data = self.qtr.read_bump()
+
         self.ir_down.init(Pin.IN)
         self.ir_bump.init(Pin.IN)
         _state = _DONE
-        return data[0:2]
-    
+        return data
+
     @micropython.viper
     def read_calibrated(self):
         data = self.read()

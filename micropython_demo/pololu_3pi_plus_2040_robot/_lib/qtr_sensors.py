@@ -8,7 +8,7 @@ from micropython import const
 TIMEOUT = const(1024)
 
 class QTRSensors:
-    """A 7-channel QTR sensor reader using PIO"""    
+    """A 7-channel QTR sensor reader using PIO"""
     @rp2.asm_pio(
         out_init=(PIO.OUT_HIGH,PIO.OUT_HIGH,PIO.OUT_HIGH,PIO.OUT_HIGH,PIO.OUT_HIGH,PIO.OUT_HIGH,PIO.OUT_HIGH),
         autopush=True, # saves push instructions
@@ -82,21 +82,22 @@ class QTRSensors:
         Pin(pin1+6, Pin.OUT, value=1)
         
         self.sm = rp2.StateMachine(id, self.counter, freq=8000000, in_base=p, out_base=p)
-        self.data = array.array('H', [0,0,0,0,0,0,0])
-        
+        self.data_bump = array.array('H', [0,0])
+        self.data_line = array.array('H', [0,0,0,0,0])
+
     def run(self):
-        for i in range(7):
-            self.data[i] = TIMEOUT
-        
         while self.sm.rx_fifo():
             self.sm.get()
         self.sm.restart()
         self.sm.active(1)
 
     @micropython.viper
-    def read(self):
+    def read_bump(self):
         last_states = uint(0x7f0000)
-        data = ptr16(self.data)
+        data = ptr16(self.data_bump)
+        data[0] = TIMEOUT
+        data[1] = TIMEOUT
+
         sm = self.sm
         while(True): # TODO: TIMEOUT?
             val = uint(sm.get())
@@ -104,18 +105,34 @@ class QTRSensors:
                 break
             new_zeros = last_states ^ val
             if new_zeros & 0x10000:
-                data[0] = TIMEOUT - val
-            if new_zeros & 0x20000:
                 data[1] = TIMEOUT - val
+            if new_zeros & 0x20000:
+                data[0] = TIMEOUT - val
+            last_states = val
+        return self.data_bump
+
+    @micropython.viper
+    def read_line(self):
+        last_states = uint(0x7f0000)
+        data = ptr16(self.data_line)
+        for i in range(5):
+            data[i] = TIMEOUT
+
+        sm = self.sm
+        while(True): # TODO: TIMEOUT?
+            val = uint(sm.get())
+            if(val == uint(0xffffffff)):
+                break
+            new_zeros = last_states ^ val
             if new_zeros & 0x40000:
-                data[2] = TIMEOUT - val
+                data[4] = TIMEOUT - val
             if new_zeros & 0x80000:
                 data[3] = TIMEOUT - val
             if new_zeros & 0x100000:
-                data[4] = TIMEOUT - val
+                data[2] = TIMEOUT - val
             if new_zeros & 0x200000:
-                data[5] = TIMEOUT - val
+                data[1] = TIMEOUT - val
             if new_zeros & 0x400000:
-                data[6] = TIMEOUT - val
+                data[0] = TIMEOUT - val
             last_states = val
-        return self.data
+        return self.data_line
