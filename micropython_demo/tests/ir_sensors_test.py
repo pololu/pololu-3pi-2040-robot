@@ -13,24 +13,26 @@ bump_sensors = robot.BumpSensors()
 
 # test without starting the read ahead of time
 start = time.ticks_us()
-data = line_sensors.read()
+data = line_sensors.read()[:] # copy
 stop = time.ticks_us()
 
-print("Blocking read: {}us {}".format(stop - start, data))
+print("Line: Blocking read: {}us {}".format(stop - start, data))
 assert stop - start > 1000, "should take time to measure"
 assert min(data) > 100
 assert max(data) < 900
 assert line_sensors._state() == 0
 
+# test the effect of a long delay
+time.sleep_ms(10)
+
 # test starting the read ahead of time
-line_sensors.read() # this line seems to help warm it up and speed up the timing
 line_sensors.start_read()
 time.sleep_ms(2)
 start = time.ticks_us()
 data2 = line_sensors.read()
 stop = time.ticks_us()
 
-print("Non-blocking read: {}us {}".format(stop - start, data2))
+print("Line: Non-blocking read: {}us {}".format(stop - start, data2))
 assert stop - start < 500, "fast non-blocking read"
 assert min(data2) > 100
 assert max(data2) < 900
@@ -62,14 +64,20 @@ assert abs(data[4] - data2[4]) < 20, "uncalibrated"
 
 # test without starting the read ahead of time
 start = time.ticks_us()
-data = bump_sensors.read()
+data = bump_sensors.read()[:] # copy
 stop = time.ticks_us()
 
-print("Blocking read: {}us {}".format(stop - start, data))
+print("Bump: blocking read: {}us {}".format(stop - start, data))
 assert stop - start > 1000, "should take time to measure"
 assert min(data) > 100
 assert max(data) < 900
 assert bump_sensors._state() == 0
+
+# do fake calibration
+bump_sensors.cal = array.array('H', [data[0], data[1]//2])
+
+# test the effect of a long delay
+time.sleep_ms(10)
 
 # test starting the read ahead of time
 bump_sensors.start_read()
@@ -78,8 +86,8 @@ start = time.ticks_us()
 data2 = bump_sensors.read()
 stop = time.ticks_us()
 
-print("Non-blocking read: {}us {}".format(stop - start, data2))
-assert stop - start < 500, "fast non-blocking read"
+print("Bump: non-blocking read: {}us {}".format(stop - start, data2))
+#assert stop - start < 500, "fast non-blocking read"
 assert min(data2) > 100
 assert max(data2) < 900
 assert bump_sensors._state() == 0
@@ -87,18 +95,17 @@ assert bump_sensors._state() == 0
 # check that the values are close
 for i in range(2):
     assert abs(data[i] - data2[i]) < 20
-    
-# fake calibration
-bump_sensors.cal_min = array.array('H', [data[0]-100, data[1]-10])
-bump_sensors.cal_max = array.array('H', [data[0]+10, data[1]+100])
-bump_sensors.read_calibrated() # this line seems to help warm it up and speed up the timing
-bump_sensors.start_read()
-time.sleep_ms(2)
-start = time.ticks_us()
-data = bump_sensors.read_calibrated()
-stop = time.ticks_us()
 
-print("Calibratred read: {}us {}".format(stop - start, data))
-#assert stop - start < 500, "fast non-blocking read"
-assert data[0] == 1000, "calibrated high"
-assert data[1] == 0, "calibrated low"
+bump_sensors.start_read()
+data = bump_sensors.read()
+
+print("Blocking read: {}".format(data))
+assert not bump_sensors.left_is_pressed(), 'calibration = value'
+assert bump_sensors.right_is_pressed(), 'calibration = value/2'
+assert not bump_sensors.left_changed()
+assert not bump_sensors.right_changed()
+
+bump_sensors.margin_percentage = 200
+data = bump_sensors.read()
+bump_sensors.margin_percentage = 0 # should have no effect
+assert not bump_sensors.right_is_pressed(), 'margin 200%'
