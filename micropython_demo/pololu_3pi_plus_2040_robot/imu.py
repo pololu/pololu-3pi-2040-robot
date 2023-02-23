@@ -4,18 +4,22 @@ class IMU:
         from machine import I2C, Pin
 
         i2c = I2C(id=0, scl=Pin(5), sda=Pin(4), freq=400_000)
-        self._lsm6 = lsm6dso.LSM6DSO(i2c)
-        self.gyro = self._lsm6.gyro
-        self.acc = self._lsm6.acc
-        self.mag = lis3mdl.LIS3MDL(i2c)
+        self._lsm6dso = lsm6dso.LSM6DSO(i2c)
+        self._lis3mdl = lis3mdl.LIS3MDL(i2c)
+        self.gyro = self._lsm6dso.gyro
+        self.acc = self._lsm6dso.acc
+        self.mag = self._lis3mdl
+
+    def detect(self):
+        return self._lsm6dso.detect() and self._lis3mdl.detect()
 
     def reset(self):
-        self._lsm6.reset()
-        self.mag.reset()
+        self._lsm6dso.reset()
+        self._lis3mdl.reset()
 
     def enable_default(self):
-        self._lsm6.enable_default()
-        self.mag.enable_default()
+        self._lsm6dso.enable_default()
+        self._lis3mdl.enable_default()
 
     def read(self):
         self.gyro.read()
