@@ -13,10 +13,7 @@ calibrate = 0
 use_calibrated_read = False
 
 while True:
-    if use_calibrated_read and not calibrate:
-        bump = bump_sensors.read_calibrated()
-    else:
-        bump = bump_sensors.read()
+    bump = bump_sensors.read()
     
     # Start a background read; we'll time how long the
     # non-blocking part takes alter.
@@ -37,8 +34,6 @@ while True:
     
     if calibrate == 1:
         line_sensors.calibrate()
-    if calibrate == 2:
-        bump_sensors.calibrate()
     
     if stop - last_update > 200000:
         last_update = stop
@@ -50,25 +45,23 @@ while True:
         else:    
             display.text("Uncalib.   {}us".format(stop-start), 0, 0)
         if calibrate == 0:
-            display.text('A/B: calibrate', 0, 10)
+            display.text('A: calibrate', 0, 10)
             display.text('C: switch mode', 0, 20)
         elif calibrate == 1:
             display.text('cal line sensors...', 0, 10)
-            display.text('A/B: stop', 0, 20)
-        elif calibrate == 2:
-            display.text('cal bump sensors...', 0, 10)
-            display.text('A/B: stop', 0, 20)
+            display.text('A: stop', 0, 20)
         
     if button_a.check():
         last_update = 0 # force display refresh
         if calibrate == 0:
+            bump_sensors.calibrate()
+            display.fill_rect(0, 10, 128, 20, 0)
+            display.text('calibrated bump', 0, 10)
+            display.text('sensors...', 0, 20)
+            display.show()
+            time.sleep_ms(500)
+            
             calibrate = 1 # calibrate line sensors
-        else:
-            calibrate = 0  
-    if button_b.check():
-        last_update = 0
-        if calibrate == 0:
-            calibrate = 2 # calibrate bump sensors
         else:
             calibrate = 0
         
@@ -80,13 +73,21 @@ while True:
     scale = 24/1023
     
     display.fill_rect(0, 32, 128, 32, 0)
-    display.fill_rect(0, 64-int(bump[1]*scale), 8, int(bump[1]*scale), 1)
     
-    display.fill_rect(36, 64-int(line[4]*scale), 8, int(line[4]*scale), 1)
-    display.fill_rect(48, 64-int(line[3]*scale), 8, int(line[3]*scale), 1)
+    if bump_sensors.left_is_pressed():
+        display.fill_rect(0, 64-int(bump[0]*scale), 8, int(bump[0]*scale), 1)
+    else:
+        display.rect(0, 64-int(bump[0]*scale), 8, int(bump[0]*scale), 1)
+    
+    display.fill_rect(36, 64-int(line[0]*scale), 8, int(line[0]*scale), 1)
+    display.fill_rect(48, 64-int(line[1]*scale), 8, int(line[1]*scale), 1)
     display.fill_rect(60, 64-int(line[2]*scale), 8, int(line[2]*scale), 1)
-    display.fill_rect(72, 64-int(line[1]*scale), 8, int(line[1]*scale), 1)
-    display.fill_rect(84, 64-int(line[0]*scale), 8, int(line[0]*scale), 1)
+    display.fill_rect(72, 64-int(line[3]*scale), 8, int(line[3]*scale), 1)
+    display.fill_rect(84, 64-int(line[4]*scale), 8, int(line[4]*scale), 1)
     
-    display.fill_rect(120, 64-int(bump[0]*scale), 8, int(bump[0]*scale), 1)
+    if bump_sensors.right_is_pressed():
+        display.fill_rect(120, 64-int(bump[1]*scale), 8, int(bump[1]*scale), 1)
+    else:
+        display.rect(120, 64-int(bump[1]*scale), 8, int(bump[1]*scale), 1)
+        
     display.show()

@@ -33,11 +33,20 @@ class LineSensors(_IRSensors):
         self.cal_max = array('H', [0,0,0,0,0])
 
     def calibrate(self):
-        data = self.read()
+        tmp_min = array('H', [1024,1024,1024,1024,1024])
+        tmp_max = array('H', [0,0,0,0,0])
+        
+        # do 10 measurements
+        for trials in range(10):
+            data = self.read()
+            for i in range(5):
+                tmp_min[i] = min(data[i], tmp_min[i])
+                tmp_max[i] = max(data[i], tmp_max[i])
+        
+        # update data only if ALL data beyond one of the limits
         for i in range(5):
-            self.cal_min[i] = min(data[i], self.cal_min[i])
-        for i in range(5):
-            self.cal_max[i] = max(data[i], self.cal_max[i])
+            self.cal_max[i] = max(tmp_min[i], self.cal_max[i])
+            self.cal_min[i] = min(tmp_max[i], self.cal_min[i])
 
     def start_read(self):
         global _state
@@ -89,7 +98,9 @@ class BumpSensors(_IRSensors):
         return _state
 
     def reset_calibration(self):
-        self.cal = array('H', [200, 200])
+        # start at max so it will not register
+        # a bump without calibration
+        self.cal = array('H', [1023, 1023])
 
     def calibrate(self, count=50):
         cal = [0, 0]
