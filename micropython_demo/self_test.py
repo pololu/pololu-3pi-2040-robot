@@ -88,7 +88,7 @@ def run_test():
     display_line_break(2)
     display_centered_text('IMU   ')
     imu.reset()
-    if not (imu._lsm6.detect() and imu.mag.detect()): # TODO friendlier method?
+    if not imu.detect():
         raise TestError('IMU not detected')
     display_centered_text('    OK')
     rgb_leds.set(3, YELLOW) # D
@@ -150,7 +150,6 @@ def run_test():
         rgb_leds.set(i, GREEN)
     rgb_leds.show()
     buzzer.play_in_background(BEEP_PASS)
-
 
 try:
     run_test()
