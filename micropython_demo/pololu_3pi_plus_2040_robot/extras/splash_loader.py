@@ -131,6 +131,9 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
         display.fill(0)
         display.show()
 
+    if button_a.is_pressed():
+        run_file("self_test.py")
+
     if splash_delay_s != 0:
         buzzer.play_in_background(welcome_song)
     button = initial_screen()
@@ -141,7 +144,5 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
         menu()
     elif button == "B":
         run_bootloader()
-    elif button == "A":
-        run_file("self_test.py")
-    else:
+    else: # A
         run_repl()

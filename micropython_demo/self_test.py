@@ -51,6 +51,8 @@ def show_test_error(test_error):
 def run_test():
     rgb_leds.set_brightness(2)
 
+    buzzer.play_in_background(BEEP_WELCOME)
+
     display.fill(0)
     display_centered_text('3pi+ 2040')
     display_line_break()
