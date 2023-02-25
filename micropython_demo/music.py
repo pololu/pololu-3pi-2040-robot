@@ -1,4 +1,4 @@
-import pololu_3pi_plus_2040_robot as robot
+from pololu_3pi_plus_2040_robot import robot
 import random
 
 b = robot.Buzzer()
@@ -22,7 +22,7 @@ last_f = 0
 up = False
 def set_leds(v, f):
     global rgb_leds, last_f, up
-    
+
     v2 = v*v/16/16
     r = (500-f)*v2
     g = (1000-f)*v2
@@ -31,7 +31,7 @@ def set_leds(v, f):
     g = max(0, min(255, int(g)))
     b = max(0, min(255, int(b)))
     print([r, g, b])
-    
+
     if f > last_f and v != 0 and last_f != 0:
         up = True
     elif f < last_f and v != 0:
@@ -40,7 +40,7 @@ def set_leds(v, f):
       last_f = f
 
     x = random.randint(1,3)
-    
+
     if not up:
         rgb_leds.set(0, [r,g,b] if x & 1 != 0 else [0,0,0])
         rgb_leds.set(1, [r,g,b] if x & 2 != 0 else [0,0,0])
