@@ -46,12 +46,12 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
             if button_c.is_pressed():
                 buzzer.play_in_background(button_c_beep)
                 return "C"
-            
+
             elapsed = time.ticks_us() - start
             countdown_s = splash_delay_s - elapsed//1000000
             if countdown_s <= 0:
                 break
-            
+
             display.fill(0)
             if elapsed < 1000000:
                 offset = 0
@@ -60,7 +60,7 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
             display.blit(splash, 0, offset)
             display.text('Push C for files', 0, 68+offset)
             display.text('Default ({}s):'.format(countdown_s), 0, 78+offset)
-            display.text('   '+default_program, 0, 88+offset) 
+            display.text('   '+default_program, 0, 88+offset)
 
             display.show()
         return None
@@ -75,7 +75,7 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
         display.show()
         buzzer.off()
         del_vars()
-        
+
         from .run_file import run_file
         run_file(filename)
 
@@ -83,9 +83,10 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
         from pololu_3pi_plus_2040_robot.extras.menu import Menu
         import os
         start_ms = time.ticks_ms()
-        options = list(filter(lambda f: f.endswith(".py") and f != "main.py", os.listdir()))
+        options = list(filter(lambda f: f.endswith(".py") and f != "main.py",
+            sorted(os.listdir())))
         options += ["bootloader", "exit to REPL"]
-        
+
         menu = Menu(options)
         menu.display = display
         menu.buzzer = buzzer
