@@ -10,6 +10,9 @@ class YellowLED:
         
     def off(self):
         self.pin.high()
+    
+    def value(self, value):
+        self.pin.value(not value)
         
     def __call__(self, value):
         if value:

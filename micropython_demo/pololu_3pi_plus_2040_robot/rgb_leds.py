@@ -39,10 +39,10 @@ class RGBLEDs():
         self.data[4 + led*4 + 2] = round(rgb[1])
         self.data[4 + led*4 + 3] = round(rgb[0])
     
-    def set_hsv(self, led, hsv, h_scale = 360):
-        self.set(self, led, self.hsv2rgb(led, hsv[0], hsv[1], hsv[2], h_scale))
+    def set_hsv(self, led, hsv, h_scale=360):
+        self.set(led, self.hsv2rgb(hsv[0], hsv[1], hsv[2], h_scale=h_scale))
 
-    def hsv2rgb(self, h, s, v, h_scale = 360):
+    def hsv2rgb(self, h, s, v, h_scale=360):
         # adapted from https://stackoverflow.com/a/14733008
         # but with variable hue scale
         sixth = (h_scale + 3) // 6

@@ -23,19 +23,22 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
     button_c = ButtonC()
     battery = Battery()
     buzzer = Buzzer()
-    RGBLEDs()    # turn off RGB LEDs
-    YellowLED()  # turn off yellow LED
+    RGBLEDs() # turn off RGB LEDs
+    yellow_led = YellowLED()
+    yellow_led.on()
 
     def del_vars():
         nonlocal display, button_a, button_b, button_c, buzzer, battery
+        nonlocal yellow_led
         del display
         del button_a
         del button_b
         del button_c
         del buzzer
+        del yellow_led
 
     def initial_screen():
-        start = time.ticks_us()
+        start = time.ticks_ms()
         while True:
             if button_a.is_pressed():
                 buzzer.play_in_background(button_a_beep)
@@ -47,22 +50,27 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
                 buzzer.play_in_background(button_c_beep)
                 return "C"
 
-            elapsed = time.ticks_us() - start
-            countdown_s = splash_delay_s - elapsed//1000000
+            elapsed = time.ticks_ms() - start
+            countdown_s = splash_delay_s - elapsed//1000
             if countdown_s <= 0:
                 break
 
             display.fill(0)
-            if elapsed < 1000000:
+            if elapsed < 1000:
                 offset = 0
             else:
-                offset = max(-32, -32 * (elapsed - 1000000) // 400000)
+                offset = max(-32, -32 * (elapsed - 1000) // 400)
             display.blit(splash, 0, offset)
             display.text('Push C for files', 0, 68+offset)
             display.text('Default ({}s):'.format(countdown_s), 0, 78+offset)
             display.text('   '+default_program, 0, 88+offset)
 
             display.show()
+            
+            if elapsed < 500:
+                yellow_led.on()
+            else:
+                yellow_led.off()
         return None
 
     def run_file(filename):
@@ -80,6 +88,8 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
         run_file(filename)
 
     def menu():
+        yellow_led.off()
+        
         from pololu_3pi_plus_2040_robot.extras.menu import Menu
         import os
         start_ms = time.ticks_ms()
@@ -114,6 +124,7 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
             run_file(option)
 
     def run_bootloader():
+        yellow_led.off()
         display.fill(0)
         display.text('Bootloader...', 0, 0)
         display.show()
@@ -124,6 +135,7 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
         machine.bootloader()
 
     def run_repl():
+        yellow_led.off()
         display.fill(0)
         display.text('exit to REPL...', 0, 0)
         display.show()
