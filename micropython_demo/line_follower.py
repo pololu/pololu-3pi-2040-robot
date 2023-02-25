@@ -77,13 +77,14 @@ def updateDisplay():
     display.text('p = '+str(p), 0, 30)
     
     # 64-40 = 24
-    scale = 24/1023
+    scale = 24/1000
     
-    display.fill_rect(36, 64-int(line[4]*scale), 8, int(line[4]*scale), 1)
-    display.fill_rect(48, 64-int(line[3]*scale), 8, int(line[3]*scale), 1)
+    print(line)
+    display.fill_rect(36, 64-int(line[0]*scale), 8, int(line[0]*scale), 1)
+    display.fill_rect(48, 64-int(line[1]*scale), 8, int(line[1]*scale), 1)
     display.fill_rect(60, 64-int(line[2]*scale), 8, int(line[2]*scale), 1)
-    display.fill_rect(72, 64-int(line[1]*scale), 8, int(line[1]*scale), 1)
-    display.fill_rect(84, 64-int(line[0]*scale), 8, int(line[0]*scale), 1)
+    display.fill_rect(72, 64-int(line[3]*scale), 8, int(line[3]*scale), 1)
+    display.fill_rect(84, 64-int(line[4]*scale), 8, int(line[4]*scale), 1)
 
     display.show()
 
@@ -91,12 +92,14 @@ def follow_line():
     last_p = 0
     global p, ir, t1, t2, line, max_speed
     while True:
-        line = line_sensors.read_calibrated()
+        # save a COPY of the line sensor data in a global variable
+        # to allow the other thread to read it safely.
+        line = line_sensors.read_calibrated()[:]
         line_sensors.start_read()
         t1 = t2
         t2 = time.ticks_us()
         
-        # postive p means robot is to right of line
+        # postive p means robot is to left of line
         if line[1] < 700 and line[2] < 700 and line[3] < 700:
             if p < 0:
                 l = 0
@@ -113,8 +116,8 @@ def follow_line():
         pid = p*90 + d*2000
 
         min_speed = 0
-        left = max(min_speed, min(max_speed, max_speed - pid))
-        right = max(min_speed, min(max_speed, max_speed + pid))
+        left = max(min_speed, min(max_speed, max_speed + pid))
+        right = max(min_speed, min(max_speed, max_speed - pid))
         motors.set_speeds(left, right)
 
 _thread.start_new_thread(follow_line, ())
