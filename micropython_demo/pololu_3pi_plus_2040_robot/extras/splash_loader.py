@@ -5,7 +5,7 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
     display.blit(splash, 0, 0)
     display.show()
 
-    welcome_song = "O5e32a16"
+    welcome_song = "O5 e64a64 O6 msl32 d v12 d v10 d v8 d v6 d16"
     button_a_beep = "!c32"
     button_b_beep = "!e32"
     button_c_beep = "!g32"
@@ -23,19 +23,19 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
     button_c = ButtonC()
     battery = Battery()
     buzzer = Buzzer()
-    RGBLEDs() # turn off RGB LEDs
-    yellow_led = YellowLED()
-    yellow_led.on()
+    rgb_leds = RGBLEDs() # turns off RGB LEDs
+    rgb_leds.set_brightness(4)
+    YellowLED() # turns off yellow LED
 
     def del_vars():
         nonlocal display, button_a, button_b, button_c, buzzer, battery
-        nonlocal yellow_led
+        nonlocal rgb_leds
         del display
         del button_a
         del button_b
         del button_c
         del buzzer
-        del yellow_led
+        del rgb_leds
 
     def initial_screen():
         start = time.ticks_ms()
@@ -66,14 +66,24 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
             display.text('   '+default_program, 0, 88+offset)
 
             display.show()
-            
-            if elapsed < 500:
-                yellow_led.on()
-            else:
-                yellow_led.off()
+
+            led_period = 80
+            decay = 500
+            q = elapsed // led_period
+            h = max(0, 240 - 240 * elapsed // 400)
+            s = min(255, 220 + 35 * elapsed // 200)
+            for i in range(4):
+                if q >= i:
+                    rgb_leds.set_hsv(4-i, [h, s, max(0, 255 - 255 * (elapsed - i * led_period) // decay )])
+                    rgb_leds.set_hsv((4+i)%6, [h, s, max(0, 255 - 255 * (elapsed - i * led_period) // decay )])
+                else:
+                    rgb_leds.set(4-i, [0, 0, 0])
+                    rgb_leds.set((4+i)%6, [0, 0, 0])
+            rgb_leds.show()
         return None
 
     def run_file(filename):
+        rgb_leds.off()
         display.fill(0)
         display.text('Run file:', 0, 0)
         display.text(filename, 0, 10)
@@ -88,8 +98,8 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
         run_file(filename)
 
     def menu():
-        yellow_led.off()
-        
+        rgb_leds.off()
+
         from pololu_3pi_plus_2040_robot.extras.menu import Menu
         import os
         start_ms = time.ticks_ms()
@@ -124,7 +134,7 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
             run_file(option)
 
     def run_bootloader():
-        yellow_led.off()
+        rgb_leds.off()
         display.fill(0)
         display.text('Bootloader...', 0, 0)
         display.show()
@@ -135,7 +145,7 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
         machine.bootloader()
 
     def run_repl():
-        yellow_led.off()
+        rgb_leds.off()
         display.fill(0)
         display.text('exit to REPL...', 0, 0)
         display.show()

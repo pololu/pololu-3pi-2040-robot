@@ -27,9 +27,9 @@
 try:
     from pololu_3pi_plus_2040_robot.extras.splash_loader import splash_loader
     splash_loader(
-        default_program = "rgb_demo.py",
+        default_program = "blink.py",
         splash_delay_s = 6, # delay while waiting for a button
-        run_file_delay_ms = 700 # extra delay to show the action 
+        run_file_delay_ms = 700 # extra delay to show the action
         )
 
 except Exception as e:
@@ -39,7 +39,7 @@ except Exception as e:
     RGBLEDs()  # turn off RGB LEDs
     from pololu_3pi_plus_2040_robot.buzzer import Buzzer
     buzzer = Buzzer()
-    
+
     from pololu_3pi_plus_2040_robot.display import Display
     display = Display()
     display.text(type(e).__name__+":", 0, 0, 1)
