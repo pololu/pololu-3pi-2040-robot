@@ -57,17 +57,14 @@ def run_test():
     display_centered_text('Self Test')
     time.sleep_ms(500)
 
-    #bump_sensors.calibrate() FIXME when this is made to work like 32U4 version
-    import array
-    bump_sensors.cal_min = array.array('H', [500,500])
-    bump_sensors.cal_max = array.array('H', [0,0])
+    bump_sensors.calibrate()
 
     display_line_break(2)
     display_centered_text('Press bumpers')
+
     while True:
-        bump = bump_sensors.read_calibrated()
-        if all(bump): break
-        time.sleep_ms(10) # FIXME remove if issue with repeated reads is fixed
+        bump_sensors.read()
+        if bump_sensors.left_is_pressed() and bump_sensors.right_is_pressed(): break
     display.fill_rect(0, 56, 128, 8, 0)
     display_centered_text('Bumpers OK')
     rgb_leds.set(5, YELLOW) # F
@@ -150,11 +147,12 @@ def run_test():
         rgb_leds.set(i, GREEN)
     rgb_leds.show()
     buzzer.play_in_background(BEEP_PASS)
+    while True:
+        machine.idle()
 
 try:
     run_test()
 except TestError as te:
     show_test_error(te)
-finally:
     while True:
         machine.idle()
