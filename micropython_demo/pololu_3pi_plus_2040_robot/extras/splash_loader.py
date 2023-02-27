@@ -103,8 +103,7 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
         from pololu_3pi_plus_2040_robot.extras.menu import Menu
         import os
         start_ms = time.ticks_ms()
-        options = list(filter(lambda f: f.endswith(".py") and f != "main.py",
-            sorted(os.listdir())))
+        options = sorted(f for f in os.listdir() if f.endswith(".py") and f != "main.py")
         options += ["bootloader", "exit to REPL"]
 
         menu = Menu(options)
