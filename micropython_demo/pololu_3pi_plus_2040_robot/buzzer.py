@@ -2,12 +2,11 @@ from machine import Pin, PWM
 import machine
 import time
 
-def nullCallback(v, f):
-    pass
-
 pwm = PWM(Pin(7, Pin.OUT))
-user_callback = nullCallback
+user_callback = lambda v, f: None
 is_playing = False
+
+volumes = [0, 1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 24, 32, 64, 128]
 
 class Buzzer:
     def __init__(self):
@@ -28,7 +27,7 @@ class Buzzer:
         self.pwm.duty_u16(32767)
         time.sleep_ms(100)
         self.pwm.duty_u16(0)
-        
+
     def on(self):
         self.pwm.freq(200)
         self.pwm.duty_u16(32767)
@@ -39,22 +38,26 @@ class Buzzer:
             timer.deinit()
             is_playing = False
         self.pwm.duty_u16(0)
-        
+
     def play(self, notes):
         global is_playing
-        self.play_in_background(notes)
-        while is_playing:
-            pass
-    
-        
+        try:
+            self.play_in_background(notes)
+            while is_playing:
+                pass
+        finally:
+            self.off()
+
     def play_in_background(self, notes):
-        global i, f, v, d, n, timer, is_playing
+        global i, f, v, d, note_count, timer, is_playing
         notes = notes.lower()
-        n = 0
-        f = []
-        d = []
-        v = []
-        volumes = [0, 1, 2, 3, 4,    5, 6, 8, 10,    12, 16, 20, 24,   32, 64, 128]
+
+        if is_playing:
+            timer.deinit()
+
+        f = []  # pre-computed list of frequencies
+        d = []  # pre-computed list of durations
+        v = []  # pre-computed list of volumes
 
         x = 0
 
@@ -70,7 +73,7 @@ class Buzzer:
             c = notes[x]
             x += 1
             num_string = ""
-            
+
             accidentals = 0
             if x < notelen and (notes[x] == '+' or notes[x] == '#'):
                 accidentals += 1
@@ -78,12 +81,12 @@ class Buzzer:
             elif x < notelen and notes[x] == '-':
                 accidentals -= 1
                 x += 1
-            
+
             while x < notelen and notes[x].isdigit():
                 num_string += notes[x]
                 x += 1
             num = int(num_string) if num_string != "" else 0
-            
+
             note = octave * 12
             if "c" == c:
                 note += 0
@@ -111,7 +114,7 @@ class Buzzer:
                 tempo = num
                 continue
             elif "v" == c:
-                volume = min(num,15)
+                volume = min(num, 15)
                 continue
             elif "o" == c:
                 octave = num
@@ -120,10 +123,7 @@ class Buzzer:
                 default_duration = min(num, 2000)
                 continue
             elif "m" == c:
-                if x < notelen and notes[x] == 's':
-                    staccato = True
-                else:
-                    staccato = False
+                staccato = x < notelen and notes[x] == 's'
                 x += 1
                 continue
             elif "!" == c:
@@ -136,21 +136,21 @@ class Buzzer:
                 continue
             else:
                 continue
-            
+
             note += octave_boost*12
             note += accidentals
-            
+
             duration_type = 1
             if num > 0 and num <= 2000:
                 duration_type = num
             else:
                 duration_type = default_duration
             duration = 60000/tempo/(duration_type/4)
-            
+
             if x < notelen and notes[x] == '.':
                 duration += duration/2
                 x += 1
-                
+
             if note == 0:
                 f.append(0)
                 v.append(0)
@@ -159,35 +159,32 @@ class Buzzer:
                 f.append(freq)
                 v.append(volumes[volume])
             d.append(round(duration/2 if staccato else duration))
-            n = n + 1
-            
+
             if staccato:
                 f.append(0)
                 d.append(round(duration/2))
                 v.append(0)
-                n = n + 1
-            
+
             octave_boost = 0
         # end of loop
-        
-        if is_playing:
-            timer.deinit()
+
         is_playing = True
         i = 0
+        note_count = len(f)
         timer = machine.Timer()
         timer.init(period=1, mode=machine.Timer.ONE_SHOT, callback=callback)
 
 def callback(t):
-    global pwm, i, f, v, d, n, timer, is_playing
+    global pwm, i, f, v, d, note_count, is_playing
 
-    if i >= n:
+    if i >= note_count:
         pwm.duty_u16(0)
         is_playing = False
         return
-    
-    if f[i] != 0:
+
+    if f[i]:
         pwm.freq(f[i])
     pwm.duty_u16(v[i]*256)
     user_callback(v[i], f[i])
-    t.init(period=d[i], mode = machine.Timer.ONE_SHOT, callback = callback)
-    i = i + 1
+    t.init(period=d[i], mode=machine.Timer.ONE_SHOT, callback=callback)
+    i += 1

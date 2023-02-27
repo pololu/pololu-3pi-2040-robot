@@ -1,7 +1,7 @@
 from pololu_3pi_plus_2040_robot import robot
 import random
 
-b = robot.Buzzer()
+buzzer = robot.Buzzer()
 display = robot.Display()
 rgb_leds = robot.RGBLEDs()
 button_b = robot.ButtonB()
@@ -21,7 +21,7 @@ song = "t108 l16 ms v15 " + \
 last_f = 0
 up = False
 def set_leds(v, f):
-    global rgb_leds, last_f, up
+    global last_f, up
 
     v2 = v*v/16/16
     r = (500-f)*v2
@@ -42,9 +42,9 @@ def set_leds(v, f):
     x = random.randint(1,3)
 
     if not up:
-        rgb_leds.set(0, [r,g,b] if x & 1 != 0 else [0,0,0])
-        rgb_leds.set(1, [r,g,b] if x & 2 != 0 else [0,0,0])
-        rgb_leds.set(2, [r,g,b] if x & 1 != 0 else [0,0,0])
+        rgb_leds.set(0, [r,g,b] if x & 1 else [0,0,0])
+        rgb_leds.set(1, [r,g,b] if x & 2 else [0,0,0])
+        rgb_leds.set(2, [r,g,b] if x & 1 else [0,0,0])
         rgb_leds.set(3, [0,0,0])
         rgb_leds.set(4, [0,0,0])
         rgb_leds.set(5, [0,0,0])
@@ -52,9 +52,9 @@ def set_leds(v, f):
         rgb_leds.set(0, [0,0,0])
         rgb_leds.set(1, [0,0,0])
         rgb_leds.set(2, [0,0,0])
-        rgb_leds.set(3, [r,g,b] if x & 1 != 0 else [0,0,0])
-        rgb_leds.set(4, [r,g,b] if x & 2 != 0 else [0,0,0])
-        rgb_leds.set(5, [r,g,b] if x & 1 != 0 else [0,0,0])
+        rgb_leds.set(3, [r,g,b] if x & 1 else [0,0,0])
+        rgb_leds.set(4, [r,g,b] if x & 2 else [0,0,0])
+        rgb_leds.set(5, [r,g,b] if x & 1 else [0,0,0])
 
     rgb_leds.show()
 
@@ -64,14 +64,14 @@ display.text("  by Franz Liszt", 0, 10)
 display.text("Press B to stop.", 0, 50)
 display.show()
 
-b.set_callback(set_leds)
-b.play_in_background(intro)
+buzzer.set_callback(set_leds)
+buzzer.play_in_background(intro)
 
 while not button_b.check():
-    if not b.is_playing():
-        b.play_in_background(song)
+    if not buzzer.is_playing():
+        buzzer.play_in_background(song)
 
 rgb_leds.off()
-b.off()
+buzzer.off()
 display.fill(0)
 display.show()
