@@ -68,6 +68,8 @@ class QTRSensors:
         in_(y, 32)
 
         wrap_target()
+        nop()
+        wrap()
 
     def __init__(self, id, pin1):
         Pin(pin1, Pin.IN, pull=None)
