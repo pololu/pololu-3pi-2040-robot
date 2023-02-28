@@ -81,9 +81,9 @@ def run_test():
     display_line_break(2)
     display_centered_text('Select edition')
     display_line_break()
-    display_centered_text('A: Turtle  ')
+    display_centered_text('A: Standard')
     display_line_break()
-    display_centered_text('B: Standard')
+    display_centered_text('B: Turtle  ')
     display_line_break()
     display_centered_text('C: Hyper   ')
     rgb_leds.set(4, YELLOW) # E
@@ -92,29 +92,23 @@ def run_test():
 
     # Make sure button was not held down from before (look for released-to-
     # pressed transition)
-    a_released = b_released = c_released = False
+    button_a.check()
+    button_b.check()
+    button_c.check()
+    time.sleep_ms(10)
     while True:
-        a = button_a.check()
-        if a == False:
-            a_released = True
-        elif a_released and a:
-            edition = 'Turtle'
+        if button_a.check():
+            edition = 'Standard'
             display.fill_rect(0, 48, 128, 16, 0)
             buzzer.play_in_background('c32')
             break
-        b = button_b.check()
-        if b == False:
-            b_released = True
-        elif b_released and b:
-            edition = 'Standard'
-            display.fill_rect(0, 40, 128, 16, 0)
-            display.fill_rect(0, 56, 128, 16, 0)
+        elif button_b.check():
+            edition = 'Turtle'
+            display.fill_rect(0, 40, 128, 8, 0)
+            display.fill_rect(0, 56, 128, 8, 0)
             buzzer.play_in_background('e32')
             break
-        c = button_c.check()
-        if c == False:
-            c_released = True
-        elif c_released and c:
+        elif button_c.check():
             edition = 'Hyper'
             display.fill_rect(0, 40, 128, 16, 0)
             buzzer.play_in_background('g32')
@@ -169,12 +163,13 @@ def run_test():
     display_centered_text(f"L={left} R={right}")
     display_line_break()
     display_centered_text(f"Gyro Z={gyro_z:.1f}")
-    display_line_break()
-    if edition == 'Turtle' and gyro_z > -126 and gyro_z < -84 and \
-            left > 140 and left < 200 and right > -200 and right < -140:
-        pass
-    elif edition == 'Standard' and gyro_z > -490 and gyro_z < -350 and \
+    display_line_break(2)
+    display_centered_text(f"{edition}:")
+    if edition == 'Standard' and gyro_z > -490 and gyro_z < -350 and \
             left > 212 and left < 288 and right > -288 and right < -212:
+        pass
+    elif edition == 'Turtle' and gyro_z > -126 and gyro_z < -84 and \
+            left > 140 and left < 200 and right > -200 and right < -140:
         pass
     elif edition == 'Hyper' and gyro_z > 665 and gyro_z < 1190 and \
             left > 130 and left < 370 and right > -370 and right < -130:
@@ -182,8 +177,8 @@ def run_test():
     else:
         raise TestError(f"Edition mismatch: expected {edition}, measured L={left} R={right} Gyro Z={gyro_z:.1f}")
 
-    display_line_break(2)
-    display_centered_text(f"{edition}: PASS")
+    display_line_break()
+    display_centered_text('PASS')
     for i in range(6):
         rgb_leds.set(i, GREEN)
     rgb_leds.show()
