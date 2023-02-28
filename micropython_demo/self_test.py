@@ -5,6 +5,7 @@ import time
 
 battery = robot.Battery()
 bump_sensors = robot.BumpSensors()
+button_a = robot.ButtonA()
 button_b = robot.ButtonB()
 button_c = robot.ButtonC()
 buzzer = robot.Buzzer()
@@ -14,8 +15,7 @@ imu = robot.IMU()
 motors = robot.Motors()
 rgb_leds = robot.RGBLEDs()
 
-BEEP_BROWNOUT = '<c8'
-BEEP_WELCOME = '>g32>>c32'
+BEEP_WELCOME = '!>g32>>c32'
 BEEP_FAIL = '<g-8r8<g-8r8<g-8'
 BEEP_PASS = '>l32c>e>g>>c8'
 
@@ -50,54 +50,107 @@ def show_test_error(test_error):
 
 def run_test():
     rgb_leds.set_brightness(2)
+    display.fill(0)
 
     buzzer.play_in_background(BEEP_WELCOME)
 
-    display.fill(0)
     display_centered_text('3pi+ 2040')
     display_line_break()
     display_centered_text('Self Test')
     time.sleep_ms(500)
 
-    bump_sensors.calibrate()
+    display_line_break(2)
+    v = battery.get_level_millivolts()
 
+    if v < 4000:
+        display_centered_text('Power on &')
+        display_line_break()
+        display_centered_text('unplug USB')
+        while v < 4000:
+            time.sleep_ms(100)
+            v = battery.get_level_millivolts()
+        display_line_break(2)
+
+    display_centered_text(f"VBAT {v:4} mV")
+    if v > 7000:
+        raise TestError(f"VBAT higher than expected: {v} mV")
+    rgb_leds.set(5, YELLOW) # F
+    rgb_leds.show()
+    time.sleep_ms(250)
+
+    display_line_break(2)
+    display_centered_text('Select edition')
+    display_line_break()
+    display_centered_text('A: Turtle  ')
+    display_line_break()
+    display_centered_text('B: Standard')
+    display_line_break()
+    display_centered_text('C: Hyper   ')
+    rgb_leds.set(4, YELLOW) # E
+    rgb_leds.show()
+    buzzer.play_in_background('<g32')
+
+    # Make sure button was not held down from before (look for released-to-
+    # pressed transition)
+    a_released = b_released = c_released = False
+    while True:
+        a = button_a.check()
+        if a == False:
+            a_released = True
+        elif a_released and a:
+            edition = 'Turtle'
+            display.fill_rect(0, 48, 128, 16, 0)
+            buzzer.play_in_background('c32')
+            break
+        b = button_b.check()
+        if b == False:
+            b_released = True
+        elif b_released and b:
+            edition = 'Standard'
+            display.fill_rect(0, 40, 128, 16, 0)
+            display.fill_rect(0, 56, 128, 16, 0)
+            buzzer.play_in_background('e32')
+            break
+        c = button_c.check()
+        if c == False:
+            c_released = True
+        elif c_released and c:
+            edition = 'Hyper'
+            display.fill_rect(0, 40, 128, 16, 0)
+            buzzer.play_in_background('g32')
+            break
+    display.show()
+    rgb_leds.set(3, YELLOW) # D
+    rgb_leds.show()
+
+    bump_sensors.calibrate()
     display_line_break(2)
     display_centered_text('Press bumpers')
 
     while True:
         bump_sensors.read()
         if bump_sensors.left_is_pressed() and bump_sensors.right_is_pressed(): break
+
     display.fill_rect(0, 56, 128, 8, 0)
     display_centered_text('Bumpers OK')
-    rgb_leds.set(5, YELLOW) # F
+    rgb_leds.set(0, YELLOW) # A
     rgb_leds.show()
-    buzzer.play_in_background('!c32')
-    time.sleep_ms(500)
+    buzzer.play_in_background('>c32')
+    time.sleep_ms(250)
 
-    # test some voltages and IMU presence
-    display_line_break(2)
-    v = battery.get_level_millivolts()
-    display_centered_text(f"VBAT {v:4} mV")
-    if v < 4000 or v > 7000:
-        raise TestError(f"VBAT out of range: {v} mV")
-    rgb_leds.set(4, YELLOW) # E
-    rgb_leds.show()
-    time.sleep_ms(500)
-
+    # test IMU presence
     display_line_break(2)
     display_centered_text('IMU   ')
     imu.reset()
     if not imu.detect():
         raise TestError('IMU not detected')
     display_centered_text('    OK')
-    rgb_leds.set(3, YELLOW) # D
+    rgb_leds.set(1, YELLOW) # B
     rgb_leds.show()
-    time.sleep_ms(500)
+    time.sleep_ms(250)
 
     display_line_break(2)
     display_centered_text('Motors')
-    rgb_leds.set(0, YELLOW) # A
-    rgb_leds.show()
     imu.enable_default()
     imu.gyro.set_output_data_rate(833)
     imu.gyro.set_full_scale(2000)
@@ -117,34 +170,20 @@ def run_test():
     display_line_break()
     display_centered_text(f"Gyro Z={gyro_z:.1f}")
     display_line_break()
-    if gyro_z > -490 and gyro_z < -350 and \
-            left > 212 and left < 288 and right > -288 and right < -212:
-        edition = 'Standard'
-    elif gyro_z > -126 and gyro_z < -84 and \
+    if edition == 'Turtle' and gyro_z > -126 and gyro_z < -84 and \
             left > 140 and left < 200 and right > -200 and right < -140:
-        edition = 'Turtle'
-    elif gyro_z > 665 and gyro_z < 1190 and \
+        pass
+    elif edition == 'Standard' and gyro_z > -490 and gyro_z < -350 and \
+            left > 212 and left < 288 and right > -288 and right < -212:
+        pass
+    elif edition == 'Hyper' and gyro_z > 665 and gyro_z < 1190 and \
             left > 130 and left < 370 and right > -370 and right < -130:
-        edition = 'Hyper'
+        pass
     else:
-        raise TestError("Couldn't detect edition: L={left} R={right} Gyro Z={gyro_z:.1f}")
-    display_line_break()
-    display_centered_text(f"{edition}?")
-    display_line_break()
-    display_centered_text('B=Yes C=No')
-    rgb_leds.set(1, YELLOW) # B
-    rgb_leds.show()
-
-    while True:
-        if button_b.is_pressed():
-            buzzer.play_in_background('!e32')
-            break
-        if button_c.is_pressed():
-            buzzer.play_in_background('!g32')
-            raise TestError('Edition mismatch')
+        raise TestError(f"Edition mismatch: expected {edition}, measured L={left} R={right} Gyro Z={gyro_z:.1f}")
 
     display_line_break(2)
-    display_centered_text('PASS')
+    display_centered_text(f"{edition}: PASS")
     for i in range(6):
         rgb_leds.set(i, GREEN)
     rgb_leds.show()
