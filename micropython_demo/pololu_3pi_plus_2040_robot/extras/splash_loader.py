@@ -1,9 +1,12 @@
 def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
     from pololu_3pi_plus_2040_robot.display import Display
     display = Display()
-    splash = display.load_pbm("pololu_3pi_plus_2040_robot/extras/splash.pbm")
-    display.blit(splash, 0, 0)
-    display.show()
+    splash = None
+    if splash_delay_s:
+        # Display the splash screen ASAP.
+        splash = display.load_pbm("pololu_3pi_plus_2040_robot/extras/splash.pbm")
+        display.blit(splash, 0, 0)
+        display.show()
 
     welcome_song = "O5 e64a64 O6 msl32 d v12 d v10 d v8 d v6 d16"
     button_a_beep = "!c32"
@@ -16,26 +19,27 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
     from pololu_3pi_plus_2040_robot.rgb_leds import RGBLEDs
     from pololu_3pi_plus_2040_robot.yellow_led import YellowLED
     import time
-    import framebuf
 
     button_a = ButtonA()
     button_b = ButtonB()
     button_c = ButtonC()
     battery = Battery()
-    buzzer = Buzzer()
+    buzzer = Buzzer() # turns off buzzer
     rgb_leds = RGBLEDs() # turns off RGB LEDs
     rgb_leds.set_brightness(4)
     YellowLED() # turns off yellow LED
 
     def del_vars():
-        nonlocal display, button_a, button_b, button_c, buzzer, battery
-        nonlocal rgb_leds
-        del display
-        del button_a
-        del button_b
-        del button_c
-        del buzzer
-        del rgb_leds
+        nonlocal display, splash, button_a, button_b, button_c, battery
+        nonlocal buzzer, rgb_leds
+        del display, splash, button_a, button_b, button_c, battery
+        del buzzer, rgb_leds
+
+    def read_button():
+        if button_a.is_pressed(): return "A"
+        if button_b.is_pressed(): return "B"
+        if button_c.is_pressed(): return "C"
+        return None
 
     def initial_screen():
         start = time.ticks_ms()
@@ -61,7 +65,7 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
             else:
                 offset = max(-32, -32 * (elapsed - 1000) // 400)
             display.blit(splash, 0, offset)
-            display.text('Push C for files', 0, 68+offset)
+            display.text('Push C for menu', 0, 68+offset)
             display.text('Default ({}s):'.format(countdown_s), 0, 78+offset)
             display.text('   '+default_program, 0, 88+offset)
 
@@ -74,8 +78,9 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
             s = min(255, 220 + 35 * elapsed // 200)
             for i in range(4):
                 if q >= i:
-                    rgb_leds.set_hsv(4-i, [h, s, max(0, 255 - 255 * (elapsed - i * led_period) // decay )])
-                    rgb_leds.set_hsv((4+i)%6, [h, s, max(0, 255 - 255 * (elapsed - i * led_period) // decay )])
+                    v = max(0, 255 - 255 * (elapsed - i * led_period) // decay)
+                    rgb_leds.set_hsv(4-i, [h, s, v])
+                    rgb_leds.set_hsv((4+i)%6, [h, s, v])
                 else:
                     rgb_leds.set(4-i, [0, 0, 0])
                     rgb_leds.set((4+i)%6, [0, 0, 0])
@@ -84,18 +89,47 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
 
     def run_file(filename):
         rgb_leds.off()
-        display.fill(0)
-        display.text('Run file:', 0, 0)
-        display.text(filename, 0, 10)
-        display.show()
-        time.sleep_ms(run_file_delay_ms)
+        if run_file_delay_ms:
+            display.fill(0)
+            display.text('Run file:', 0, 0)
+            display.text(filename, 0, 10)
+            display.show()
+            time.sleep_ms(run_file_delay_ms)
         display.fill(0)
         display.show()
         buzzer.off()
         del_vars()
-
         from .run_file import run_file
         run_file(filename)
+
+    # Runs the bootloader in the RP2040's Bootrom.
+    def run_bootloader():
+        rgb_leds.off()
+        if run_file_delay_ms:
+            display.fill(0)
+            display.text('Bootloader...', 0, 0)
+            display.show()
+            time.sleep_ms(run_file_delay_ms)
+        display.fill(0)
+        display.show()
+        import machine
+        buzzer.off()
+        machine.bootloader()
+
+    # Runs the Python REPL using sys.exit().
+    # You can also run the REPL by letting the interpreter reach the end of
+    # your program or by sending Ctrl+C to the USB virtual serial port.
+    def run_repl():
+        rgb_leds.off()
+        if run_file_delay_ms:
+            display.fill(0)
+            display.text('exit to REPL...', 0, 0)
+            display.show()
+            time.sleep_ms(run_file_delay_ms)
+        display.fill(0)
+        display.show()
+        import sys
+        sys.exit(0)
 
     def menu():
         rgb_leds.off()
@@ -132,32 +166,14 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
         else:
             run_file(option)
 
-    def run_bootloader():
-        rgb_leds.off()
-        display.fill(0)
-        display.text('Bootloader...', 0, 0)
-        display.show()
-        time.sleep_ms(run_file_delay_ms)
-        display.fill(0)
-        display.show()
-        import machine
-        machine.bootloader()
-
-    def run_repl():
-        rgb_leds.off()
-        display.fill(0)
-        display.text('exit to REPL...', 0, 0)
-        display.show()
-        time.sleep_ms(run_file_delay_ms)
-        display.fill(0)
-        display.show()
-
     if button_a.is_pressed():
         run_file("self_test.py")
 
-    if splash_delay_s != 0:
+    button = read_button()
+
+    if button == None and splash_delay_s != 0:
         buzzer.play_in_background(welcome_song)
-    button = initial_screen()
+        button = initial_screen()
 
     if button == None:
         run_file(default_program)
