@@ -13,8 +13,9 @@
 #
 # Setting the delays both to zero will eliminate the
 # splash screen and initial beep, running your program
-# immediately.  In this case you can still hold A, B,
-# or C on startup to activate the associated function.
+# immediately.  In this case you can still hold B or C
+# on startup to activate the associated function.
+# (Holding A on startup starts self_test.py.)
 #
 # If your default program exits normally, this script
 # will try to shut off the RGB LEDs, motors, and
