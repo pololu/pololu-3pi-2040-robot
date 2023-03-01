@@ -3,10 +3,10 @@ import machine
 import time
 
 pwm = PWM(Pin(7, Pin.OUT))
-user_callback = lambda v, f: None
+user_callback = lambda i: None
 is_playing = False
 
-volumes = [0, 1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 24, 32, 64, 128]
+volume_levels = [0, 1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 24, 32, 64, 128]
 
 class Buzzer:
     def __init__(self):
@@ -48,16 +48,22 @@ class Buzzer:
         finally:
             self.off()
 
-    def play_in_background(self, notes):
-        global i, f, v, d, note_count, timer, is_playing
-        notes = notes.lower()
+    def play_in_background(self, music):
+        global i, note_count, timer, is_playing, volume_levels
+        global frequencies, durations, volumes, notes, beats
+        music = music.lower()
 
         if is_playing:
             timer.deinit()
 
-        f = []  # pre-computed list of frequencies
-        d = []  # pre-computed list of durations
-        v = []  # pre-computed list of volumes
+        # Initialize the arrays that store the precomputed music
+        # sequence.  We also make them accessible as instance
+        # variables so you can monitor the state of the sequence.
+        self.volumes = volumes = []
+        self.durations = durations = []
+        self.frequencies = frequencies = []
+        self.beats = beats = [] # units of 1/20160 of a measure
+        self.notes = notes = []
 
         x = 0
 
@@ -67,23 +73,24 @@ class Buzzer:
         staccato = False
         tempo = 120
         default_duration = 4
+        elapsed_beats = 0
 
-        notelen = len(notes)
-        while x < notelen:
-            c = notes[x]
+        music_len = len(music)
+        while x < music_len:
+            c = music[x]
             x += 1
             num_string = ""
 
             accidentals = 0
-            if x < notelen and (notes[x] == '+' or notes[x] == '#'):
+            if x < music_len and (music[x] == '+' or music[x] == '#'):
                 accidentals += 1
                 x += 1
-            elif x < notelen and notes[x] == '-':
+            elif x < music_len and music[x] == '-':
                 accidentals -= 1
                 x += 1
 
-            while x < notelen and notes[x].isdigit():
-                num_string += notes[x]
+            while x < music_len and music[x].isdigit():
+                num_string += music[x]
                 x += 1
             num = int(num_string) if num_string != "" else 0
 
@@ -123,7 +130,7 @@ class Buzzer:
                 default_duration = min(num, 2000)
                 continue
             elif "m" == c:
-                staccato = x < notelen and notes[x] == 's'
+                staccato = x < music_len and music[x] == 's'
                 x += 1
                 continue
             elif "!" == c:
@@ -147,44 +154,57 @@ class Buzzer:
                 duration_type = default_duration
             duration = 60000/tempo/(duration_type/4)
 
-            if x < notelen and notes[x] == '.':
+            # Compute integer duration in units of 1/20160 of a
+            # quarter note, for keeping the beat.
+            duration_beats = 20160*4//duration_type
+
+            if x < music_len and music[x] == '.':
                 duration += duration/2
+                duration_beats += duration_beats//2
                 x += 1
 
             if note == 0:
-                f.append(0)
-                v.append(0)
+                frequencies.append(0)
+                volumes.append(0)
+                notes.append(0)
             else:
                 freq = round(440 * 2**((note - 57)/12))
-                f.append(freq)
-                v.append(volumes[volume])
-            d.append(round(duration/2 if staccato else duration))
+                frequencies.append(freq)
+                volumes.append(volume_levels[volume])
+                notes.append(note)
+            durations.append(round(duration/2 if staccato else duration))
+
+            beats.append(elapsed_beats)
+            elapsed_beats += (duration_beats // 2 if staccato else duration_beats)
 
             if staccato:
-                f.append(0)
-                d.append(round(duration/2))
-                v.append(0)
+                frequencies.append(0)
+                durations.append(round(duration / 2))
+                volumes.append(0)
+                notes.append(0)
+                beats.append(elapsed_beats)
+                elapsed_beats += duration_beats // 2
 
             octave_boost = 0
         # end of loop
 
         is_playing = True
         i = 0
-        note_count = len(f)
+        note_count = len(frequencies)
         timer = machine.Timer()
         timer.init(period=1, mode=machine.Timer.ONE_SHOT, callback=callback)
 
 def callback(t):
-    global pwm, i, f, v, d, note_count, is_playing
+    global pwm, i, frequencies, volumes, durations, note_count, is_playing
 
     if i >= note_count:
         pwm.duty_u16(0)
         is_playing = False
         return
 
-    if f[i]:
-        pwm.freq(f[i])
-    pwm.duty_u16(v[i]*256)
-    user_callback(v[i], f[i])
-    t.init(period=d[i], mode=machine.Timer.ONE_SHOT, callback=callback)
+    if frequencies[i]:
+        pwm.freq(frequencies[i])
+    pwm.duty_u16(volumes[i]*256)
+    user_callback(i)
+    t.init(period=durations[i], mode=machine.Timer.ONE_SHOT, callback=callback)
     i += 1
