@@ -1,3 +1,6 @@
+# Displays encoder counts on the screen and blinks the yellow LED with
+# each tick.
+
 from pololu_3pi_plus_2040_robot import robot
 
 led = robot.YellowLED()
@@ -10,7 +13,7 @@ while True:
 
     # change LED on every count
     led((c[0] + c[1]) % 2)
-    
+
     display.fill_rect(0, 0, 128, 18, 0)
     display.text("Left: "+str(c[0]), 0, 0)
     display.text("Right: "+str(c[1]), 0, 10)

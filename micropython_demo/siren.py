@@ -1,3 +1,5 @@
+# A siren sound effect.
+
 from pololu_3pi_plus_2040_robot import robot
 import time
 
@@ -27,9 +29,9 @@ def siren1():
         min = 900
         max = 1500
     buzzer.pwm.freq(tri(x, min, max, period//2,  period, period))
-        
+
     T = 800000
-    
+
     p1 = tri(x, 0, 255, T//6, T//3, T)
     p2 = tri(x+T//6, 0, 255, T//6, T//3, T)
     p3 = tri(x+T//3, 0, 255, T//6, T//3, T)
@@ -43,6 +45,6 @@ def siren1():
     rgb_leds.set(4, [p5,0,p2])
     rgb_leds.set(5, [p1,0,p4])
     rgb_leds.show()
-    
+
 while True:
     siren1()

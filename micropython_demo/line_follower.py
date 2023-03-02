@@ -1,3 +1,8 @@
+# PID line follower demo.
+#
+# Place the robot on the line and press A to calibrate, then press A
+# again to start it following the line.
+
 import time
 import random
 import rp2
@@ -23,7 +28,7 @@ display.show()
 
 while not button_a.check():
     pass
-    
+
 display.fill(0)
 display.show()
 time.sleep_ms(500)
@@ -67,7 +72,7 @@ def updateDisplay():
     global p
     global line
     global starting
-    
+
     display.fill(0)
     if starting:
         display.text("Line Follower", 0, 0)
@@ -75,10 +80,10 @@ def updateDisplay():
         display.text("Press A", 0, 0)
     display.text("Main loop: "+str((t2-t1)//1000)+'.'+str((t2-t1)//100%10)+ 'ms', 0, 20)
     display.text('p = '+str(p), 0, 30)
-    
+
     # 64-40 = 24
     scale = 24/1000
-    
+
     print(line)
     display.fill_rect(36, 64-int(line[0]*scale), 8, int(line[0]*scale), 1)
     display.fill_rect(48, 64-int(line[1]*scale), 8, int(line[1]*scale), 1)
@@ -98,7 +103,7 @@ def follow_line():
         line_sensors.start_read()
         t1 = t2
         t2 = time.ticks_us()
-        
+
         # postive p means robot is to left of line
         if line[1] < 700 and line[2] < 700 and line[3] < 700:
             if p < 0:
@@ -109,8 +114,8 @@ def follow_line():
             # estimate line position
             l = (1000*line[1] + 2000*line[2] + 3000*line[3] + 4000*line[4]) // \
                 (line[0] + line[1] + line[2] + line[3] + line[4])
-        
-        p = l - 2000        
+
+        p = l - 2000
         d = p - last_p
         last_p = p
         pid = p*90 + d*2000

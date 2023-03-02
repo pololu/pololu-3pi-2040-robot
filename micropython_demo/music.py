@@ -1,3 +1,5 @@
+# Demo of music playing with callbacks for LED and display effects.
+
 from pololu_3pi_plus_2040_robot import robot
 import random
 
