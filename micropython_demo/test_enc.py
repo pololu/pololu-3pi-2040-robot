@@ -1,7 +1,7 @@
 # Displays encoder counts on the screen and blinks the yellow LED with
 # each tick.
 
-from pololu_3pi_plus_2040_robot import robot
+from pololu_3pi_2040_robot import robot
 
 led = robot.YellowLED()
 encoders = robot.Encoders()

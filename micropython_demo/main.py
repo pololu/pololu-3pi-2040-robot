@@ -26,7 +26,7 @@
 # replace this script with your own main.py.
 
 try:
-    from pololu_3pi_plus_2040_robot.extras.splash_loader import splash_loader
+    from pololu_3pi_2040_robot.extras.splash_loader import splash_loader
     splash_loader(
         default_program = "blink.py",
         splash_delay_s = 6, # delay while waiting for a button
@@ -34,14 +34,14 @@ try:
         )
 
 except Exception as e:
-    from pololu_3pi_plus_2040_robot.motors import Motors
+    from pololu_3pi_2040_robot.motors import Motors
     Motors()   # turn off Motors ASAP
-    from pololu_3pi_plus_2040_robot.rgb_leds import RGBLEDs
+    from pololu_3pi_2040_robot.rgb_leds import RGBLEDs
     RGBLEDs()  # turn off RGB LEDs
-    from pololu_3pi_plus_2040_robot.buzzer import Buzzer
+    from pololu_3pi_2040_robot.buzzer import Buzzer
     buzzer = Buzzer()
 
-    from pololu_3pi_plus_2040_robot.display import Display
+    from pololu_3pi_2040_robot.display import Display
     display = Display()
     display.text(type(e).__name__+":", 0, 0, 1)
     msg = str(e)
@@ -53,12 +53,12 @@ except Exception as e:
     raise
 
 finally:
-    from pololu_3pi_plus_2040_robot.motors import Motors
+    from pololu_3pi_2040_robot.motors import Motors
     Motors()   # turn off Motors ASAP
-    from pololu_3pi_plus_2040_robot.buzzer import Buzzer
+    from pololu_3pi_2040_robot.buzzer import Buzzer
     Buzzer()   # turn off Buzzer
-    from pololu_3pi_plus_2040_robot.rgb_leds import RGBLEDs
+    from pololu_3pi_2040_robot.rgb_leds import RGBLEDs
     RGBLEDs()  # turn off RGB LEDs
 
     # make the REPL friendlier, if you enter it the right way
-    from pololu_3pi_plus_2040_robot import robot
+    from pololu_3pi_2040_robot import robot

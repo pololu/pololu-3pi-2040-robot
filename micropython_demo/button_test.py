@@ -3,7 +3,7 @@
 # debounce time of 500 ms, so you can see the debouncing effect by
 # pressing the button quickly.
 
-from pololu_3pi_plus_2040_robot import robot
+from pololu_3pi_2040_robot import robot
 display = robot.Display()
 button_a = robot.ButtonA()
 button_a.debounce_ms = 500

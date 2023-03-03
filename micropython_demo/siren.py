@@ -1,6 +1,6 @@
 # A siren sound effect.
 
-from pololu_3pi_plus_2040_robot import robot
+from pololu_3pi_2040_robot import robot
 import time
 
 rgb_leds = robot.RGBLEDs()

@@ -1,7 +1,7 @@
 # Runs all the IMU sensors, displaying values on the screen and
 # printing them to the USB serial port.
 
-from pololu_3pi_plus_2040_robot import robot
+from pololu_3pi_2040_robot import robot
 import time
 
 display = robot.Display()

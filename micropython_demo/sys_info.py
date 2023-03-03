@@ -5,7 +5,7 @@ import gc
 import os
 import machine
 import re
-from pololu_3pi_plus_2040_robot import robot
+from pololu_3pi_2040_robot import robot
 
 display = robot.Display()
 button_b = robot.ButtonB()
