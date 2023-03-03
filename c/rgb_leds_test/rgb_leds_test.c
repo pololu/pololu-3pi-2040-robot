@@ -2,7 +2,7 @@
 // Pololu 3p+ 2040 Robot.
 
 #include <pico/stdlib.h>
-#include <pololu_3pi_plus_2040_robot.h>
+#include <pololu_3pi_2040_robot.h>
 
 rgb_color colors[6];
 

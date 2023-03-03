@@ -3,7 +3,7 @@
 #include <pico/stdlib.h>
 #include <hardware/structs/ioqspi.h>
 #include <hardware/sync.h>
-#include <pololu_3pi_plus_2040_robot.h>
+#include <pololu_3pi_2040_robot.h>
 
 // Temporarily changes pin 25 to be an input in order to read button A.
 bool button_a_is_pressed()

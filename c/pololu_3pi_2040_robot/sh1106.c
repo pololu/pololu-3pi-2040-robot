@@ -5,7 +5,7 @@
 // TODO: Use hardware SPI instead of GPIO
 
 #include <pico/stdlib.h>
-#include <pololu_3pi_plus_2040_robot.h>
+#include <pololu_3pi_2040_robot.h>
 
 #define SH1106_DC_PIN 0
 #define SH1106_RES_PIN 1

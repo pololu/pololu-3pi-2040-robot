@@ -7,7 +7,7 @@
 This directory contains example code for the Pololu 3pi+ 2040 Robot written in
 C.  Most of the code depends on the [Pico SDK].
 
-The `pololu_3pi_plus_2040_robot` directory contains a library of functions
+The `pololu_3pi_2040_robot` directory contains a library of functions
 that help access various components of the robot.
 The `include` directory holds the include files for the library.
 
@@ -48,14 +48,14 @@ Install [Homebrew], then do:
 Use Git to download this repository (if you don't already have it) and
 navigate to this directory:
 
-    git clone https://github.com/pololu/pololu-3pi-plus-2040-robot-example-code.git
-    cd pololu-3pi-plus-2040-robot-example-code/c
+    git clone https://github.com/pololu/pololu-3pi-2040-robot
+    cd pololu-3pi-2040-robot/c
 
 Use Git to download the Pico SDK and the tinyusb submodule.  (If you don't want
 to store the Pico SDK in this location, you can set the `PICO_SDK_PATH`
 environment variable to point to a copy of the Pico SDK somewhere else.)
 
-    git clone https://github.com/raspberrypi/pico-sdk.git
+    git clone https://github.com/raspberrypi/pico-sdk
     git -C pico-sdk submodule update --init lib/tinyusb
 
 Make a build directory and use CMake to configure and build one of the
@@ -100,7 +100,7 @@ robot will start executing the code.
 
 ## Notes
 
-You can move pico-sdk and the pololu_3pi_plus_2040_robot library into
+You can move pico-sdk and the pololu_3pi_2040_robot library into
 different locations, for example making them subdirectories of your project.
 If you do that, update the paths starting with "../" in your CMakeLists.txt.
 

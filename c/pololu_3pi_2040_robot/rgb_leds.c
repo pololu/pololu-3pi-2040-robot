@@ -2,7 +2,7 @@
 
 #include <pico/stdlib.h>
 #include <hardware/spi.h>
-#include <pololu_3pi_plus_2040_robot.h>
+#include <pololu_3pi_2040_robot.h>
 
 static void rgb_leds_start_frame()
 {

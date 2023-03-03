@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <pico/stdlib.h>
-#include <pololu_3pi_plus_2040_robot.h>
+#include <pololu_3pi_2040_robot.h>
 
 int main()
 {

@@ -5,7 +5,7 @@
 #include <pico/stdlib.h>
 #include <hardware/pio.h>
 
-#include <pololu_3pi_plus_2040_robot.h>
+#include <pololu_3pi_2040_robot.h>
 #include <qtr_sensor_counter.pio.h>
 
 #define IR_PIO pio1
