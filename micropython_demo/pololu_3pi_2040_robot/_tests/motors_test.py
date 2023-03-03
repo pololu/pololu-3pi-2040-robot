@@ -1,7 +1,7 @@
 # Run this test with power off to verify that the Motor
 # class does the right thing with the PWM registers.
 
-from pololu_3pi_plus_2040_robot import robot
+from pololu_3pi_2040_robot import robot
 
 motors = robot.Motors()
 right = motors.right_motor_pwm
