@@ -60,5 +60,8 @@ finally:
     from pololu_3pi_2040_robot.rgb_leds import RGBLEDs
     RGBLEDs()  # turn off RGB LEDs
 
+    # don't leave extra classes lying around
+    del Motors, Buzzer, RGBLEDs, splash_loader
+
     # make the REPL friendlier, if you enter it the right way
     from pololu_3pi_2040_robot import robot

@@ -19,6 +19,7 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
     from pololu_3pi_2040_robot.rgb_leds import RGBLEDs
     from pololu_3pi_2040_robot.yellow_led import YellowLED
     import time
+    from machine import PWM
 
     button_a = ButtonA()
     button_b = ButtonB()
@@ -27,13 +28,23 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
     buzzer = Buzzer() # turns off buzzer
     rgb_leds = RGBLEDs() # turns off RGB LEDs
     rgb_leds.set_brightness(4)
-    YellowLED() # turns off the yellow LED
+
+    # Initialize a PWM on the yellow LED at 0% duty cycle, which
+    # corresponds to full brightness.  We can't initialize PWM with
+    # the LED off so we'll just have it on for a while.
+    pwm = PWM(YellowLED().pin)
+    pwm.freq(1000)
+    pwm.duty_u16(0)
 
     def del_vars():
         nonlocal display, splash, button_a, button_b, button_c, battery
-        nonlocal buzzer, rgb_leds
+        nonlocal buzzer, rgb_leds, pwm
+
+        pwm.deinit()
+        YellowLED() # turn off yellow LED and reset to an output
+
         del display, splash, button_a, button_b, button_c, battery
-        del buzzer, rgb_leds
+        del buzzer, rgb_leds, pwm
 
     def read_button():
         if button_a.is_pressed(): return "A"
@@ -89,6 +100,7 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
                     rgb_leds.set(4-i, [0, 0, 0])
                     rgb_leds.set((4+i)%6, [0, 0, 0])
             rgb_leds.show()
+
         return None
 
     def run_file(filename):
@@ -143,12 +155,7 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
 
         from pololu_3pi_2040_robot.extras.menu import Menu
         import os
-        from machine import PWM
         from math import exp
-
-        pwm = PWM(YellowLED().pin)
-        pwm.duty_u16(65535) # 100% off
-        pwm.freq(1000)
 
         start_ms = time.ticks_ms()
         options = sorted(f for f in os.listdir() if f.endswith(".py") and f != "main.py")
@@ -167,8 +174,9 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
             t = time.ticks_ms()
             elapsed_ms = time.ticks_diff(t, start_ms)
 
-            x = (elapsed_ms % 3000 - 1500) / 1500
-            b = exp(-x**2/(2*0.2**2))
+            x = ((elapsed_ms + 1500) % 3000 - 1500) / 1500
+            b = exp(-12.5*x*x)
+
             pwm.duty_u16(65535 - int(b * 65535))
 
             if not mv or time.ticks_diff(t, mv_time) > 200:
