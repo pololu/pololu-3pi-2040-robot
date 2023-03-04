@@ -1,4 +1,4 @@
-# Pololu 3pi+ 2040 Robot example code and libraries
+# Pololu 3pi+ 2040 Robot Libraries and Example Code
 
 [www.pololu.com](https://www.pololu.com/)
 
