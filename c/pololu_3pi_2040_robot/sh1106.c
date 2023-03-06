@@ -2,24 +2,14 @@
 
 // Low-level library for the SH1106 OLED display.
 
-// TODO: Use hardware SPI instead of GPIO
-
 #include <pico/stdlib.h>
+#include <hardware/spi.h>
 #include <pololu_3pi_2040_robot.h>
 
 #define SH1106_DC_PIN 0
 #define SH1106_RES_PIN 1
 #define SH1106_CLK_PIN 2
 #define SH1106_MOS_PIN 3
-
-void sh1106_init_pins(void)
-{
-  gpio_init(SH1106_RES_PIN);
-  gpio_set_dir(SH1106_RES_PIN, GPIO_OUT);
-
-  gpio_init(SH1106_CLK_PIN);
-  gpio_set_dir(SH1106_CLK_PIN, GPIO_OUT);
-}
 
 void sh1106_reset(void)
 {
@@ -31,92 +21,89 @@ void sh1106_reset(void)
 
 void sh1106_transfer_start(void)
 {
-  gpio_init(SH1106_MOS_PIN);
-  gpio_set_dir(SH1106_MOS_PIN, GPIO_OUT);
+  // This is a faster version of:
+  //   spi_set_baudrate(spi0, 10000000);
+  //   spi_set_format(spi0, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_LSB_FIRST);
+  // Frequency = 125 MHz / CPSR / (SCR + 1) = 125 MHz / 2 / (6 + 1) = 8.9 MHz
+  spi0_hw->cpsr = 2;
+  spi0_hw->cr0 = 0x607;  // SCR = 6. DSS = 0b111: 8-bit data.
 
-  gpio_init(SH1106_DC_PIN);
+  gpio_set_function(SH1106_CLK_PIN, GPIO_FUNC_SPI);
+  gpio_set_function(SH1106_MOS_PIN, GPIO_FUNC_SPI);
+  gpio_set_function(SH1106_DC_PIN, GPIO_FUNC_SIO);
   gpio_set_dir(SH1106_DC_PIN, GPIO_OUT);
 }
 
-void sh1106_transfer_end(void)
+void sh1106_transfer_end()
 {
-  gpio_deinit(SH1106_MOS_PIN);
-  gpio_deinit(SH1106_DC_PIN);
+  gpio_set_function(SH1106_DC_PIN, GPIO_FUNC_NULL);   // stop driving
+  gpio_set_function(SH1106_MOS_PIN, GPIO_FUNC_NULL);  // stop driving
+  gpio_set_function(SH1106_CLK_PIN, GPIO_FUNC_SIO);   // drive low
 }
 
-void sh1106_command_mode(void)
+void sh1106_command_mode()
 {
   gpio_put(SH1106_DC_PIN, 0);
 }
 
-void sh1106_data_mode(void)
+void sh1106_data_mode()
 {
   gpio_put(SH1106_DC_PIN, 1);
-}
-
-// Experimentally, we found that there needs to be one NOP between "str"
-// instructions writing to OLED pins or else the communication is too fast.
-// Let's use 4 to be a little extra safe.
-static void sh1106_delay(void)
-{
-  __asm__("nop\n" "nop\n" "nop\n" "nop\n");
-}
-
-// Note: We should try rewriting this to use hardware SPI.
-void sh1106_write(uint8_t d)
-{
-  for (uint8_t i = 0; i < 8; i++)
-  {
-    gpio_put(SH1106_CLK_PIN, 0);
-    sh1106_delay();
-    gpio_put(SH1106_MOS_PIN, d & 0x80);
-    sh1106_delay();
-    gpio_put(SH1106_CLK_PIN, 1);
-    sh1106_delay();
-    d <<= 1;
-  }
 }
 
 void sh1106_start_page_write(uint8_t page)
 {
   sh1106_command_mode();
-  sh1106_write(SH1106_SET_PAGE_ADDR | page);
-  sh1106_write(SH1106_SET_COLUMN_ADDR_HIGH | 0);
-  sh1106_write(SH1106_SET_COLUMN_ADDR_LOW | 2);
+  uint8_t cmd[] = {
+    SH1106_SET_PAGE_ADDR | page,
+    SH1106_SET_COLUMN_ADDR_HIGH | 0,
+    SH1106_SET_COLUMN_ADDR_LOW | 2,
+  };
+  spi_write_blocking(spi0, cmd, sizeof(cmd));
   sh1106_data_mode();
 }
 
-void sh1106_clear(void)
+void sh1106_page_write(uint8_t page, uint8_t * data)
 {
+  sh1106_start_page_write(page);
+  spi_write_blocking(spi0, data, 128);
+}
+
+void sh1106_clear()
+{
+  uint8_t empty[128] = { 0 };
   sh1106_transfer_start();
   sh1106_command_mode();
-  sh1106_write(SH1106_SET_COLUMN_ADDR_LOW | 2);
   for (uint8_t page = 0; page < 8; page++)
   {
-    sh1106_start_page_write(page);
-    for (uint8_t i = 0; i < 128; i++)
-    {
-      sh1106_write(0);
-    }
+    sh1106_page_write(page, empty);
   }
   sh1106_transfer_end();
 }
 
-void sh1106_configure_default(void)
+void sh1106_configure_default()
 {
   sh1106_transfer_start();
   sh1106_command_mode();
-  sh1106_write(SH1106_SET_SEGMENT_REMAP | 1);  // flip horizontally
-  sh1106_write(SH1106_SET_COM_SCAN_DIR | 8);   // flip vertically
-  sh1106_write(SH1106_SET_CONTRAST);
-  sh1106_write(0xFF);                // maximum brightness
-  sh1106_write(SH1106_SET_DISPLAY_ON | 1);
+  uint8_t cmd[] = {
+    SH1106_SET_SEGMENT_REMAP | 1,  // flip horizontally
+    SH1106_SET_COM_SCAN_DIR | 8,   // flip vertically
+    SH1106_SET_CONTRAST, 0xFF,     // maximum brightness
+    SH1106_SET_DISPLAY_ON | 1,
+  };
+  spi_write_blocking(spi0, cmd, sizeof(cmd));
   sh1106_transfer_end();
 }
 
-void sh1106_init(void)
+void sh1106_init()
 {
-  sh1106_init_pins();
+  spi_init(spi0, 10000000);
+
+  gpio_init(SH1106_RES_PIN);
+  gpio_set_dir(SH1106_RES_PIN, GPIO_OUT);
+
+  gpio_init(SH1106_CLK_PIN);
+  gpio_set_dir(SH1106_CLK_PIN, GPIO_OUT);
 
   // Sometimes the OLED doesn't get initialized properly and stays off,
   // or displays its pages in the incorrect positions,

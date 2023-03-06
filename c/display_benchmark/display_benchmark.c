@@ -4,11 +4,12 @@
 
 void show_bar(uint8_t page, uint8_t width)
 {
-  sh1106_start_page_write(page);
+  uint8_t data[128];
   for (uint8_t x = 0; x < 128; x++)
   {
-    sh1106_write(x < width ? 0xFE : 0x00);
+    data[x] = x < width ? 0xFE : 0x00;
   }
+  sh1106_page_write(page, data);
 }
 
 void report(uint32_t time, const char * name)
@@ -29,6 +30,12 @@ int main()
 
   while (1)
   {
+    putchar('\n');
+
+    start = time_us_32();
+    sh1106_clear();
+    report(time_us_32() - start, "Clear");
+
     start = time_us_32();
     sh1106_transfer_start();
     show_bar(0, 10);
@@ -41,8 +48,6 @@ int main()
     show_bar(7, 80);
     sh1106_transfer_end();
     report(time_us_32() - start, "Full raw update");
-
-    yellow_led(time_us_32() >> 18 & 1);
 
     sleep_ms(1000);
   }

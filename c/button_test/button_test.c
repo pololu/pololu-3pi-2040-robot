@@ -1,5 +1,6 @@
 // This example shows how to read the buttons on the Pololu 3p+ 2040 Robot and
-// print to the USB serial port.
+// simultaneously blink the yellow LED, blink the RGB LEDs, print to the USB
+// serial port, and display info on the OLED.
 
 #include <string.h>
 #include <stdio.h>
@@ -16,6 +17,7 @@ int main()
 
   while (true)
   {
+    // Blink the yellow LED.
     yellow_led(time_us_32() >> 18 & 1);
 
     // Print the button states to USB if they have changed.
@@ -31,23 +33,33 @@ int main()
       strcpy(last_report, report);
     }
 
-    // Show the button states on the OLED.
     bool a_pressed = button_a_is_pressed();
     bool b_pressed = button_b_is_pressed();
     bool c_pressed = button_c_is_pressed();
+
+    // Show the button states on the OLED.
+    uint8_t page_data[128] = { 0 };
+    if (a_pressed) { memset(page_data + 2, 0xFF, 40); }
+    if (b_pressed) { memset(page_data + 44, 0xFF, 40); }
+    if (c_pressed) { memset(page_data + 86, 0xFF, 40); }
     sh1106_transfer_start();
     for (uint8_t page = 0; page < 8; page++)
     {
-      if (page == 7) { a_pressed = b_pressed = c_pressed = true; }
-      sh1106_start_page_write(page);
-      uint8_t x = 0;
-      while (x < 2) { x++; }
-      while (x < 42) { x++; sh1106_write(a_pressed ? 0xFF : 0x00); }
-      while (x < 44) { x++; sh1106_write(0); }
-      while (x < 84) { x++; sh1106_write(b_pressed ? 0xFF : 0x00); }
-      while (x < 86) { x++; sh1106_write(0); }
-      while (x < 126) { x++; sh1106_write(c_pressed ? 0xFF : 0x00); }
+      if (page == 7)
+      {
+        memset(page_data + 2, 0xFF, 40);
+        memset(page_data + 44, 0xFF, 40);
+        memset(page_data + 86, 0xFF, 40);
+      }
+      sh1106_page_write(page, page_data);
     }
     sh1106_transfer_end();
+
+    // Show the button states on the RGB LEDs.
+    rgb_color colors[6] = { 0 };
+    if (a_pressed) { colors[0] = colors[5] = (rgb_color){ 80, 0, 0 }; }
+    if (b_pressed) { colors[1] = colors[4] = (rgb_color){ 0, 80, 0 }; }
+    if (c_pressed) { colors[2] = colors[3] = (rgb_color){ 0, 0, 80 }; }
+    rgb_leds_write(colors, 6, 2);
   }
 }

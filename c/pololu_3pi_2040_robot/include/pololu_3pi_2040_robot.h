@@ -34,14 +34,13 @@ void rgb_leds_init(void);
 #define SH1106_SET_PAGE_ADDR 0xB0
 #define SH1106_SET_COM_SCAN_DIR 0xC0
 
-void sh1106_init_pins(void);
 void sh1106_reset(void);
 void sh1106_transfer_start(void);
 void sh1106_transfer_end(void);
 void sh1106_command_mode(void);
 void sh1106_data_mode(void);
-void sh1106_write(uint8_t);
 void sh1106_start_page_write(uint8_t page);
+void sh1106_page_write(uint8_t page, uint8_t * data);
 void sh1106_clear(void);
 void sh1106_configure_default(void);
 void sh1106_init(void);
