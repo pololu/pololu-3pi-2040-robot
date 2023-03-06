@@ -76,6 +76,17 @@ a simple binary image with a `.bin` extension, a `.uf2` file that works with
 the RP2040's USB bootloader, and a `.elf` file that includes debugging
 information.
 
+## Build troubleshooting
+
+**MSYS2 users:** If CMake reports an error while generating
+`bs2_default_padded_checksummed.S`, it might be using the wrong Python
+interpreter, which causes issues with Windows/POSIX path conversions.
+Look at the output from the first CMake command and see if it found Python
+in the `/usr/bin` folder inside MSYS2.
+If so, delete your build directory and try again, and this time
+append `-DPython3_EXECUTABLE=$(which python3)` to the first CMake command.
+
+
 ## Flashing the compiled firmware
 
 Connect your 3pi+ 2040 Robot to your computer via USB and get it into BOOTSEL
