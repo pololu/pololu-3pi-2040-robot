@@ -105,15 +105,6 @@ void sh1106_init()
   gpio_init(SH1106_CLK_PIN);
   gpio_set_dir(SH1106_CLK_PIN, GPIO_OUT);
 
-  // Sometimes the OLED doesn't get initialized properly and stays off,
-  // or displays its pages in the incorrect positions,
-  // especially when plugging USB into an unpowered 3pi04a board.
-  // This delay seems to fix that, but I haven't characterized the necessary
-  // timing carefully.
-  absolute_time_t oled_ready;
-  update_us_since_boot(&oled_ready, 20000);
-  sleep_until(oled_ready);
-
   sh1106_reset();
   sh1106_clear();
   sh1106_configure_default();
