@@ -1,4 +1,4 @@
-# Pololu 3pi+ 2040 Robot example code and libraries for C
+# Pololu 3pi+ 2040 Robot Libraries and Example Code for C
 
 [www.pololu.com](https://www.pololu.com/)
 
@@ -124,12 +124,19 @@ if USB is disabled (i.e. call `pico_enable_stdio_usb` with an argument of 0).
 
 ## See also
 
-- [Pico SDK]
-- [Pico SDK documentation]
+- [Getting started with Raspberry Pi Pico] (PDF)
+- [Raspberry Pi Pico SDK documentation]
+- [Raspberry Pi Pico SDK source code]
+- [Raspberry Pi Pico SDK examples]
+- [pico-extras]
 - [RP2040 datasheet]
+- [picotool]
 
-[Pico SDK]: https://github.com/raspberrypi/pico-sdk
-[Pico SDK documentation]: https://raspberrypi.github.io/pico-sdk-doxygen/index.html
+[Getting started with Raspberry Pi Pico]: https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf
+[Raspberry Pi Pico SDK documentation]: https://www.raspberrypi.com/documentation/pico-sdk/
+[Raspberry Pi Pico SDK source code]: https://github.com/raspberrypi/pico-sdk
+[Raspberry Pi Pico SDK examples]: https://github.com/raspberrypi/pico-examples
+[pico-extras]: https://github.com/raspberrypi/pico-extras
 [RP2040 datasheet]: https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf
 [picotool]: https://github.com/raspberrypi/picotool
 [MSYS2]: https://www.msys2.org/
