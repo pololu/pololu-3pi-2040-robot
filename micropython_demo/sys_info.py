@@ -1,11 +1,11 @@
 # This program prints out some basic information about the system.
 
+from pololu_3pi_2040_robot import robot
 import sys
 import gc
 import os
 import machine
 import re
-from pololu_3pi_2040_robot import robot
 
 display = robot.Display()
 button_b = robot.ButtonB()

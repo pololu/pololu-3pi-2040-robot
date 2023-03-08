@@ -7,8 +7,8 @@
 # Press C to switch the line sensors to display calibrated or
 # uncalibrated values.
 
-import time
 from pololu_3pi_2040_robot import robot
+import time
 
 line_sensors = robot.LineSensors()
 bump_sensors = robot.BumpSensors()

@@ -3,13 +3,9 @@
 # Place the robot on the line and press A to calibrate, then press A
 # again to start it following the line.
 
-import time
-import random
-import rp2
-from machine import Pin
 from pololu_3pi_2040_robot import robot
+import time
 import _thread
-from array import *
 
 display = robot.Display()
 motors = robot.Motors()
