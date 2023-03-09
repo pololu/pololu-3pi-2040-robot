@@ -7,14 +7,14 @@
 #define RGB_DATA_PIN 3
 #define RGB_CLOCK_PIN 6
 
+static uint16_t rgb_leds_cpsr;
+static uint16_t rgb_leds_cr0;
+
 static void rgb_leds_start_frame()
 {
-  // This is a faster version of:
-  //   spi_set_baudrate(spi0, 20000000);
-  //   spi_set_format(spi0, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_LSB_FIRST);
-  // Frequency = 125 MHz / CPSR / (SCR + 1) = 125 MHz / 2 / (3 + 1) = 15.6 MHz
-  spi0_hw->cpsr = 2;
-  spi0_hw->cr0 = 0x307;  // SCR = 3. DSS = 0b111: 8-bit data.
+  // Quickly restore the correct clock frequency and format options.
+  spi0_hw->cpsr = rgb_leds_cpsr;
+  spi0_hw->cr0 = rgb_leds_cr0;
 
   gpio_set_function(RGB_CLOCK_PIN, GPIO_FUNC_SPI);
   gpio_set_function(RGB_DATA_PIN, GPIO_FUNC_SPI);
@@ -58,6 +58,8 @@ void rgb_leds_off()
 void rgb_leds_init()
 {
   spi_init(spi0, 20000000);
+  rgb_leds_cpsr = spi0_hw->cpsr;
+  rgb_leds_cr0 = spi0_hw->cr0;
 
   gpio_init(RGB_CLOCK_PIN);
   gpio_set_dir(RGB_CLOCK_PIN, GPIO_OUT);

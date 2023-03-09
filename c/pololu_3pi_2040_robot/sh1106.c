@@ -11,6 +11,9 @@
 #define SH1106_CLK_PIN 2
 #define SH1106_MOS_PIN 3
 
+static uint16_t sh1106_cpsr;
+static uint16_t sh1106_cr0;
+
 void sh1106_reset(void)
 {
   gpio_put(SH1106_RES_PIN, 0);
@@ -21,12 +24,9 @@ void sh1106_reset(void)
 
 void sh1106_transfer_start(void)
 {
-  // This is a faster version of:
-  //   spi_set_baudrate(spi0, 10000000);
-  //   spi_set_format(spi0, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_LSB_FIRST);
-  // Frequency = 125 MHz / CPSR / (SCR + 1) = 125 MHz / 2 / (6 + 1) = 8.9 MHz
-  spi0_hw->cpsr = 2;
-  spi0_hw->cr0 = 0x607;  // SCR = 6. DSS = 0b111: 8-bit data.
+  // Quickly restore the correct clock frequency and format options.
+  spi0_hw->cpsr = sh1106_cpsr;
+  spi0_hw->cr0 = sh1106_cr0;
 
   gpio_set_function(SH1106_CLK_PIN, GPIO_FUNC_SPI);
   gpio_set_function(SH1106_MOS_PIN, GPIO_FUNC_SPI);
@@ -97,7 +97,11 @@ void sh1106_configure_default()
 
 void sh1106_init()
 {
-  spi_init(spi0, 10000000);
+  // The SH1106 datasheet specifies a maximum SPI frequency of 4 MHz, but it
+  // seems to work fine up to at least 31 MHz.
+  spi_init(spi0, 20000000);
+  sh1106_cpsr = spi0_hw->cpsr;
+  sh1106_cr0 = spi0_hw->cr0;
 
   gpio_init(SH1106_RES_PIN);
   gpio_set_dir(SH1106_RES_PIN, GPIO_OUT);
