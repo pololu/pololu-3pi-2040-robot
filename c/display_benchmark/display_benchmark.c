@@ -18,7 +18,7 @@ void report(uint32_t time, const char * name)
   for (size_t i = name_length; i < 32; i++) { putchar(' '); }
   printf("%ld\n", time);
 
-  sleep_ms(1000);
+  sleep_ms(500);
   while (button_a_is_pressed());
 }
 
@@ -36,16 +36,20 @@ int main()
     start = time_us_32();
     display_fill(0);
 
-    //start = time_us_32();
-    display_text("hello :)", 0, 0, 0);
-    //display_show();
-    //report(time_us_32() - start, "8-character ASCII update");
-
-    //start = time_us_32();
-    display_text("°±²µΔΘΩθμπ…←↑→↓𝟅", 0, 16, 0);
-    display_text("Pololu 3π+ 2040", 8, 40, 0);
-    report(time_us_32() - start, "16-character unicode update");
+    start = time_us_32();
+    display_text("hi:)", 0, 0, 0);
     display_show();
+    report(time_us_32() - start, "4-character ASCII update");
+
+    start = time_us_32();
+    display_text("hello world :):)", 0, 0, 0);
+    display_show();
+    report(time_us_32() - start, "16-character ASCII update");
+
+    start = time_us_32();
+    display_text("°±²µΔΘΩθμπ…←↑→↓𝟅", 4, 24, 0);
+    display_show();
+    report(time_us_32() - start, "16-character unicode update");
     continue;
 
     start = time_us_32();

@@ -53,7 +53,6 @@ void display_fill(uint8_t color)
   }
 }
 
-// TODO: I think just take y as the argument instead of a page number.  Ignore the lower 3 bits.
 void display_text_aligned(const char * text, size_t x, size_t page, uint8_t color)
 {
   (void)color; // TODO: implement color argument
@@ -62,7 +61,7 @@ void display_text_aligned(const char * text, size_t x, size_t page, uint8_t colo
   while (1)
   {
     uint32_t c = *text++;
-    if (!c || x > 120) { break; }
+    if (c == 0 || x > 120) { break; }
     if (0x80 & c)
     {
       // Convert UTF-8 bytes to a codepoint.
@@ -103,7 +102,7 @@ void display_text(const char * text, size_t x, size_t y, uint8_t color)
 {
   if (x >= 128 || y >= 64) { return; }
 
-  if (((x | y) & 7) == 0)
+  if ((y & 7) == 0)
   {
     display_text_aligned(text, x, y >> 3, color);
   }
