@@ -53,15 +53,16 @@ void display_fill(uint8_t color)
   }
 }
 
-void display_text_aligned(const char * text, size_t x, size_t page, uint8_t color)
+void display_text_aligned(const char * text, size_t x, size_t y, uint8_t color)
 {
   (void)color; // TODO: implement color argument
-  if (page >= 7) { return; }
+  assert((y & 7) == 0);
+  if (x + 8 > 128 || y + 16 > 64) { return; }
 
   while (1)
   {
     uint32_t c = *text++;
-    if (c == 0 || x > 120) { break; }
+    if (c == 0 || x + 8 > 128) { break; }
     if (0x80 & c)
     {
       // Convert UTF-8 bytes to a codepoint.
@@ -84,7 +85,7 @@ void display_text_aligned(const char * text, size_t x, size_t page, uint8_t colo
 
     const uint32_t * glyph = find_glyph(oled_font, c);
 
-    uint8_t * b = &display_buffer[page * 128 + x];
+    uint8_t * b = &display_buffer[y * 16 + x];
     for (size_t i = 0; i < 4; i++)
     {
       uint32_t g = glyph[i];
@@ -104,7 +105,7 @@ void display_text(const char * text, size_t x, size_t y, uint8_t color)
 
   if ((y & 7) == 0)
   {
-    display_text_aligned(text, x, y >> 3, color);
+    display_text_aligned(text, x, y, color);
   }
 
   // TODO: implement slow path

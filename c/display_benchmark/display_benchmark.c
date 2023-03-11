@@ -33,7 +33,6 @@ int main()
   {
     putchar('\n');
 
-    start = time_us_32();
     display_fill(0);
 
     start = time_us_32();
