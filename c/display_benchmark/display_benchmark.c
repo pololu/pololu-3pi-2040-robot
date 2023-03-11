@@ -9,7 +9,7 @@ void show_bar(uint8_t page, uint8_t width)
   {
     data[x] = x < width ? 0xFE : 0x00;
   }
-  sh1106_page_write(page, data);
+  sh1106_write_page(page, data);
 }
 
 void report(uint32_t time, const char * name)
@@ -33,41 +33,21 @@ int main()
   {
     putchar('\n');
 
+    start = time_us_32();
     display_fill(0);
+    display_show();
+    report(time_us_32() - start, "Clear");
 
     start = time_us_32();
-    display_text("hi:)", 0, 0, 0);
-    display_show();
+    display_text("hi:)", 0, 0, DISPLAY_NOW);
     report(time_us_32() - start, "4-character ASCII update");
 
     start = time_us_32();
-    display_text("hello world :):)", 0, 0, 0);
-    display_show();
+    display_text("hello world :):)", 0, 0, DISPLAY_NOW);
     report(time_us_32() - start, "16-character ASCII update");
 
     start = time_us_32();
-    display_text("°±²µΔΘΩθμπ…←↑→↓𝟅", 4, 24, 0);
-    display_show();
+    display_text("°±²µΔΘΩθμπ…←↑→↓𝟅", 4, 24, DISPLAY_NOW);
     report(time_us_32() - start, "16-character unicode update");
-    continue;
-
-    start = time_us_32();
-    sh1106_transfer_start();
-    show_bar(0, 10);
-    show_bar(1, 20);
-    show_bar(2, 30);
-    show_bar(3, 40);
-    show_bar(4, 50);
-    show_bar(5, 60);
-    show_bar(6, 70);
-    show_bar(7, 80);
-    sh1106_transfer_end();
-    report(time_us_32() - start, "Full raw update");
-
-    start = time_us_32();
-    sh1106_clear();
-    report(time_us_32() - start, "Clear");
-
-    sleep_ms(1000);
   }
 }

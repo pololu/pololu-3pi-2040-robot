@@ -39,8 +39,8 @@ void sh1106_transfer_start(void);
 void sh1106_transfer_end(void);
 void sh1106_command_mode(void);
 void sh1106_data_mode(void);
-void sh1106_start_page_write(uint8_t page);
-void sh1106_page_write(uint8_t page, uint8_t * data);
+void sh1106_write(uint8_t page, uint8_t x, const uint8_t * data, uint32_t length);
+void sh1106_write_page(uint8_t page, uint8_t * data);
 void sh1106_clear(void);
 void sh1106_configure_default(void);
 void sh1106_init(void);
@@ -48,10 +48,13 @@ void sh1106_init(void);
 extern unsigned long oled_font[];
 
 extern uint8_t display_buffer[1024];
+#define DISPLAY_NOW 0x800
+// TODO: add flags to specify the color
 void display_init(void);
 void display_fill(uint8_t color);
-void display_text_aligned(const char * string, size_t x, size_t y, uint8_t color);
-void display_text(const char * string, size_t x, size_t y, uint8_t color);
+uint32_t display_text_aligned(const char * string, uint32_t x, uint32_t y, uint32_t flags);
+uint32_t display_text(const char * string, uint32_t x, uint32_t y, uint32_t flags);
+void display_show_rectangle(uint32_t x_left, uint32_t x_right, uint32_t y_top, uint32_t y_bottom);
 void display_show(void);
 
 extern uint16_t bump_sensor_left, bump_sensor_right, line_sensors[5];
