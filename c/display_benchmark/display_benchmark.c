@@ -19,12 +19,13 @@ void report(uint32_t time, const char * name)
   printf("%ld\n", time);
 
   sleep_ms(1000);
+  while (button_a_is_pressed());
 }
 
 int main()
 {
   stdio_init_all();
-  sh1106_init();
+  display_init();
 
   uint32_t start;
 
@@ -32,9 +33,17 @@ int main()
   {
     putchar('\n');
 
+    display_fill(0);
+
     start = time_us_32();
-    sh1106_clear();
-    report(time_us_32() - start, "Clear");
+    display_text("hello :)", 0, 0, 0);
+    display_show();
+    report(time_us_32() - start, "8-character ASCII update");
+
+    start = time_us_32();
+    display_text("°±²µΔΘΩθμπ←↑→↓𝟅𝟅", 0, 16, 0);
+    display_show();
+    report(time_us_32() - start, "16-character unicode update");
 
     start = time_us_32();
     sh1106_transfer_start();
@@ -48,6 +57,10 @@ int main()
     show_bar(7, 80);
     sh1106_transfer_end();
     report(time_us_32() - start, "Full raw update");
+
+    start = time_us_32();
+    sh1106_clear();
+    report(time_us_32() - start, "Clear");
 
     sleep_ms(1000);
   }

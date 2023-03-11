@@ -1,8 +1,10 @@
 add_library(pololu_3pi_2040_robot
   battery.c
   button.c
+  display.c
   ir_sensors.c
   motors.c
+  oled_font.c
   rgb_leds.c
   sh1106.c
   yellow_led.c

@@ -14,7 +14,7 @@
 static uint16_t sh1106_cpsr;
 static uint16_t sh1106_cr0;
 
-void sh1106_reset(void)
+void sh1106_reset()
 {
   gpio_put(SH1106_RES_PIN, 0);
   sleep_us(10);
@@ -22,7 +22,7 @@ void sh1106_reset(void)
   sleep_us(10);
 }
 
-void sh1106_transfer_start(void)
+void sh1106_transfer_start()
 {
   // Quickly restore the correct clock frequency and format options.
   spi0_hw->cpsr = sh1106_cpsr;

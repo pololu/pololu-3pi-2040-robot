@@ -45,6 +45,15 @@ void sh1106_clear(void);
 void sh1106_configure_default(void);
 void sh1106_init(void);
 
+extern unsigned long oled_font[];
+
+extern uint8_t display_buffer[1024];
+void display_init(void);
+void display_fill(uint8_t color);
+void display_text_aligned(const char * string, size_t x, size_t y, uint8_t color);
+void display_text(const char * string, size_t x, size_t y, uint8_t color);
+void display_show(void);
+
 extern uint16_t bump_sensor_left, bump_sensor_right, line_sensors[5];
 void ir_sensors_read_bump(void);
 void ir_sensors_read_line(void);
