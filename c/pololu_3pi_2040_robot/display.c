@@ -53,7 +53,8 @@ void display_fill(uint8_t color)
   }
 }
 
-void display_text_aligned(const char * text, size_t column, size_t page, uint8_t color)
+// TODO: I think just take y as the argument instead of a page number.  Ignore the lower 3 bits.
+void display_text_aligned(const char * text, size_t x, size_t page, uint8_t color)
 {
   (void)color; // TODO: implement color argument
   if (page >= 7) { return; }
@@ -61,30 +62,30 @@ void display_text_aligned(const char * text, size_t column, size_t page, uint8_t
   while (1)
   {
     uint32_t c = *text++;
-    if (!c || column >= 16) { return; }
+    if (!c || x > 120) { break; }
     if (0x80 & c)
     {
       // Convert UTF-8 bytes to a codepoint.
       uint8_t n = *text++;
       if (n == 0) { break; }
-      c = (c & 0x3F) << 6 | n;
+      c = (c & 0x3F) << 6 | (n & 0x3F);
       if (0x20 << 6 & c)
       {
         n = *text++;
         if (n == 0) { break; }
-        c = (c & 0x7FF) << 6 | n;
+        c = (c & 0x7FF) << 6 | (n & 0x3F);
       }
       if (0x10 << 12 & c)
       {
         n = *text++;
         if (n == 0) { break; }
-        c = (c & 0x1FFFF) << 6 | n;
+        c = (c & 0x7FFF) << 6 | (n & 0x3F);
       }
     }
 
     const uint32_t * glyph = find_glyph(oled_font, c);
 
-    uint8_t * b = &display_buffer[page * 128 + column * 8];
+    uint8_t * b = &display_buffer[page * 128 + x];
     for (size_t i = 0; i < 4; i++)
     {
       uint32_t g = glyph[i];
@@ -93,7 +94,7 @@ void display_text_aligned(const char * text, size_t column, size_t page, uint8_t
       b[i * 2 + 1] = g >> 16 & 0xFF;
       b[i * 2 + 128 + 1] = g >> 24 & 0xFF;
     }
-    column++;
+    x += 8;
   }
 }
 
@@ -104,7 +105,7 @@ void display_text(const char * text, size_t x, size_t y, uint8_t color)
 
   if (((x | y) & 7) == 0)
   {
-    display_text_aligned(text, x >> 3, y >> 3, color);
+    display_text_aligned(text, x, y >> 3, color);
   }
 
   // TODO: implement slow path

@@ -33,17 +33,20 @@ int main()
   {
     putchar('\n');
 
+    start = time_us_32();
     display_fill(0);
 
-    start = time_us_32();
+    //start = time_us_32();
     display_text("hello :)", 0, 0, 0);
-    display_show();
-    report(time_us_32() - start, "8-character ASCII update");
+    //display_show();
+    //report(time_us_32() - start, "8-character ASCII update");
 
-    start = time_us_32();
-    display_text("°±²µΔΘΩθμπ←↑→↓𝟅𝟅", 0, 16, 0);
-    display_show();
+    //start = time_us_32();
+    display_text("°±²µΔΘΩθμπ…←↑→↓𝟅", 0, 16, 0);
+    display_text("Pololu 3π+ 2040", 8, 40, 0);
     report(time_us_32() - start, "16-character unicode update");
+    display_show();
+    continue;
 
     start = time_us_32();
     sh1106_transfer_start();

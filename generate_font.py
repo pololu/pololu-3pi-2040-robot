@@ -12,7 +12,7 @@
 
 import os, sys
 
-extra_chars = '°±²µΔΘΩθμπ←↑→↓'
+extra_chars = '°±²µΔΘΩθμπ…←↑→↓'
 codepoints = list(range(0x20, 0x7E)) + [ord(c) for c in extra_chars]
 
 input_filename = sys.argv[1]
