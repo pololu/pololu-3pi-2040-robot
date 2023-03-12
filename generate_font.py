@@ -12,7 +12,7 @@
 
 import os, sys
 
-extra_chars = '°±²µΔΘΩθμπ…←↑→↓'
+extra_chars = '°±²µΔΘΩθμπ…←↑→↓■□▲△▶▷▼▽◀◁○●♡♥'
 codepoints = list(range(0x20, 0x7E)) + [ord(c) for c in extra_chars]
 
 input_filename = sys.argv[1]
@@ -21,6 +21,13 @@ output_filename = sys.argv[2]
 extra_chars_sorted = "".join(sorted(set(extra_chars)))
 if extra_chars_sorted != extra_chars:
     print("Warning: extra_chars should be written: " + repr(extra_chars_sorted))
+
+def description(codepoint):
+    #if chr(codepoint) == "'": return "'\\''"
+    #if chr(codepoint) == "\\": return "'\\\\'"
+    #if codepoint < 128: return "'" + chr(codepoint) + "'"
+    if codepoint < 128: return repr(chr(codepoint))
+    return "'\\u{:04x}' or {}".format(codepoint, repr(chr(codepoint)))
 
 print("Reading {}...".format(input_filename))
 input = open(input_filename, "r")
@@ -32,6 +39,20 @@ while True:
     if len(parts) != 2: continue
     codepoint = int(parts[0], 16)
     input_font[codepoint] = parts[1]
+
+for codepoint in list(codepoints):
+    if codepoint not in input_font:
+        print("Warning: Cannot find {} ({}) in font, skipping.".
+            format(description(codepoint), codepoint))
+        codepoints.remove(codepoint)
+
+header_entries = 6
+font_entries = header_entries + len(codepoints) * (1 + 4)
+glyph_width = 8
+glyph_height = 16
+glyph_entries = 4
+search_mask = 1
+while search_mask <= len(codepoints) >> 1: search_mask <<= 1
 
 def print_glyph_columns(codepoint):
     # Each byte in row_data is a 8x1 row.
@@ -54,18 +75,21 @@ output = open(output_filename, mode="w", encoding="utf-8")
 
 base_input_filename = os.path.basename(input_filename)
 print("// Automatically generated from {}".format(base_input_filename), file=output)
-print("const unsigned long oled_font[] = {", file=output)
+print("const unsigned long oled_font[{}] = {{".format(font_entries), file=output)
+print("  sizeof(oled_font),", file=output)
 print("  {},  // number of characters".format(len(codepoints)), file=output)
-print_glyph_columns(0x25A1)  # white square (missing glyph)
+print("  {},  // mask used for binary search".format(search_mask), file=output)
+print("  {},  // number of longs per glyph".format(glyph_entries), file=output)
+print("  {},  // glyph width, in pixels".format(glyph_width), file=output)
+print("  {},  // glyph height, in pixels".format(glyph_height), file=output)
 
+print("  // List of codepoints", file=output)
 for codepoint in sorted(codepoints):
-    description = repr(chr(codepoint))
-    print("  // {}".format(description), file=output)
-    print("  0x{:08x},".format(codepoint), file=output)
-    if codepoint in input_font:
-        print_glyph_columns(codepoint)
-    else:
-        print("Warning: Cannot find {} ({}) in font, skipping.".
-            format(description, codepoint))
+    print("  0x{:04x}, // {}".format(codepoint, description(codepoint)), file=output)
+
+print("  // Glyph data", file=output)
+for codepoint in sorted(codepoints):
+    print("  // {}".format(description(codepoint)), file=output)
+    print_glyph_columns(codepoint)
 
 print("};", file=output)
