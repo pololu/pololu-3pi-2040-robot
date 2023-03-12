@@ -67,21 +67,26 @@ glyph_entries = 4
 search_mask = 1
 while search_mask <= len(codepoints) >> 1: search_mask <<= 1
 
-def print_glyph_columns(codepoint):
-    # Each byte in row_data is a 8x1 row.
+def print_glyph_entries(codepoint):
+    # Convert rows to columns.
     row_data = bytearray.fromhex(input_font[codepoint])
-
-    # Convert rows to a list of 1x16 columns.  Each MSB is the bottom of a column.
-    column_data = [0] * 8
+    column_data = [0] * glyph_width
     for row in range(len(row_data)):
         for column in range(0, 8):
             if row_data[row] >> (7 - column) & 1: column_data[column] |= (1 << row)
 
-    for i in range(len(column_data)):
-        if i & 1:
-            print("  0b{:016b} << 16,".format(column_data[i]), file=output)
-        else:
-            print("  0b{:016b} |".format(column_data[i]), file=output)
+    y = 0
+    while y < glyph_height:
+        x = 0
+        while x < glyph_width:
+            entry = \
+                (column_data[x + 0] >> y & 0xFF) << 0 | \
+                (column_data[x + 1] >> y & 0xFF) << 8 | \
+                (column_data[x + 2] >> y & 0xFF) << 16 | \
+                (column_data[x + 3] >> y & 0xFF) << 24
+            print("  0x{:08x},".format(entry), file=output)
+            x += 4
+        y += 8
 
 print("Generating {}...".format(output_filename))
 output = open(output_filename, mode="w", encoding="utf-8")
@@ -103,6 +108,6 @@ for codepoint in codepoints:
 print("  // Glyph data", file=output)
 for codepoint in codepoints:
     print("  // {}".format(description(codepoint)), file=output)
-    print_glyph_columns(codepoint)
+    print_glyph_entries(codepoint)
 
 print("};", file=output)

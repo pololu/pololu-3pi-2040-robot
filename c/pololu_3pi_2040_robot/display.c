@@ -69,7 +69,8 @@ void display_fill(uint8_t color)
 
 uint32_t display_text_aligned(const char * text, uint32_t x, uint32_t y, uint32_t flags)
 {
-  assert((y & 7) == 0);
+  x &= ~3;
+  y &= ~7;
   if (x + 8 > 128 || y + 16 > 64) { return 0; }
 
   size_t left_x = x;
@@ -100,15 +101,12 @@ uint32_t display_text_aligned(const char * text, uint32_t x, uint32_t y, uint32_
 
     const uint32_t * glyph = find_glyph(oled_font, c);
 
-    uint8_t * b = &display_buffer[y * 16 + x];
-    for (size_t i = 0; i < 4; i++)
-    {
-      uint32_t g = glyph[i];
-      b[i * 2] = g & 0xFF;
-      b[i * 2 + 128] = g >> 8 & 0xFF;
-      b[i * 2 + 1] = g >> 16 & 0xFF;
-      b[i * 2 + 128 + 1] = g >> 24 & 0xFF;
-    }
+    uint32_t * b = (uint32_t *)&display_buffer[y * 16 + x];
+    b[0] = glyph[0];
+    b[1] = glyph[1];
+    b[32] = glyph[2];
+    b[33] = glyph[3];
+
     x += 8;
   }
 
@@ -124,7 +122,7 @@ uint32_t display_text(const char * text, uint32_t x, uint32_t y, uint32_t flags)
 {
   if (x >= 128 || y >= 64) { return 0; }
 
-  if ((y & 7) == 0)
+  if ((x & 3) == 0 && (y & 7) == 0)
   {
     return display_text_aligned(text, x, y, flags);
   }
@@ -135,11 +133,6 @@ uint32_t display_text(const char * text, uint32_t x, uint32_t y, uint32_t flags)
 
 void display_show_rectangle(uint32_t x_left, uint32_t x_right, uint32_t y_top, uint32_t y_bottom)
 {
-  assert(x_left <= x_right);
-  assert(x_right <= 128);
-  assert(y_top <= y_bottom);
-  assert(y_bottom <= 64);
-
   sh1106_transfer_start();
   for (unsigned int page = y_top >> 3; page < y_bottom >> 3; page++)
   {

@@ -49,5 +49,9 @@ int main()
     start = time_us_32();
     display_text("°±²µΔΘΩθμπ…←↑→𝟅", 4, 24, DISPLAY_NOW);
     report(time_us_32() - start, "16-character unicode update");
+
+    start = time_us_32();
+    display_text("°±²µΔΘΩθμπ…←↑→𝟅", 4, 24, 0);
+    report(time_us_32() - start, "16-character unicode draw");
   }
 }
