@@ -101,7 +101,7 @@ uint32_t display_text_aligned(const char * text, uint32_t x, uint32_t y, uint32_
     const uint32_t * glyph = find_glyph(oled_font, c);
 
     uint8_t * b = &display_buffer[y * 16 + x];
-    for (size_t i = 0; i < FONT_LONGS_PER_GLYPH; i++)
+    for (size_t i = 0; i < 4; i++)
     {
       uint32_t g = glyph[i];
       b[i * 2] = g & 0xFF;

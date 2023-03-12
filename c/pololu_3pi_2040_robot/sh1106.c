@@ -111,9 +111,10 @@ void sh1106_init()
   gpio_set_dir(SH1106_CLK_PIN, GPIO_OUT);
 
   // Give the OLED some time to start up.  Without this, it sometimes gets
-  // misconfigured and displays things in the wrong positions.
+  // misconfigured and displays things in the wrong positions, espcially
+  // when plugging USB into a robot that has been unpowered for a while.
   absolute_time_t oled_ready;
-  update_us_since_boot(&oled_ready, 4000);
+  update_us_since_boot(&oled_ready, 20000);
   sleep_until(oled_ready);
 
   sh1106_reset();
