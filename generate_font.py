@@ -12,15 +12,26 @@
 
 import os, sys
 
-extra_chars = '°±²µΔΘΩθμπ…←↑→↓■□▲△▶▷▼▽◀◁○●♡♥'
-codepoints = list(range(0x20, 0x7E)) + [ord(c) for c in extra_chars]
+codepoint_ranges = [
+    range(0x20, 0x7F),    # ASCII
+    range(0xA0, 0xFF),    # Latin-1
+    range(0x100, 0x17F),  # Latin Extended-A
+    '©°±²³µ»¿ΔΘΩθμπ…←↑→↓■□▲△▶▷▼▽◀◁○●☆☐☑☹☺☻♡♥♬'
+    # TODO: ⚠♭♮♯
+]
 
 input_filename = sys.argv[1]
 output_filename = sys.argv[2]
 
-extra_chars_sorted = "".join(sorted(set(extra_chars)))
-if extra_chars_sorted != extra_chars:
-    print("Warning: extra_chars should be written: " + repr(extra_chars_sorted))
+codepoints = []
+for r in codepoint_ranges:
+    if isinstance(r, str):
+        canonical = "".join(sorted(set(r)))
+        if canonical != r:
+            print("Warning: string should be written: " + repr(canonical))
+        codepoints += [ord(char) for char in r]
+    else:
+        codepoints += list(r)
 
 def description(codepoint):
     #if chr(codepoint) == "'": return "'\\''"
@@ -45,6 +56,8 @@ for codepoint in list(codepoints):
         print("Warning: Cannot find {} ({}) in font, skipping.".
             format(description(codepoint), codepoint))
         codepoints.remove(codepoint)
+
+codepoints = sorted(set(codepoints))
 
 header_entries = 6
 font_entries = header_entries + len(codepoints) * (1 + 4)
@@ -84,11 +97,11 @@ print("  {},  // glyph width, in pixels".format(glyph_width), file=output)
 print("  {},  // glyph height, in pixels".format(glyph_height), file=output)
 
 print("  // List of codepoints", file=output)
-for codepoint in sorted(codepoints):
+for codepoint in codepoints:
     print("  0x{:04x}, // {}".format(codepoint, description(codepoint)), file=output)
 
 print("  // Glyph data", file=output)
-for codepoint in sorted(codepoints):
+for codepoint in codepoints:
     print("  // {}".format(description(codepoint)), file=output)
     print_glyph_columns(codepoint)
 
