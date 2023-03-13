@@ -68,20 +68,22 @@ uint32_t display_text_aligned(const char * text, uint32_t x, uint32_t y, uint32_
 {
   x &= ~3;  // We do 32-bit writes (8x4 pixels), so x should be 4-aligned.
   y &= ~7;  // SH1106 pages are 8 pixels tall, so y should be 8-aligned.
-  if (x + 8 > 128 || y + 16 > 64) { return 0; }
 
   size_t left_x = x;
-
+  uint32_t font_width = oled_font[4];
   uint32_t font_height = oled_font[5];
+  uint32_t max_x = 128 - font_width;
 
-  while (1)
+  if (y + font_height > 64) { return 0; }
+
+  while (x <= max_x)
   {
+    // Collect the UTF-8 continuation bytes for this character, but break
+    // if we reach the end of the string.
     uint32_t c = *text++;
-    if (c == 0 || x + 8 > 128) { break; }
+    if (c == 0) { break; }
     if (0x80 & c)
     {
-      // Collect the UTF-8 continuation bytes for this character, but break
-      // if we find the end of the string.
       uint8_t n = *text++;
       if (n == 0) { break; }
       c = c << 8 | n;
@@ -110,12 +112,12 @@ uint32_t display_text_aligned(const char * text, uint32_t x, uint32_t y, uint32_
       b[33] = glyph[3];
     }
 
-    x += 8;
+    x += font_width;
   }
 
   if (flags & DISPLAY_NOW)
   {
-    display_show_rectangle(left_x, x, y, y + font_height);
+    display_show_partial(left_x, x, y, y + font_height);
   }
 
   return x;
@@ -134,7 +136,7 @@ uint32_t display_text(const char * text, uint32_t x, uint32_t y, uint32_t flags)
   return 0;
 }
 
-void display_show_rectangle(uint32_t x_left, uint32_t x_right, uint32_t y_top, uint32_t y_bottom)
+void display_show_partial(uint32_t x_left, uint32_t x_right, uint32_t y_top, uint32_t y_bottom)
 {
   sh1106_transfer_start();
   for (unsigned int page = y_top >> 3; page < y_bottom >> 3; page++)

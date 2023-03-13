@@ -54,7 +54,7 @@ void display_init(void);
 void display_fill(uint8_t color);
 uint32_t display_text_aligned(const char * string, uint32_t x, uint32_t y, uint32_t flags);
 uint32_t display_text(const char * string, uint32_t x, uint32_t y, uint32_t flags);
-void display_show_rectangle(uint32_t x_left, uint32_t x_right, uint32_t y_top, uint32_t y_bottom);
+void display_show_partial(uint32_t x_left, uint32_t x_right, uint32_t y_top, uint32_t y_bottom);
 void display_show(void);
 
 extern uint16_t bump_sensor_left, bump_sensor_right, line_sensors[5];
