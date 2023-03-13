@@ -34,11 +34,8 @@ for r in codepoint_ranges:
         codepoints += list(r)
 
 def description(codepoint):
-    #if chr(codepoint) == "'": return "'\\''"
-    #if chr(codepoint) == "\\": return "'\\\\'"
-    #if codepoint < 128: return "'" + chr(codepoint) + "'"
-    if codepoint < 128: return repr(chr(codepoint))
-    return "'\\u{:04x}' or {}".format(codepoint, repr(chr(codepoint)))
+    if codepoint <= 0x7F: return repr(chr(codepoint))
+    return "\"\\u{:04x}\" or \"{}\"".format(codepoint, chr(codepoint))
 
 print("Reading {}...".format(input_filename))
 input = open(input_filename, "r")
@@ -101,11 +98,13 @@ print("  {},  // number of longs per glyph".format(glyph_entries), file=output)
 print("  {},  // glyph width, in pixels".format(glyph_width), file=output)
 print("  {},  // glyph height, in pixels".format(glyph_height), file=output)
 
-print("  // List of codepoints", file=output)
+print("  // List of codepoints, UTF-8 encoded and then reversed", file=output)
 for codepoint in codepoints:
-    print("  0x{:04x}, // {}".format(codepoint, description(codepoint)), file=output)
+    encoded = 0
+    for b in chr(codepoint).encode(): encoded = encoded << 8 | b
+    print("  0x{:08x}, // {}".format(encoded, description(codepoint)), file=output)
 
-print("  // Glyph data", file=output)
+print("  // Glyph data for codepoints above", file=output)
 for codepoint in codepoints:
     print("  // {}".format(description(codepoint)), file=output)
     print_glyph_entries(codepoint)

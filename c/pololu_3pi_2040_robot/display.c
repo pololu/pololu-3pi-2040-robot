@@ -6,15 +6,10 @@
 
 uint8_t display_buffer[1024];
 
-// TODO: we want to get these values from the font so we can allow fonts of
-// different sizes (at least 8x16, 8x8, 5x8, 10x16).
-#define FONT_WIDTH 8
-#define FONT_HEIGHT 16
-
 #define FONT_HEADER_SIZE 6  // in units of 4 bytes
-#define WHITE_SQUARE_UTF8 0xE296A1
+#define WHITE_SQUARE_UTF8 0xE296A1  // "\u25A1"
 
-static const uint32_t * find_glyph(const uint32_t * font, uint32_t codepoint)
+static const uint32_t * find_glyph(const uint32_t * font, uint32_t code)
 {
   uint32_t glyph_count = font[1];
   uint32_t mask = font[2];
@@ -24,27 +19,26 @@ static const uint32_t * find_glyph(const uint32_t * font, uint32_t codepoint)
   {
     if ((i | mask) < glyph_count)
     {
-      uint32_t codepoint_found = font[FONT_HEADER_SIZE + (i | mask)];
-      if (codepoint_found == codepoint)
+      uint32_t code_found = font[FONT_HEADER_SIZE + (i | mask)];
+      if (code_found == code)
       {
         return &font[FONT_HEADER_SIZE + glyph_count + glyph_size * (i | mask)];
       }
-      if (codepoint_found < codepoint)
+      if (code_found < code)
       {
         i |= mask;
       }
     }
     if (mask == 0)
     {
-      // Character not found
-      if (codepoint == WHITE_SQUARE_UTF8)
+      // Character not found.
+      if (code == WHITE_SQUARE_UTF8)
       {
-        // White square (\u25A1) not found, so just return the first glyph.
+        // White square not found, so just return the first glyph.
         return &font[FONT_HEADER_SIZE + glyph_count];
       }
       else
       {
-        // Find the white square instead.
         return find_glyph(font, WHITE_SQUARE_UTF8);
       }
     }
@@ -72,11 +66,13 @@ void display_fill(uint8_t color)
 
 uint32_t display_text_aligned(const char * text, uint32_t x, uint32_t y, uint32_t flags)
 {
-  x &= ~3;
-  y &= ~7;
+  x &= ~3;  // We do 32-bit writes (8x4 pixels), so x should be 4-aligned.
+  y &= ~7;  // SH1106 pages are 8 pixels tall, so y should be 8-aligned.
   if (x + 8 > 128 || y + 16 > 64) { return 0; }
 
   size_t left_x = x;
+
+  uint32_t font_height = oled_font[5];
 
   while (1)
   {
@@ -84,21 +80,22 @@ uint32_t display_text_aligned(const char * text, uint32_t x, uint32_t y, uint32_
     if (c == 0 || x + 8 > 128) { break; }
     if (0x80 & c)
     {
-      // Convert UTF-8 bytes to a codepoint.
+      // Collect the UTF-8 continuation bytes for this character, but break
+      // if we find the end of the string.
       uint8_t n = *text++;
       if (n == 0) { break; }
-      c = (c & 0x3F) << 6 | (n & 0x3F);
-      if (0x20 << 6 & c)
+      c = c << 8 | n;
+      if (0x2000 & c)
       {
         n = *text++;
         if (n == 0) { break; }
-        c = (c & 0x7FF) << 6 | (n & 0x3F);
-      }
-      if (0x10 << 12 & c)
-      {
-        n = *text++;
-        if (n == 0) { break; }
-        c = (c & 0x7FFF) << 6 | (n & 0x3F);
+        c = c << 8 | n;
+        if (0x100000 & c)
+        {
+          n = *text++;
+          if (n == 0) { break; }
+          c = c << 8 | n;
+        }
       }
     }
 
@@ -107,15 +104,18 @@ uint32_t display_text_aligned(const char * text, uint32_t x, uint32_t y, uint32_
     uint32_t * b = (uint32_t *)&display_buffer[y * 16 + x];
     b[0] = glyph[0];
     b[1] = glyph[1];
-    b[32] = glyph[2];
-    b[33] = glyph[3];
+    if (font_height > 8)
+    {
+      b[32] = glyph[2];
+      b[33] = glyph[3];
+    }
 
     x += 8;
   }
 
   if (flags & DISPLAY_NOW)
   {
-    display_show_rectangle(left_x, x, y, y + FONT_HEIGHT);
+    display_show_rectangle(left_x, x, y, y + font_height);
   }
 
   return x;
