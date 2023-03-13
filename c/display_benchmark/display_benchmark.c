@@ -15,7 +15,7 @@ void show_bar(uint8_t page, uint8_t width)
 void report(uint32_t time, const char * name)
 {
   size_t name_length = printf("%s: ", name);
-  for (size_t i = name_length; i < 32; i++) { putchar(' '); }
+  for (size_t i = name_length; i < 40; i++) { putchar(' '); }
   printf("%ld\n", time);
 
   sleep_ms(500);
@@ -38,20 +38,46 @@ int main()
     display_show();
     report(time_us_32() - start, "Clear");
 
+    display_set_font(font_8x16);
+
+    // TODO: 8x16 full update
+
     start = time_us_32();
     display_text("hi:)", 0, 0, DISPLAY_NOW);
-    report(time_us_32() - start, "4-character ASCII update");
+    report(time_us_32() - start, "8x16: 4-char ASCII update");
 
     start = time_us_32();
     display_text("hello world :):)", 0, 0, DISPLAY_NOW);
-    report(time_us_32() - start, "16-character ASCII update");
+    report(time_us_32() - start, "8x16: 16-char ASCII update");
 
     start = time_us_32();
     display_text("°±²µΔΘΩθμπ…←↑→𝟅", 4, 24, DISPLAY_NOW);
-    report(time_us_32() - start, "16-character unicode update");
+    report(time_us_32() - start, "8x16: 16-char Unicode update");
 
     start = time_us_32();
     display_text("°±²µΔΘΩθμπ…←↑→𝟅", 4, 24, 0);
-    report(time_us_32() - start, "16-character unicode draw");
+    report(time_us_32() - start, "8x16: 16-char Unicode render");
+
+    display_set_font(font_8x8);
+    display_fill(0);
+    display_show();
+
+    // TODO: 8x8 full update
+
+    start = time_us_32();
+    display_text("hi:)", 0, 0, DISPLAY_NOW);
+    report(time_us_32() - start, "8x8: 4-char ASCII update");
+
+    start = time_us_32();
+    display_text("hello world :):)", 0, 0, DISPLAY_NOW);
+    report(time_us_32() - start, "8x8: 16-char ASCII update");
+
+    start = time_us_32();
+    display_text("°±²µΔΘΩθμπ…←↑→𝟅", 4, 8, DISPLAY_NOW);
+    report(time_us_32() - start, "8x8: 16-char Unicode update");
+
+    start = time_us_32();
+    display_text("°±²µΔΘΩθμπ…←↑→𝟅", 4, 8, 0);
+    report(time_us_32() - start, "8x8: 16-char Unicode render");
   }
 }

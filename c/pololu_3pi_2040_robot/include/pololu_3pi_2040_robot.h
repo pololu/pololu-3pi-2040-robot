@@ -45,12 +45,14 @@ void sh1106_clear(void);
 void sh1106_configure_default(void);
 void sh1106_init(void);
 
-extern const unsigned long oled_font[];
+extern const uint32_t font_8x16[];
+extern const uint32_t font_8x8[];
 
 extern uint8_t display_buffer[1024];
 #define DISPLAY_NOW 0x800
 // TODO: add flags to specify the color
 void display_init(void);
+void display_set_font(const uint32_t * font);
 void display_fill(uint8_t color);
 uint32_t display_text_aligned(const char * string, uint32_t x, uint32_t y, uint32_t flags);
 uint32_t display_text(const char * string, uint32_t x, uint32_t y, uint32_t flags);

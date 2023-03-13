@@ -6,7 +6,8 @@
 # Example usage:
 #
 # wget http://viznut.fi/unscii/unscii-16.hex
-# ./generate_font.py unscii-16.hex font.c
+# wget http://viznut.fi/unscii/unscii-8.hex
+# ./generate_font.py
 
 # Copyright (C) Pololu Corporation.  See LICENSE.txt for details.
 
@@ -20,93 +21,94 @@ codepoint_ranges = [
     # TODO: ⚠♭♮♯
 ]
 
-input_filename = sys.argv[1]
-output_filename = sys.argv[2]
-
-codepoints = []
+desired_codepoints = []
 for r in codepoint_ranges:
     if isinstance(r, str):
         canonical = "".join(sorted(set(r)))
         if canonical != r:
             print("Warning: string should be written: " + repr(canonical))
-        codepoints += [ord(char) for char in r]
+        desired_codepoints += [ord(char) for char in r]
     else:
-        codepoints += list(r)
+        desired_codepoints += list(r)
 
 def description(codepoint):
     if codepoint <= 0x7F: return repr(chr(codepoint))
     return "\"\\u{:04x}\" or \"{}\"".format(codepoint, chr(codepoint))
 
-print("Reading {}...".format(input_filename))
-input = open(input_filename, "r")
-input_font = {}
-while True:
-    line = input.readline()
-    if not line: break
-    parts = line.split(":")
-    if len(parts) != 2: continue
-    codepoint = int(parts[0], 16)
-    input_font[codepoint] = parts[1]
+def read_hex(filename, width, height):
+    print("Reading {}...".format(filename))
+    font = { 'file': filename, 'width': width, 'height': height }
+    with open(filename, "r") as input:
+        while True:
+            line = input.readline()
+            if not line: break
+            parts = line.split(":")
+            if len(parts) != 2: continue
+            codepoint = int(parts[0], 16)
+            font[codepoint] = parts[1]
+    return font
 
-for codepoint in list(codepoints):
-    if codepoint not in input_font:
-        print("Warning: Cannot find {} ({}) in font, skipping.".
-            format(description(codepoint), codepoint))
-        codepoints.remove(codepoint)
-
-codepoints = sorted(set(codepoints))
-
-header_entries = 6
-font_entries = header_entries + len(codepoints) * (1 + 4)
-glyph_width = 8
-glyph_height = 16
-glyph_entries = 4
-search_mask = 1
-while search_mask <= len(codepoints) >> 1: search_mask <<= 1
-
-def print_glyph_entries(codepoint):
+def print_glyph_entries(font, codepoint, *, file):
     # Convert rows to columns.
-    row_data = bytearray.fromhex(input_font[codepoint])
-    column_data = [0] * glyph_width
+    row_data = bytearray.fromhex(font[codepoint])
+    column_data = [0] * font['width']
     for row in range(len(row_data)):
         for column in range(0, 8):
             if row_data[row] >> (7 - column) & 1: column_data[column] |= (1 << row)
 
     y = 0
-    while y < glyph_height:
+    while y < font['height']:
         x = 0
-        while x < glyph_width:
+        while x < font['width']:
             entry = \
                 (column_data[x + 0] >> y & 0xFF) << 0 | \
                 (column_data[x + 1] >> y & 0xFF) << 8 | \
                 (column_data[x + 2] >> y & 0xFF) << 16 | \
                 (column_data[x + 3] >> y & 0xFF) << 24
-            print("  0x{:08x},".format(entry), file=output)
+            print("  0x{:08x},".format(entry), file=file)
             x += 4
         y += 8
 
-print("Generating {}...".format(output_filename))
-output = open(output_filename, mode="w", encoding="utf-8")
+def generate_c(font, filename):
+    codepoints = sorted(set(desired_codepoints))
+    for codepoint in list(codepoints):
+        if codepoint not in font:
+            print("Warning: Cannot find {} ({}) in {}, skipping.".
+                format(font['file'], description(codepoint), codepoint))
+            codepoints.remove(codepoint)
 
-base_input_filename = os.path.basename(input_filename)
-print("// Automatically generated from {}".format(base_input_filename), file=output)
-print("const unsigned long oled_font[{}] = {{".format(font_entries), file=output)
-print("  sizeof(oled_font),", file=output)
-print("  {},  // number of characters".format(len(codepoints)), file=output)
-print("  {},  // mask used for binary search".format(search_mask), file=output)
-print("  {},  // number of longs per glyph".format(glyph_entries), file=output)
-print("  {},  // glyph width, in pixels".format(glyph_width), file=output)
-print("  {},  // glyph height, in pixels".format(glyph_height), file=output)
+    header_entries = 6
+    font_entries = header_entries + len(codepoints) * (1 + 4)
+    glyph_entries = 4 if font['height'] == 16 else 2
+    search_mask = 1
+    while search_mask <= len(codepoints): search_mask <<= 1
 
-print("  // List of codepoints, UTF-8 encoded and then reversed", file=output)
-for codepoint in codepoints:
-    encoded = 0
-    for b in chr(codepoint).encode(): encoded = encoded << 8 | b
-    print("  0x{:08x}, // {}".format(encoded, description(codepoint)), file=output)
+    input_name = os.path.basename(font['file'])
+    array_name = os.path.basename(filename).split(".")[0]
 
-print("  // Glyph data for codepoints above", file=output)
-for codepoint in codepoints:
-    print("  // {}".format(description(codepoint)), file=output)
-    print_glyph_entries(codepoint)
+    print("Generating {}...".format(filename))
+    with open(filename, mode="w", encoding="utf-8") as output:
+        print("// Automatically generated from {}".format(input_name), file=output)
+        print("const unsigned long {}[{}] = {{".format(array_name, font_entries), file=output)
+        print("  sizeof({}),".format(array_name), file=output)
+        print("  {},  // number of characters".format(len(codepoints)), file=output)
+        print("  {},  // mask used for binary search".format(search_mask), file=output)
+        print("  {},  // number of longs per glyph".format(glyph_entries), file=output)
+        print("  {},  // width, in pixels".format(font['width']), file=output)
+        print("  {},  // height, in pixels".format(font['height']), file=output)
 
-print("};", file=output)
+        print("  // List of codepoints, UTF-8 encoded and then reversed", file=output)
+        for codepoint in codepoints:
+            encoded = 0
+            for b in chr(codepoint).encode(): encoded = encoded << 8 | b
+            print("  0x{:08x}, // {}".format(encoded, description(codepoint)), file=output)
+
+        print("  // Glyph data for codepoints above", file=output)
+        for codepoint in codepoints:
+            print("  // {}".format(description(codepoint)), file=output)
+            print_glyph_entries(font, codepoint, file=output)
+
+        print("};", file=output)
+
+generate_c(read_hex('unscii-16.hex', 8, 16), 'c/pololu_3pi_2040_robot/font_8x16.c')
+generate_c(read_hex('unscii-8.hex', 8, 8), 'c/pololu_3pi_2040_robot/font_8x8.c')

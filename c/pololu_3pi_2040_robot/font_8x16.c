@@ -1,11 +1,11 @@
 // Automatically generated from unscii-16.hex
-const unsigned long oled_font[1751] = {
-  sizeof(oled_font),
+const unsigned long font_8x16[1751] = {
+  sizeof(font_8x16),
   349,  // number of characters
-  256,  // mask used for binary search
+  512,  // mask used for binary search
   4,  // number of longs per glyph
-  8,  // glyph width, in pixels
-  16,  // glyph height, in pixels
+  8,  // width, in pixels
+  16,  // height, in pixels
   // List of codepoints, UTF-8 encoded and then reversed
   0x00000020, // ' '
   0x00000021, // '!'
