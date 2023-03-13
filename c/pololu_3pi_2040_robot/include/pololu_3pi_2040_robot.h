@@ -45,7 +45,7 @@ void sh1106_clear(void);
 void sh1106_configure_default(void);
 void sh1106_init(void);
 
-extern unsigned long oled_font[];
+extern const unsigned long oled_font[];
 
 extern uint8_t display_buffer[1024];
 #define DISPLAY_NOW 0x800

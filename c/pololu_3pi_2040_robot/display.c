@@ -11,20 +11,23 @@ uint8_t display_buffer[1024];
 #define FONT_WIDTH 8
 #define FONT_HEIGHT 16
 
+#define FONT_HEADER_SIZE 6  // in units of 4 bytes
+#define WHITE_SQUARE_UTF8 0xE296A1
+
 static const uint32_t * find_glyph(const uint32_t * font, uint32_t codepoint)
 {
   uint32_t glyph_count = font[1];
   uint32_t mask = font[2];
-  uint32_t longs_per_glyph = font[3];
+  uint32_t glyph_size = font[3];  // in units of 4 bytes
   uint32_t i = 0;
   while (true)
   {
     if ((i | mask) < glyph_count)
     {
-      uint32_t codepoint_found = font[6 + (i | mask)];
+      uint32_t codepoint_found = font[FONT_HEADER_SIZE + (i | mask)];
       if (codepoint_found == codepoint)
       {
-        return &font[6 + glyph_count + longs_per_glyph * (i | mask)];
+        return &font[FONT_HEADER_SIZE + glyph_count + glyph_size * (i | mask)];
       }
       if (codepoint_found < codepoint)
       {
@@ -34,15 +37,15 @@ static const uint32_t * find_glyph(const uint32_t * font, uint32_t codepoint)
     if (mask == 0)
     {
       // Character not found
-      if (codepoint == 0x25A1)
+      if (codepoint == WHITE_SQUARE_UTF8)
       {
-        // White square not found, just return the first glyph.
-        return &font[6 + glyph_count];
+        // White square (\u25A1) not found, so just return the first glyph.
+        return &font[FONT_HEADER_SIZE + glyph_count];
       }
       else
       {
         // Find the white square instead.
-        return find_glyph(font, 0x25A1);
+        return find_glyph(font, WHITE_SQUARE_UTF8);
       }
     }
     mask >>= 1;
