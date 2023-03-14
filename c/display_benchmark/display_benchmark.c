@@ -41,19 +41,19 @@ int main()
     display_set_font(font_8x16);
 
     start = time_us_32();
-    display_text("hi:)", 0, 0, DISPLAY_NOW);
+    display_text("hi:)", 0, 0, DISPLAY_NOW | 1);
     report(time_us_32() - start, "8x16: 4-char ASCII update");
 
     start = time_us_32();
-    display_text("hello world :):)", 0, 0, DISPLAY_NOW);
+    display_text("hello world :):)", 0, 0, DISPLAY_NOW | COLOR_BLACK_ON_WHITE);
     report(time_us_32() - start, "8x16: 16-char ASCII update");
 
     start = time_us_32();
-    display_text("°±²µΔΘΩθμπ…←↑→☺𝟅", 0, 24, DISPLAY_NOW);
+    display_text("°±²µΔΘΩθμπ…←↑→☺𝟅", 0, 24, DISPLAY_NOW | 1);
     report(time_us_32() - start, "8x16: 16-char Unicode update");
 
     start = time_us_32();
-    display_text("°±²µΔΘΩθμπ…←↑→☺𝟅", 0, 24, 0);
+    display_text("°±²µΔΘΩθμπ…←↑→☺𝟅", 0, 24, 1);
     report(time_us_32() - start, "8x16: 16-char Unicode render");
 
     start = time_us_32();
@@ -70,31 +70,31 @@ int main()
     display_show();
 
     start = time_us_32();
-    display_text("hi:)", 0, 0, DISPLAY_NOW);
+    display_text("hi:)", 0, 0, DISPLAY_NOW | 1);
     report(time_us_32() - start, "8x8: 4-char ASCII update");
 
     start = time_us_32();
-    display_text("hello world :):)", 0, 0, DISPLAY_NOW);
+    display_text("hello world :):)", 0, 0, DISPLAY_NOW | COLOR_BLACK_ON_WHITE);
     report(time_us_32() - start, "8x8: 16-char ASCII update");
 
     start = time_us_32();
-    display_text("°±²µΔΘΩθμπ…←↑→𝟅", 0, 8, DISPLAY_NOW);
+    display_text("°±²µΔΘΩθμπ…←↑→𝟅", 0, 8, DISPLAY_NOW | 1);
     report(time_us_32() - start, "8x8: 16-char Unicode update");
 
     start = time_us_32();
-    display_text("°±²µΔΘΩθμπ…←↑→𝟅", 0, 8, 0);
+    display_text("°±²µΔΘΩθμπ…←↑→𝟅", 0, 8, 1);
     report(time_us_32() - start, "8x8: 16-char Unicode render");
 
     start = time_us_32();
     display_fill(0);
-    display_text("Full update!    ", 0, 0, 0);
-    display_text("Short 8x8 font  ", 0, 8, 0);
-    display_text("& some unicode  ", 0, 16, 0);
-    display_text("°±²µΔΘΩθμπ…←↑→☺𝟅", 0, 24, 0);
-    display_text("Important for   ", 0, 32, 0);
-    display_text("people who want ", 0, 40, 0);
-    display_text("lots of data!   ", 0, 48, 0);
-    display_text("☺☻♡♥☺☻♡♥☺☻♡♥☺☻♡♥", 0, 56, 0);
+    display_text("Full update!    ", 0, 0, COLOR_XOR);
+    display_text("Short 8x8 font  ", 0, 8, 1);
+    display_text("& some unicode  ", 0, 16, 1);
+    display_text("°±²µΔΘΩθμπ…←↑→☺𝟅", 0, 24, COLOR_WHITE_ON_BLACK);
+    display_text("Important for   ", 0, 32, 1);
+    display_text("people who want ", 0, 40, 1);
+    display_text("lots of data!   ", 0, 48, 1);
+    display_text("☺☻♡♥☺☻♡♥☺☻♡♥☺☻♡♥", 0, 56, 1);
     display_show();
     report(time_us_32() - start, "8x8: full update");
   }

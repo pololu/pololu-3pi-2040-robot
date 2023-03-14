@@ -68,6 +68,26 @@ void display_fill(uint8_t color)
   }
 }
 
+void color_0(uint32_t * dest, uint32_t src) { *dest &= ~src; }
+void color_1(uint32_t * dest, uint32_t src) { *dest |= src; }
+void color_0_on_1(uint32_t * dest, uint32_t src) { *dest = ~src; }
+void color_1_on_0(uint32_t * dest, uint32_t src) { *dest = src; }
+void color_xor(uint32_t * dest, uint32_t src) { *dest = src; }
+
+typedef void (* color_func)(uint32_t *, uint32_t);
+color_func color_funcs[] = {
+  // The first two colors are the same as MicroPython's framebuf.text().
+  color_0,
+  color_1,
+  color_0_on_1,
+  color_1_on_0,
+  color_xor,
+  color_1,  // reserved
+  color_1,  // reserved
+  color_1,  // reserved
+};
+#define COLOR_MASK 7
+
 // We do 32-bit writes (8x4 pixels), so x should be 4-aligned.
 // SH1106 pages are 8 pixels tall, so y should be 8-aligned.
 static uint32_t display_text_aligned(const char * text, uint32_t x, uint32_t y, uint32_t flags)
@@ -76,6 +96,8 @@ static uint32_t display_text_aligned(const char * text, uint32_t x, uint32_t y, 
   uint32_t font_width = display_font[4];
   uint32_t font_height = display_font[5];
   uint32_t max_x = 128 - font_width;
+
+  color_func color = color_funcs[flags & COLOR_MASK];
 
   if (y + font_height > 64) { return 0; }
 
@@ -107,12 +129,12 @@ static uint32_t display_text_aligned(const char * text, uint32_t x, uint32_t y, 
     const uint32_t * glyph = find_glyph(display_font, c);
 
     uint32_t * b = (uint32_t *)&display_buffer[y * 16 + x];
-    b[0] = glyph[0];
-    b[1] = glyph[1];
+    color(&b[0], glyph[0]);
+    color(&b[1], glyph[1]);
     if (font_height > 8)
     {
-      b[32] = glyph[2];
-      b[33] = glyph[3];
+      color(&b[32], glyph[2]);
+      color(&b[33], glyph[3]);
     }
 
     x += font_width;

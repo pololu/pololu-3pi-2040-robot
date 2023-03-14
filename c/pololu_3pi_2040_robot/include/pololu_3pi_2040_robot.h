@@ -50,7 +50,11 @@ extern const uint32_t font_8x8[];
 
 extern uint8_t display_buffer[1024];
 #define DISPLAY_NOW 0x800
-// TODO: add flags to specify the color
+#define COLOR_BLACK 0
+#define COLOR_WHITE 1
+#define COLOR_BLACK_ON_WHITE 2
+#define COLOR_WHITE_ON_BLACK 3
+#define COLOR_XOR 4
 void display_init(void);
 void display_set_font(const uint32_t * font);
 void display_fill(uint8_t color);
