@@ -17,8 +17,8 @@ codepoint_ranges = [
     range(0x20, 0x7F),    # ASCII
     range(0xA0, 0xFF),    # Latin-1
     range(0x100, 0x17F),  # Latin Extended-A
-    '©°±²³µ»¿ΔΘΩθμπ…←↑→↓■□▲△▶▷▼▽◀◁○●☆☐☑☹☺☻♡♥♬'
-    # TODO: ⚠♭♮♯
+    '©°±²³µ»÷ΔΘΩθμπ…←↑→↓−√∞≤≥■□▲△▶▷▼▽◀◁○●☆☐☑☹☺☻♡♥♬'
+    # Note: We want these, but unscii lacks them: �∑≠⚠♭♮♯
 ]
 
 desired_codepoints = []

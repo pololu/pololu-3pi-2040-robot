@@ -7,14 +7,9 @@
 #define FONT_HEADER_SIZE 6  // in units of 4 bytes
 #define WHITE_SQUARE_UTF8 0xE296A1  // "\u25A1"
 
-// Define a checkerboard glyph that will be displayed if the user forgets to
-// call display_set_font.
-// const uint32_t null_glyph[4] = { 0xA55AA55A, 0xA55AA55A, 0xA55AA55A, 0xA55AA55A };
-const uint32_t null_glyph[4] = { 0xCCCC3333, 0xCCCC3333, 0xCCCC3333, 0xCCCC3333 };
+const uint32_t checkerboard[] = { 0xCCCC3333, 0xCCCC3333, 0xCCCC3333, 0xCCCC3333 };
 
-const uint32_t null_font[FONT_HEADER_SIZE] = { sizeof(null_font), 0, 0, 2, 8, 8 };
-
-const uint32_t * display_font = null_font;
+const uint32_t * display_font = font_8x8;
 
 uint8_t display_buffer[1024];
 
@@ -52,7 +47,7 @@ static const uint32_t * find_glyph(const uint32_t * font, uint32_t code)
     return find_glyph(font, WHITE_SQUARE_UTF8);
   }
   // White square not found, so just return a checkerboard.
-  return null_glyph;
+  return checkerboard;
 }
 
 void display_init()
@@ -73,11 +68,10 @@ void display_fill(uint8_t color)
   }
 }
 
-uint32_t display_text_aligned(const char * text, uint32_t x, uint32_t y, uint32_t flags)
+// We do 32-bit writes (8x4 pixels), so x should be 4-aligned.
+// SH1106 pages are 8 pixels tall, so y should be 8-aligned.
+static uint32_t display_text_aligned(const char * text, uint32_t x, uint32_t y, uint32_t flags)
 {
-  x &= ~3;  // We do 32-bit writes (8x4 pixels), so x should be 4-aligned.
-  y &= ~7;  // SH1106 pages are 8 pixels tall, so y should be 8-aligned.
-
   size_t left_x = x;
   uint32_t font_width = display_font[4];
   uint32_t font_height = display_font[5];
@@ -141,7 +135,7 @@ uint32_t display_text(const char * text, uint32_t x, uint32_t y, uint32_t flags)
     return display_text_aligned(text, x, y, flags);
   }
 
-  // TODO: implement slow path
+  // TODO: implement slow path so people can do unaligned text
   return 0;
 }
 

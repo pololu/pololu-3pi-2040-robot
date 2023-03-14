@@ -1,7 +1,7 @@
 // Automatically generated from unscii-8.hex
-const unsigned long font_8x8[1751] = {
+const unsigned long font_8x8[1776] = {
   sizeof(font_8x8),
-  349,  // number of characters
+  354,  // number of characters
   512,  // mask used for binary search
   2,  // number of longs per glyph
   8,  // width, in pixels
@@ -335,6 +335,11 @@ const unsigned long font_8x8[1751] = {
   0x00e28691, // "\u2191" or "↑"
   0x00e28692, // "\u2192" or "→"
   0x00e28693, // "\u2193" or "↓"
+  0x00e28892, // "\u2212" or "−"
+  0x00e2889a, // "\u221a" or "√"
+  0x00e2889e, // "\u221e" or "∞"
+  0x00e289a4, // "\u2264" or "≤"
+  0x00e289a5, // "\u2265" or "≥"
   0x00e296a0, // "\u25a0" or "■"
   0x00e296a1, // "\u25a1" or "□"
   0x00e296b2, // "\u25b2" or "▲"
@@ -1341,6 +1346,21 @@ const unsigned long font_8x8[1751] = {
   // "\u2193" or "↓"
   0xff602000,
   0x002060ff,
+  // "\u2212" or "−"
+  0x08080800,
+  0x00080808,
+  // "\u221a" or "√"
+  0x30603018,
+  0x03060c18,
+  // "\u221e" or "∞"
+  0x1c243c18,
+  0x183c2438,
+  // "\u2264" or "≤"
+  0x4e444000,
+  0x0040515b,
+  // "\u2265" or "≥"
+  0x5b514000,
+  0x0040444e,
   // "\u25a0" or "■"
   0x7e7e7e00,
   0x007e7e7e,
