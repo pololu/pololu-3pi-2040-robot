@@ -5,7 +5,7 @@
 #include <assert.h>
 
 #define FONT_HEADER_SIZE 6  // in units of 4 bytes
-#define WHITE_SQUARE_UTF8 0xE296A1  // "\u25A1"
+#define WHITE_SQUARE 0x25A1
 
 const uint32_t checkerboard[] = { 0xCCCC3333, 0xCCCC3333, 0xCCCC3333, 0xCCCC3333 };
 
@@ -40,10 +40,10 @@ static const uint32_t * find_glyph(const uint32_t * font, uint32_t code)
       }
     }
   }
-  if (code != WHITE_SQUARE_UTF8)
+  if (code != WHITE_SQUARE)
   {
     // Character not found, so try to find the white square.
-    return find_glyph(font, WHITE_SQUARE_UTF8);
+    return find_glyph(font, WHITE_SQUARE);
   }
   // White square not found, so just return a checkerboard.
   return checkerboard;
@@ -51,25 +51,24 @@ static const uint32_t * find_glyph(const uint32_t * font, uint32_t code)
 
 // Given the first byte of a multi-byte UTF8 character sequence and a
 // pointer to a pointer to the bytes following it, this function reads the
-// remainder of the bytes for the UTF8 character and returns them packed into
-// a uint32_t.  (This is different from the Unicode code point.)
-// Returns 0 ifthe end of the string is found (indicating invalid UTF-8 encoding).
+// remaining bytes for the UTF8 character and returns the code point.
+// Returns 0 if the end of the string is found (indicating invalid encoding).
 // Does not check for other possible misencodings.
 static uint32_t read_utf8_continuation(const char ** text, uint32_t c)
 {
   uint8_t n = *(*text)++;
   if (n == 0) { return 0; }
-  c = c << 8 | n;
-  if (c & 0x2000)
+  c = (c & 0x3F) << 6 | (n & 0x3F);        // c bits:             xxxx xxyy yyyy
+  if (c & 0x800)
   {
     n = *(*text)++;
     if (n == 0) { return 0; }
-    c = c << 8 | n;
-    if (c & 0x100000)
+    c = (c & 0x7FF) << 6 | (n & 0x3F);     // c bits:      x xxxx yyyy yyzz zzzz
+    if (c & 0x10000)
     {
       n = *(*text)++;
       if (n == 0) { return 0; }
-      c = c << 8 | n;
+      c = (c & 0x7FFF) << 6 | (n & 0x3F);  // c bits:  xxxyy yyyy zzzz zzqq qqqq
     }
   }
   return c;

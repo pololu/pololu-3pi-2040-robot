@@ -32,7 +32,8 @@ for r in codepoint_ranges:
         desired_codepoints += list(r)
 
 def description(codepoint):
-    if codepoint <= 0x7F: return repr(chr(codepoint))
+    if codepoint == 0x22: return '"\\""'
+    if codepoint <= 0x7F: return "\"{}\"".format(chr(codepoint))
     return "\"\\u{:04x}\" or \"{}\"".format(codepoint, chr(codepoint))
 
 def read_hex(filename, width, height):
@@ -97,11 +98,9 @@ def generate_c(font, filename):
         print("  {},  // width, in pixels".format(font['width']), file=output)
         print("  {},  // height, in pixels".format(font['height']), file=output)
 
-        print("  // List of codepoints, UTF-8 encoded and then reversed", file=output)
+        print("  // List of codepoints", file=output)
         for codepoint in codepoints:
-            encoded = 0
-            for b in chr(codepoint).encode(): encoded = encoded << 8 | b
-            print("  0x{:08x}, // {}".format(encoded, description(codepoint)), file=output)
+            print("  0x{:08x},  // {}".format(codepoint, description(codepoint)), file=output)
 
         print("  // Glyph data for codepoints above", file=output)
         for codepoint in codepoints:
