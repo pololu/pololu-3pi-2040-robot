@@ -48,6 +48,8 @@ void sh1106_init(void);
 extern const uint32_t font_8x16[];
 extern const uint32_t font_8x8[];
 
+#define DISPLAY_WIDTH 128
+#define DISPLAY_HEIGHT 64
 extern uint8_t display_buffer[1024];
 #define DISPLAY_NOW 0x800
 #define COLOR_BLACK 0
@@ -57,7 +59,9 @@ extern uint8_t display_buffer[1024];
 #define COLOR_XOR 4
 void display_init(void);
 void display_set_font(const uint32_t * font);
-void display_fill(uint8_t color);
+void display_fill(uint8_t color);  // only supports colors 0 and 1
+void display_pixel(uint32_t x, uint32_t y, uint32_t flags);
+bool display_get_pixel(uint32_t x, uint32_t y);
 uint32_t display_text(const char * string, uint32_t x, uint32_t y, uint32_t flags);  // TODO: x and y should be signed
 void display_show_partial(uint32_t x_left, uint32_t x_right, uint32_t y_top, uint32_t y_bottom);
 void display_show(void);

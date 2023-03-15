@@ -38,7 +38,17 @@ int main()
     display_show();
     report(time_us_32() - start, "Clear");
 
+    start = time_us_32();
+    for (uint8_t i = 0; i < 128; i++)
+    {
+      display_pixel(i, (i * 13) % 128, DISPLAY_NOW | 1);
+    }
+    report(time_us_32() - start, "64 pixels");
+
+    //// 8x16 text /////////////////////////////////////////////////////////////
     display_set_font(font_8x16);
+    display_fill(0);
+    display_show();
 
     start = time_us_32();
     display_text("hi:)", 0, 0, DISPLAY_NOW | 1);
@@ -58,13 +68,14 @@ int main()
 
     start = time_us_32();
     display_fill(0);
-    display_text("Full update!    ", 0, 0, 0);
-    display_text("Tall 8x16 font  ", 0, 16, 0);
-    display_text("& some unicode  ", 0, 32, 0);
-    display_text("°±²µΔΘΩθμπ…←↑→☺𝟅", 0, 48, 0);
-    display_show();
+    display_text("Full update!    ", 0, 0, 1);
+    display_text("Tall 8x16 font  ", 0, 16, 1);
+    display_text("& some unicode  ", 0, 32, 1);
+    display_text("°±²µΔΘΩθμπ…←↑→☺𝟅", 0, 48, 1);
+    display_show();  // TODO: not working?
     report(time_us_32() - start, "8x16: full update");
 
+    //// 8x8 text /////////////////////////////////////////////////////////////
     display_set_font(font_8x8);
     display_fill(0);
     display_show();
@@ -90,7 +101,7 @@ int main()
     display_text("Full update!    ", 0, 0, COLOR_XOR);
     display_text("Short 8x8 font  ", 0, 8, 1);
     display_text("& some unicode  ", 0, 16, 1);
-    display_text("°±²µΔΘΩθμπ…←↑→☺𝟅", 0, 24, COLOR_WHITE_ON_BLACK);
+    display_text("°±²µΔΘΩθμπ…←↑→☺𝟅", 0, 24, COLOR_BLACK_ON_WHITE);
     display_text("Important for   ", 0, 32, 1);
     display_text("people who want ", 0, 40, 1);
     display_text("lots of data!   ", 0, 48, 1);

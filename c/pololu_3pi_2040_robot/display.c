@@ -27,7 +27,6 @@ static const uint32_t * find_glyph(const uint32_t * font, uint32_t code)
   while (mask)
   {
     mask >>= 1;
-    // TODO: try uint32_t candidate = i | mask; since we use it in 4 places.
     if ((i | mask) < glyph_count)
     {
       uint32_t code_found = font[FONT_HEADER_SIZE + (i | mask)];
@@ -88,14 +87,33 @@ color_func color_funcs[] = {
 };
 #define COLOR_MASK 7
 
+void display_pixel(uint32_t x, uint32_t y, uint32_t flags)
+{
+  if (x >= DISPLAY_WIDTH || y >= DISPLAY_HEIGHT) { return; }
+  uint8_t page = y >> 3;
+  uint8_t mask = 1 << (y & 7);
+  uint8_t * p = &display_buffer[page * DISPLAY_WIDTH + x];
+  uint32_t sliver = *p;
+  color_funcs[flags & COLOR_MASK](&sliver, mask);
+  *p = (*p & ~mask) | (sliver & mask);
+  if (flags & DISPLAY_NOW) { display_show_partial(x, x, y, y); }
+}
+
+bool display_get_pixel(uint32_t x, uint32_t y)
+{
+  if (x >= DISPLAY_WIDTH || y >= DISPLAY_HEIGHT) { return 0; }
+  return display_buffer[(y >> 3) * DISPLAY_WIDTH + x] >> (y & 7) & 1;
+}
+
 // We do 32-bit writes (8x4 pixels), so x should be 4-aligned.
 // SH1106 pages are 8 pixels tall, so y should be 8-aligned.
-static uint32_t display_text_aligned(const char * text, uint32_t x, uint32_t y, uint32_t flags)
+static uint32_t display_text_aligned(const char * text, uint32_t x, uint32_t y,
+  uint32_t flags)
 {
   size_t left_x = x;
   uint32_t font_width = display_font[4];
   uint32_t font_height = display_font[5];
-  uint32_t max_x = 128 - font_width;
+  uint32_t max_x = DISPLAY_WIDTH - font_width;
 
   color_func color = color_funcs[flags & COLOR_MASK];
 
@@ -142,7 +160,7 @@ static uint32_t display_text_aligned(const char * text, uint32_t x, uint32_t y, 
 
   if (flags & DISPLAY_NOW)
   {
-    display_show_partial(left_x, x, y, y + font_height);
+    display_show_partial(left_x, x - 1, y, y + font_height - 1);
   }
 
   return x;
@@ -150,7 +168,7 @@ static uint32_t display_text_aligned(const char * text, uint32_t x, uint32_t y, 
 
 uint32_t display_text(const char * text, uint32_t x, uint32_t y, uint32_t flags)
 {
-  if (x >= 128 || y >= 64) { return 0; }
+  if (x >= DISPLAY_WIDTH || y >= DISPLAY_HEIGHT) { return 0; }
 
   if ((x & 3) == 0 && (y & 7) == 0)
   {
@@ -161,12 +179,16 @@ uint32_t display_text(const char * text, uint32_t x, uint32_t y, uint32_t flags)
   return 0;
 }
 
-void display_show_partial(uint32_t x_left, uint32_t x_right, uint32_t y_top, uint32_t y_bottom)
+void display_show_partial(uint32_t x_left, uint32_t x_right,
+  uint32_t y_top, uint32_t y_bottom)
 {
+  if (x_left >= DISPLAY_WIDTH || y_top >= DISPLAY_HEIGHT) { return; }
+  if (x_left > x_right || y_top > y_bottom) { return; }
   sh1106_transfer_start();
-  for (unsigned int page = y_top >> 3; page < y_bottom >> 3; page++)
+  for (unsigned int page = y_top >> 3; page <= y_bottom >> 3; page++)
   {
-    sh1106_write(page, x_left, display_buffer + page * 128 + x_left, x_right - x_left);
+    sh1106_write(page, x_left, display_buffer + page * DISPLAY_WIDTH + x_left,
+      x_right + 1 - x_left);
   }
   sh1106_transfer_end();
 }
@@ -176,7 +198,7 @@ void display_show()
   sh1106_transfer_start();
   for (unsigned int page = 0; page < 8; page++)
   {
-    sh1106_write_page(page, display_buffer + page * 128);
+    sh1106_write_page(page, display_buffer + page * DISPLAY_WIDTH);
   }
   sh1106_transfer_end();
 }
