@@ -49,6 +49,32 @@ static const uint32_t * find_glyph(const uint32_t * font, uint32_t code)
   return checkerboard;
 }
 
+// Given the first byte of a multi-byte UTF8 character sequence and a
+// pointer to a pointer to the bytes following it, this function reads the
+// remainder of the bytes for the UTF8 character and returns them packed into
+// a uint32_t.  (This is different from the Unicode code point.)
+// Returns 0 ifthe end of the string is found (indicating invalid UTF-8 encoding).
+// Does not check for other possible misencodings.
+static uint32_t read_utf8_continuation(const char ** text, uint32_t c)
+{
+  uint8_t n = *(*text)++;
+  if (n == 0) { return 0; }
+  c = c << 8 | n;
+  if (c & 0x2000)
+  {
+    n = *(*text)++;
+    if (n == 0) { return 0; }
+    c = c << 8 | n;
+    if (c & 0x100000)
+    {
+      n = *(*text)++;
+      if (n == 0) { return 0; }
+      c = c << 8 | n;
+    }
+  }
+  return c;
+}
+
 void display_init()
 {
   sh1106_init();
@@ -71,7 +97,7 @@ void color_0(uint32_t * dest, uint32_t src) { *dest &= ~src; }
 void color_1(uint32_t * dest, uint32_t src) { *dest |= src; }
 void color_0_on_1(uint32_t * dest, uint32_t src) { *dest = ~src; }
 void color_1_on_0(uint32_t * dest, uint32_t src) { *dest = src; }
-void color_xor(uint32_t * dest, uint32_t src) { *dest = src; }
+void color_xor(uint32_t * dest, uint32_t src) { *dest ^= src; }
 
 typedef void (* color_func)(uint32_t *, uint32_t);
 color_func color_funcs[] = {
@@ -121,28 +147,9 @@ static uint32_t display_text_aligned(const char * text, uint32_t x, uint32_t y,
 
   while (x <= max_x)
   {
-    // Collect the UTF-8 continuation bytes for this character, but break
-    // if we reach the end of the string.
     uint32_t c = *text++;
+    if (c & 0x80) { c = read_utf8_continuation(&text, c); }
     if (c == 0) { break; }
-    if (0x80 & c)
-    {
-      uint8_t n = *text++;
-      if (n == 0) { break; }
-      c = c << 8 | n;
-      if (0x2000 & c)
-      {
-        n = *text++;
-        if (n == 0) { break; }
-        c = c << 8 | n;
-        if (0x100000 & c)
-        {
-          n = *text++;
-          if (n == 0) { break; }
-          c = c << 8 | n;
-        }
-      }
-    }
 
     const uint32_t * glyph = find_glyph(display_font, c);
 
@@ -166,7 +173,13 @@ static uint32_t display_text_aligned(const char * text, uint32_t x, uint32_t y,
   return x;
 }
 
-uint32_t display_text(const char * text, uint32_t x, uint32_t y, uint32_t flags)
+// Assumption: the font width is 8, and gx and gy are valid coordinates.
+static bool glyph_get_pixel(const uint32_t * glyph, uint32_t gx, uint32_t gy)
+{
+  return glyph[(gy >> 3 << 1) + (gx >> 2)] >> (((gx & 3) << 3) + (gy & 7)) & 1;
+}
+
+uint32_t display_text(const char * text, int32_t x, int32_t y, uint32_t flags)
 {
   if (x >= DISPLAY_WIDTH || y >= DISPLAY_HEIGHT) { return 0; }
 
@@ -175,8 +188,48 @@ uint32_t display_text(const char * text, uint32_t x, uint32_t y, uint32_t flags)
     return display_text_aligned(text, x, y, flags);
   }
 
-  // TODO: implement slow path so people can do unaligned text
-  return 0;
+  size_t left_x = x;
+  uint32_t font_width = display_font[4];
+  uint32_t font_height = display_font[5];
+
+  uint32_t color = flags & COLOR_MASK;
+
+  while (1)
+  {
+    uint32_t c = *text++;
+    if (c & 0x80) { c = read_utf8_continuation(&text, c); }
+    if (c == 0) { break; }
+
+    const uint32_t * glyph = find_glyph(display_font, c);
+
+    for (uint32_t gx = 0; gx < font_width; gx++)
+    {
+      for (uint32_t gy = 0; gy < font_height; gy++)
+      {
+        if (glyph_get_pixel(glyph, gx, gy))
+        {
+          display_pixel(x + gx, y + gy, color);
+        }
+        else if (color == COLOR_BLACK_ON_WHITE)
+        {
+          display_pixel(x + gx, y + gy, COLOR_WHITE);
+        }
+        else if (color == COLOR_WHITE_ON_BLACK)
+        {
+          display_pixel(x + gx, y + gy, COLOR_BLACK);
+        }
+      }
+    }
+    x += font_width;
+  }
+
+  if (flags & DISPLAY_NOW)
+  {
+    display_show_partial(left_x, x - 1, y, y + font_height - 1);
+  }
+
+  if (x > DISPLAY_WIDTH) { x = DISPLAY_WIDTH; }
+  return x;
 }
 
 void display_show_partial(uint32_t x_left, uint32_t x_right,
@@ -184,6 +237,8 @@ void display_show_partial(uint32_t x_left, uint32_t x_right,
 {
   if (x_left >= DISPLAY_WIDTH || y_top >= DISPLAY_HEIGHT) { return; }
   if (x_left > x_right || y_top > y_bottom) { return; }
+  if (x_right >= DISPLAY_WIDTH) { x_right = DISPLAY_WIDTH - 1; }
+  if (y_bottom >= DISPLAY_HEIGHT) { y_bottom = DISPLAY_HEIGHT - 1; }
   sh1106_transfer_start();
   for (unsigned int page = y_top >> 3; page <= y_bottom >> 3; page++)
   {

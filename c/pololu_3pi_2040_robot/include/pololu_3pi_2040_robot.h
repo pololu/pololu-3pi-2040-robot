@@ -62,7 +62,32 @@ void display_set_font(const uint32_t * font);
 void display_fill(uint8_t color);  // only supports colors 0 and 1
 void display_pixel(uint32_t x, uint32_t y, uint32_t flags);
 bool display_get_pixel(uint32_t x, uint32_t y);
-uint32_t display_text(const char * string, uint32_t x, uint32_t y, uint32_t flags);  // TODO: x and y should be signed
+
+/// @brief Writes text to the frame buffer and optionally to the display.
+///
+/// You can specify which font to use by calling display_set_font().
+///
+/// For good performance, the text must be aligned:
+/// - @p y must be a multiple of 8.
+/// - @p x must be a multiple of 4.
+///
+/// Writing unaligned text can increase the run time of this function by about
+/// 40 to 80 microseconds per character.
+///
+/// @param string A null-terminated, UTF-8 encoded string.
+/// @param x The left-most column of the text (0 = left side of screen).
+/// @param y The top-most row of the text (0 = top side of screen).
+/// @param flags
+///   The lower byte of this argument should be 1 for white, 0 for black,
+///   or one of the other COLOR_* macros.
+///   Use bitwise OR (|) to combine this argument with DISPLAY_NOW to
+///   immediately write the text to the OLED display.
+/// @return A number between 0 and 128 that is one plus the x coordinate of the
+///   rightmost column the portion of the text that is on the screen.
+///   (If none of the text is on the screen, the return value is unspecified.)
+///   This can be used to measure text that is less wide than the screen.
+uint32_t display_text(const char * string, int32_t x, int32_t y, uint32_t flags);
+
 void display_show_partial(uint32_t x_left, uint32_t x_right, uint32_t y_top, uint32_t y_bottom);
 void display_show(void);
 
