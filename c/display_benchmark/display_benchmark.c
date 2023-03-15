@@ -104,13 +104,13 @@ int main()
     display_text("°±²µΔΘΩθμπ…←↑→☺𝟅", 0, 8, COLOR_BLACK_ON_WHITE);
     end = time_us_32();
     display_show();
-    report(end - start, "8x8: 16-char Unicode render");
+    report(end - start, "8x8: 16-char Unicode draw");
 
     start = time_us_32();
     display_text("°±²µΔΘΩθμπ…←↑→☺𝟅", 0, 20, COLOR_BLACK_ON_WHITE);
     end = time_us_32();
     display_show();
-    report(end - start, "8x8: 16-char Unicode render unaligned");
+    report(end - start, "8x8: 16-char Unicode draw unaligned");
 
     start = time_us_32();
     display_fill(0);
