@@ -94,12 +94,9 @@ bool display_get_pixel(uint32_t x, uint32_t y);
 ///
 /// You can specify which font to use by calling display_set_font().
 ///
-/// For good performance, the text must be aligned:
-/// - y must be a multiple of 8.
-/// - x must be a multiple of 4.
-///
-/// Writing unaligned text can increase the run time of this function by about
-/// 40 to 80 microseconds per character.
+/// For good performance, the text should be aligned:
+/// - y should be a multiple of 8.
+/// - x should be a multiple of 4.
 ///
 /// @param string A null-terminated, UTF-8 encoded string.
 /// @param x The left-most column of the text (0 = left side of screen).
