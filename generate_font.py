@@ -49,7 +49,7 @@ def read_hex(filename, width, height):
             font[codepoint] = parts[1]
     return font
 
-def print_glyph_entries(font, codepoint, *, file):
+def print_glyph_bytes(font, codepoint, *, file):
     # Convert rows to columns.
     row_data = bytearray.fromhex(font[codepoint])
     column_data = [0] * font['width']
@@ -61,14 +61,16 @@ def print_glyph_entries(font, codepoint, *, file):
     while y < font['height']:
         x = 0
         while x < font['width']:
-            entry = \
-                (column_data[x + 0] >> y & 0xFF) << 0 | \
-                (column_data[x + 1] >> y & 0xFF) << 8 | \
-                (column_data[x + 2] >> y & 0xFF) << 16 | \
-                (column_data[x + 3] >> y & 0xFF) << 24
-            print("  0x{:08x},".format(entry), file=file)
-            x += 4
+            entry = column_data[x] >> y & 0xFF
+            print("  0b{:08b},".format(entry), file=file)
+            x += 1
         y += 8
+
+def generate_u32(output, value, comment):
+    print("  0x{:02x}, 0x{:02x}, 0x{:02x}, 0x{:02x},  // 0x{:08x}: {}".format(
+        value & 0xFF, value >> 8 & 0xFF,
+        value >> 16 & 0xFF, value >> 24 & 0xFF, value, comment
+    ), file=output)
 
 def generate_c(font, filename):
     codepoints = sorted(set(desired_codepoints))
@@ -78,9 +80,9 @@ def generate_c(font, filename):
                 format(font['file'], description(codepoint), codepoint))
             codepoints.remove(codepoint)
 
-    header_entries = 6
-    font_entries = header_entries + len(codepoints) * (1 + 4)
-    glyph_entries = 4 if font['height'] == 16 else 2
+    header_size = 16
+    glyph_size = font['height'] // 8 * font['width']
+    font_size = header_size + len(codepoints) * (4 + glyph_size)
     search_mask = 1
     while search_mask <= len(codepoints): search_mask <<= 1
 
@@ -90,22 +92,23 @@ def generate_c(font, filename):
     print("Generating {}...".format(filename))
     with open(filename, mode="w", encoding="utf-8") as output:
         print("// Automatically generated from {}".format(input_name), file=output)
-        print("const unsigned long {}[{}] = {{".format(array_name, font_entries), file=output)
-        print("  sizeof({}),".format(array_name), file=output)
-        print("  {},  // number of characters".format(len(codepoints)), file=output)
-        print("  {},  // mask used for binary search".format(search_mask), file=output)
-        print("  {},  // number of longs per glyph".format(glyph_entries), file=output)
-        print("  {},  // width, in pixels".format(font['width']), file=output)
-        print("  {},  // height, in pixels".format(font['height']), file=output)
+        print("const unsigned char {}[{}] = {{".format(array_name, font_size), file=output)
+        generate_u32(output, font_size, "font size in bytes")
+        generate_u32(output, len(codepoints), "number of characters")
+        generate_u32(output, search_mask, "mask used for binary search")
+        print("  {},  // glyph size in bytes".format(glyph_size), file=output)
+        print("  {},  // font width in pixels".format(font['width']), file=output)
+        print("  {},  // font height in pixels".format(font['height']), file=output)
+        print("  0,  // padding", file=output)
 
         print("  // List of codepoints", file=output)
         for codepoint in codepoints:
-            print("  0x{:08x},  // {}".format(codepoint, description(codepoint)), file=output)
+            generate_u32(output, codepoint, description(codepoint))
 
         print("  // Glyph data for codepoints above", file=output)
         for codepoint in codepoints:
             print("  // {}".format(description(codepoint)), file=output)
-            print_glyph_entries(font, codepoint, file=output)
+            print_glyph_bytes(font, codepoint, file=output)
 
         print("};", file=output)
 

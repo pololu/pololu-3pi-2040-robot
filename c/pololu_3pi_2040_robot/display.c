@@ -4,35 +4,51 @@
 #include <string.h>
 #include <assert.h>
 
-#define FONT_HEADER_SIZE 6  // in units of 4 bytes
+typedef struct font_header {
+  uint32_t size;
+  uint32_t glyph_count;
+  uint32_t mask;
+  uint8_t glyph_size;
+  uint8_t font_width;
+  uint8_t font_height;
+  uint8_t _padding;
+  uint8_t data[];
+} font_header;
+
 #define WHITE_SQUARE 0x25A1
 
-const uint32_t checkerboard[] = { 0xCCCC3333, 0xCCCC3333, 0xCCCC3333, 0xCCCC3333 };
+const uint8_t checkerboard[] = {
+  0x33, 0x33, 0xCC, 0xCC,
+  0x33, 0x33, 0xCC, 0xCC,
+  0x33, 0x33, 0xCC, 0xCC,
+  0x33, 0x33, 0xCC, 0xCC,
+};
 
-const uint32_t * display_font = font_8x8;
+const font_header * display_font = (void *)font_8x8;
 
 uint8_t display_buffer[1024];
 
 void display_set_font(const uint32_t * font)
 {
-  display_font = font;
+  display_font = (void *)font;
 }
 
-static const uint32_t * find_glyph(const uint32_t * font, uint32_t code)
+static const uint8_t * find_glyph(const font_header * font, uint32_t code)
 {
-  uint32_t glyph_count = font[1];
-  uint32_t mask = font[2];
-  uint32_t glyph_size = font[3];  // in units of 4 bytes
+  uint32_t glyph_count = font->glyph_count;
+  uint32_t mask = font->mask;
+  uint32_t glyph_size = font->glyph_size;
+  const uint8_t * data = font->data;
   uint32_t i = 0;
   while (mask)
   {
     mask >>= 1;
     if ((i | mask) < glyph_count)
     {
-      uint32_t code_found = font[FONT_HEADER_SIZE + (i | mask)];
+      uint32_t code_found = ((uint32_t *)data)[i | mask];
       if (code_found == code)
       {
-        return &font[FONT_HEADER_SIZE + glyph_count + glyph_size * (i | mask)];
+        return data + 4 * glyph_count + glyph_size * (i | mask);
       }
       if (code_found < code)
       {
@@ -58,17 +74,17 @@ static uint32_t read_utf8_continuation(const char ** text, uint32_t c)
 {
   uint8_t n = *(*text)++;
   if (n == 0) { return 0; }
-  c = (c & 0x3F) << 6 | (n & 0x3F);        // c bits:             xxxx xxyy yyyy
+  c = (c & 0x3F) << 6 | (n & 0x3F);        // c bits: 0 0000 0000 xxxx xxyy yyyy
   if (c & 0x800)
   {
     n = *(*text)++;
     if (n == 0) { return 0; }
-    c = (c & 0x7FF) << 6 | (n & 0x3F);     // c bits:      x xxxx yyyy yyzz zzzz
+    c = (c & 0x7FF) << 6 | (n & 0x3F);     // c bits: 0 000x xxxx yyyy yyzz zzzz
     if (c & 0x10000)
     {
       n = *(*text)++;
       if (n == 0) { return 0; }
-      c = (c & 0x7FFF) << 6 | (n & 0x3F);  // c bits:  xxxyy yyyy zzzz zzqq qqqq
+      c = (c & 0x7FFF) << 6 | (n & 0x3F);  // c bits: x xxyy yyyy zzzz zzqq qqqq
     }
   }
   return c;
@@ -136,8 +152,8 @@ static uint32_t display_text_aligned(const char * text, uint32_t x, uint32_t y,
   uint32_t flags)
 {
   size_t left_x = x;
-  uint32_t font_width = display_font[4];
-  uint32_t font_height = display_font[5];
+  uint32_t font_width = display_font->font_width;
+  uint32_t font_height = display_font->font_height;
   uint32_t max_x = DISPLAY_WIDTH - font_width;
 
   color_func color = color_funcs[flags & COLOR_MASK];
@@ -150,7 +166,7 @@ static uint32_t display_text_aligned(const char * text, uint32_t x, uint32_t y,
     if (c & 0x80) { c = read_utf8_continuation(&text, c); }
     if (c == 0) { break; }
 
-    const uint32_t * glyph = find_glyph(display_font, c);
+    const uint32_t * glyph = (const uint32_t *)find_glyph(display_font, c);
 
     uint32_t * b = (uint32_t *)&display_buffer[y * 16 + x];
     color(&b[0], glyph[0]);
@@ -173,9 +189,9 @@ static uint32_t display_text_aligned(const char * text, uint32_t x, uint32_t y,
 }
 
 // Assumption: the font width is 8, and gx and gy are valid coordinates.
-static bool glyph_get_pixel(const uint32_t * glyph, uint32_t gx, uint32_t gy)
+static bool glyph_get_pixel(const uint8_t * glyph, uint32_t gx, uint32_t gy)
 {
-  return glyph[(gy >> 3 << 1) + (gx >> 2)] >> (((gx & 3) << 3) + (gy & 7)) & 1;
+  return glyph[(gy & ~7) + gx] >> (gy & 7) & 1;
 }
 
 uint32_t display_text(const char * text, int32_t x, int32_t y, uint32_t flags)
@@ -188,8 +204,8 @@ uint32_t display_text(const char * text, int32_t x, int32_t y, uint32_t flags)
   }
 
   size_t left_x = x;
-  uint32_t font_width = display_font[4];
-  uint32_t font_height = display_font[5];
+  uint32_t font_width = display_font->font_width;
+  uint32_t font_height = display_font->font_height;
 
   uint32_t color = flags & COLOR_MASK;
 
@@ -199,7 +215,7 @@ uint32_t display_text(const char * text, int32_t x, int32_t y, uint32_t flags)
     if (c & 0x80) { c = read_utf8_continuation(&text, c); }
     if (c == 0) { break; }
 
-    const uint32_t * glyph = find_glyph(display_font, c);
+    const uint8_t * glyph = find_glyph(display_font, c);
 
     for (uint32_t gx = 0; gx < font_width; gx++)
     {

@@ -9,12 +9,12 @@
 // A font where each character is 8 pixels wide and 16 pixels tall.
 // Refer to the comments in font_8x16.c to see which Unicode characters are
 // included and how to write them in a C string.
-extern const uint32_t font_8x16[];
+extern const uint8_t font_8x16[];
 
 // A font where each character is 8 pixels wide and 8 pixels tall.
 // Refer to the comments in font_8x8.c to see which Unicode characters are
 // included and how to write them in a C string.
-extern const uint32_t font_8x8[];
+extern const uint8_t font_8x8[];
 
 /// The width of the display, in pixels.
 #define DISPLAY_WIDTH 128
