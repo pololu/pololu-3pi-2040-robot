@@ -68,8 +68,8 @@ bool display_get_pixel(uint32_t x, uint32_t y);
 /// You can specify which font to use by calling display_set_font().
 ///
 /// For good performance, the text must be aligned:
-/// - @p y must be a multiple of 8.
-/// - @p x must be a multiple of 4.
+/// - y must be a multiple of 8.
+/// - x must be a multiple of 4.
 ///
 /// Writing unaligned text can increase the run time of this function by about
 /// 40 to 80 microseconds per character.

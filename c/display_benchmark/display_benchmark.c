@@ -27,7 +27,7 @@ int main()
   stdio_init_all();
   display_init();
 
-  uint32_t start;
+  uint32_t start, end;
 
   while (1)
   {
@@ -59,8 +59,20 @@ int main()
     report(time_us_32() - start, "8x16: 16-char ASCII update");
 
     start = time_us_32();
-    display_text("°±²µΔΘΩθμπ…←↑→☺𝟅", 0, 24, DISPLAY_NOW | 1);
+    display_text("°±²µΔΘΩθμπ…←↑→☺𝟅", 0, 16, DISPLAY_NOW | 1);
     report(time_us_32() - start, "8x16: 16-char Unicode update");
+
+    start = time_us_32();
+    display_text("°±²µΔΘΩθμπ…←↑→☺𝟅", 0, 16, COLOR_BLACK_ON_WHITE);
+    end = time_us_32();
+    display_show();
+    report(end - start, "8x16: 16-char Unicode render");
+
+    start = time_us_32();
+    display_text("°±²µΔΘΩθμπ…←↑→☺𝟅", 0, 36, COLOR_BLACK_ON_WHITE);
+    end = time_us_32();
+    display_show();
+    report(end - start, "8x16: 16-char Unicode render unaligned");
 
     start = time_us_32();
     display_fill(0);
@@ -68,16 +80,8 @@ int main()
     display_text("Tall 8x16 font  ", 0, 16, 1);
     display_text("& some unicode  ", 0, 32, 1);
     display_text("°±²µΔΘΩθμπ…←↑→☺𝟅", 0, 48, 1);
-    display_show();  // TODO: not working?
+    display_show();
     report(time_us_32() - start, "8x16: full update");
-
-    start = time_us_32();
-    display_text("°±²µΔΘΩθμπ…←↑→☺𝟅", 0, 24, 1);
-    report(time_us_32() - start, "8x16: 16-char Unicode render");
-
-    start = time_us_32();
-    display_text("°±²µΔΘΩθμπ…←↑→☺𝟅", 0, 11, 1);
-    report(time_us_32() - start, "8x16: 16-char Unicode render unaligned");
 
     //// 8x8 text /////////////////////////////////////////////////////////////
     display_set_font(font_8x8);
@@ -93,8 +97,20 @@ int main()
     report(time_us_32() - start, "8x8: 16-char ASCII update");
 
     start = time_us_32();
-    display_text("°±²µΔΘΩθμπ…←↑→𝟅", 0, 8, DISPLAY_NOW | 1);
+    display_text("°±²µΔΘΩθμπ…←↑→☺𝟅", 0, 8, DISPLAY_NOW | 1);
     report(time_us_32() - start, "8x8: 16-char Unicode update");
+
+    start = time_us_32();
+    display_text("°±²µΔΘΩθμπ…←↑→☺𝟅", 0, 8, COLOR_BLACK_ON_WHITE);
+    end = time_us_32();
+    display_show();
+    report(end - start, "8x8: 16-char Unicode render");
+
+    start = time_us_32();
+    display_text("°±²µΔΘΩθμπ…←↑→☺𝟅", 0, 20, COLOR_BLACK_ON_WHITE);
+    end = time_us_32();
+    display_show();
+    report(end - start, "8x8: 16-char Unicode render unaligned");
 
     start = time_us_32();
     display_fill(0);
@@ -108,13 +124,5 @@ int main()
     display_text("☺☻♡♥☺☻♡♥☺☻♡♥☺☻♡♥", 0, 56, 1);
     display_show();
     report(time_us_32() - start, "8x8: full update");
-
-    start = time_us_32();
-    display_text("°±²µΔΘΩθμπ…←↑→𝟅", 0, 8, 1);
-    report(time_us_32() - start, "8x8: 16-char Unicode render");
-
-    start = time_us_32();
-    display_text("°±²µΔΘΩθμπ…←↑→☺𝟅", 0, 11, 1);
-    report(time_us_32() - start, "8x8: 16-char Unicode render unaligned");
   }
 }
