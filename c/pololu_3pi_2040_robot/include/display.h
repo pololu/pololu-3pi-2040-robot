@@ -53,7 +53,7 @@ extern uint8_t display_buffer[1024];
 
 /// A flag that can be passed to certain display functions indicating that they
 /// should show their changes to the OLED before returning.
-#define DISPLAY_NOW 0x800
+#define DISPLAY_NOW 0x100
 
 /// Calls sh1106_init() to initialize the OLED and also clears the graphics
 /// buffer.
