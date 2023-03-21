@@ -258,8 +258,8 @@ void display_show_partial(uint32_t x_left, uint32_t x_right,
   sh1106_transfer_start();
   for (unsigned int page = y_top >> 3; page <= y_bottom >> 3; page++)
   {
-    sh1106_write(page, x_left, display_buffer + page * DISPLAY_WIDTH + x_left,
-      x_right + 1 - x_left);
+    sh1106_write_page(page, x_left,
+      display_buffer + page * DISPLAY_WIDTH + x_left, x_right + 1 - x_left);
   }
   sh1106_transfer_end();
 }
@@ -269,7 +269,8 @@ void display_show()
   sh1106_transfer_start();
   for (unsigned int page = 0; page < 8; page++)
   {
-    sh1106_write_page(page, display_buffer + page * DISPLAY_WIDTH);
+    sh1106_write_page(page, 0,
+      display_buffer + page * DISPLAY_WIDTH, DISPLAY_WIDTH);
   }
   sh1106_transfer_end();
 }

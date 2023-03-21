@@ -51,7 +51,7 @@ void sh1106_data_mode()
   gpio_put(SH1106_DC_PIN, 1);
 }
 
-void sh1106_write(uint8_t page, uint8_t x, const uint8_t * data, uint32_t length)
+void sh1106_write_page(uint8_t page, uint8_t x, const uint8_t * data, uint32_t length)
 {
   sh1106_command_mode();
   uint8_t column = x + 2;
@@ -65,11 +65,6 @@ void sh1106_write(uint8_t page, uint8_t x, const uint8_t * data, uint32_t length
   spi_write_blocking(spi0, data, length);
 }
 
-void sh1106_write_page(uint8_t page, uint8_t * data)
-{
-  sh1106_write(page, 0, data, 128);
-}
-
 void sh1106_clear()
 {
   uint8_t empty[128] = { 0 };
@@ -77,7 +72,7 @@ void sh1106_clear()
   sh1106_command_mode();
   for (uint8_t page = 0; page < 8; page++)
   {
-    sh1106_write_page(page, empty);
+    sh1106_write_page(page, 0, empty, 128);
   }
   sh1106_transfer_end();
 }

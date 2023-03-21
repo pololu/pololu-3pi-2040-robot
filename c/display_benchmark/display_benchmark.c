@@ -2,16 +2,6 @@
 #include <pico/stdlib.h>
 #include <pololu_3pi_2040_robot.h>
 
-void show_bar(uint8_t page, uint8_t width)
-{
-  uint8_t data[128];
-  for (uint8_t x = 0; x < 128; x++)
-  {
-    data[x] = x < width ? 0xFE : 0x00;
-  }
-  sh1106_write_page(page, data);
-}
-
 void report(uint32_t time, const char * name)
 {
   size_t name_length = printf("%s: ", name);

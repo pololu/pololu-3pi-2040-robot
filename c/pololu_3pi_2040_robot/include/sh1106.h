@@ -22,9 +22,7 @@ void sh1106_transfer_start(void);
 void sh1106_transfer_end(void);
 void sh1106_command_mode(void);
 void sh1106_data_mode(void);
-// TODO: just have one function, sh1106_write_page, which takes all the arguments
-void sh1106_write(uint8_t page, uint8_t x, const uint8_t * data, uint32_t length);
-void sh1106_write_page(uint8_t page, uint8_t * data);
+void sh1106_write_page(uint8_t page, uint8_t x, const uint8_t * data, uint32_t length);
 void sh1106_clear(void);
 void sh1106_configure_default(void);
 void sh1106_init(void);

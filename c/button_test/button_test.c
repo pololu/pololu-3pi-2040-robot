@@ -51,7 +51,7 @@ int main()
         memset(page_data + 44, 0xFF, 40);
         memset(page_data + 86, 0xFF, 40);
       }
-      sh1106_write_page(page, page_data);
+      sh1106_write_page(page, 0, page_data, 128);
     }
     sh1106_transfer_end();
 
