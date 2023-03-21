@@ -21,8 +21,8 @@ int main()
 
   while (1)
   {
-    ir_sensors_read_line();
-    ir_sensors_read_bump();
+    line_sensors_read();
+    bump_sensors_read();
 
     sh1106_transfer_start();
     for (uint8_t i = 0; i < 5; i++)

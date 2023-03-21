@@ -10,12 +10,25 @@
 #define IR_PIO pio1
 #define IR_FUNC GPIO_FUNC_PIO1
 
+#define IR_EMITTER_BUMP 23
+#define IR_EMITTER_LINE 26
+
+#define TIMEOUT 1024
+
 static uint8_t counter_sm = 0xFF;
 static uint8_t counter_offset;
 
+#define STATE_DONE 0
+#define STATE_READ_LINE 1
+#define STATE_READ_BUMP 2
+uint8_t state;
+
 uint16_t bump_sensor_left, bump_sensor_right, line_sensors[5];
 
-static void ir_sensors_read(uint16_t * output)
+// TODO: uint16_t line_sensors_cal_min[5] = { 1024, 1024, 1024, 1024, 1024 };
+// TODO: uint16_t line_sensors_cal_max[5] = { 0, 0, 0, 0, 0 };
+
+static void ir_sensors_start_read()
 {
   if (counter_sm == 0xFF)
   {
@@ -58,17 +71,19 @@ static void ir_sensors_read(uint16_t * output)
   pio_sm_clear_fifos(IR_PIO, counter_sm);
   pio_sm_restart(IR_PIO, counter_sm);
 
-  const uint16_t timeout = 1024;
-
-  // Set the counter (y) to the timeout (10 ones).
+  // Set the counter (y) to 1023 (10 ones).
   pio_sm_exec_wait_blocking(IR_PIO, counter_sm, 0xA0EB);  // mov osr, !null
   pio_sm_exec_wait_blocking(IR_PIO, counter_sm, 0x604A);  // out y, 10
 
   pio_sm_exec_wait_blocking(IR_PIO, counter_sm, 0xA0E3);  // mov osr, null
 
   pio_sm_set_enabled(IR_PIO, counter_sm, true);
+}
 
-  for (uint8_t i = 0; i < 7; i++) { output[i] = timeout; }
+// Finish a reading that was earlier initiated by ir_sensors_start_read.
+static void ir_sensors_read(uint16_t * output)
+{
+  for (uint8_t i = 0; i < 7; i++) { output[i] = TIMEOUT; }
 
   uint8_t last_state = 0xFF;
   while (1)
@@ -80,47 +95,68 @@ static void ir_sensors_read(uint16_t * output)
     uint16_t time_left = data & 0xFFFF;
     uint8_t state = data >> 16 & 0x7F;
     uint8_t new_zeros = last_state & ~state;
-    if (new_zeros & (1 << 0)) { output[0] = timeout - time_left; }
-    if (new_zeros & (1 << 1)) { output[1] = timeout - time_left; }
-    if (new_zeros & (1 << 2)) { output[2] = timeout - time_left; }
-    if (new_zeros & (1 << 3)) { output[3] = timeout - time_left; }
-    if (new_zeros & (1 << 4)) { output[4] = timeout - time_left; }
-    if (new_zeros & (1 << 5)) { output[5] = timeout - time_left; }
-    if (new_zeros & (1 << 6)) { output[6] = timeout - time_left; }
-    last_state = state;  // TODO: use &= so we detect the *first* 0 transition?
+    if (new_zeros & (1 << 0)) { output[0] = TIMEOUT - time_left; }
+    if (new_zeros & (1 << 1)) { output[1] = TIMEOUT - time_left; }
+    if (new_zeros & (1 << 2)) { output[2] = TIMEOUT - time_left; }
+    if (new_zeros & (1 << 3)) { output[3] = TIMEOUT - time_left; }
+    if (new_zeros & (1 << 4)) { output[4] = TIMEOUT - time_left; }
+    if (new_zeros & (1 << 5)) { output[5] = TIMEOUT - time_left; }
+    if (new_zeros & (1 << 6)) { output[6] = TIMEOUT - time_left; }
+    last_state = state;
   }
 
   pio_sm_set_enabled(IR_PIO, counter_sm, false);  // stop the state machine
 }
 
-void ir_sensors_read_bump()
+void line_sensors_start_read()
 {
-  // Turn on the bump sensor emitter.
-  gpio_init(23);
-  gpio_put(23, true);
-  gpio_set_dir(23, GPIO_OUT);
+  gpio_init(IR_EMITTER_BUMP);
+
+  gpio_init(IR_EMITTER_LINE);
+  gpio_put(IR_EMITTER_LINE, 1);
+  gpio_set_dir(IR_EMITTER_LINE, GPIO_OUT);
+
+  state = STATE_READ_LINE;
+  ir_sensors_start_read();
+}
+
+void line_sensors_read()
+{
+  if (state != STATE_READ_LINE) { line_sensors_start_read(); }
 
   uint16_t output[7];
   ir_sensors_read(output);
+
+  gpio_init(IR_EMITTER_LINE);
+  gpio_init(IR_EMITTER_BUMP);
+  state = STATE_DONE;
+
+  for (uint8_t i = 0; i < 5; i++) { line_sensors[i] = output[i + 2]; }
+}
+
+void bump_sensors_start_read()
+{
+  gpio_init(IR_EMITTER_LINE);
+
+  gpio_init(IR_EMITTER_BUMP);
+  gpio_put(IR_EMITTER_BUMP, 1);
+  gpio_set_dir(IR_EMITTER_BUMP, GPIO_OUT);
+
+  state = STATE_READ_BUMP;
+  ir_sensors_start_read();
+}
+
+void bump_sensors_read()
+{
+  if (state != STATE_READ_BUMP) { bump_sensors_start_read(); }
+
+  uint16_t output[7];
+  ir_sensors_read(output);
+
+  gpio_init(IR_EMITTER_LINE);
+  gpio_init(IR_EMITTER_BUMP);
+  state = STATE_DONE;
+
   bump_sensor_left = output[0];
   bump_sensor_right = output[1];
-
-  gpio_put(23, 0);
 }
-
-void ir_sensors_read_line()
-{
-  // Turn on the line sensor emitter.
-  gpio_init(26);
-  gpio_put(26, true);
-  gpio_set_dir(26, GPIO_OUT);
-
-  uint16_t output[7];
-  ir_sensors_read(output);
-  for (uint8_t i = 0; i < 5; i++) { line_sensors[i] = output[i + 2]; }
-
-  // turn off emitters
-  gpio_put(26, 0);
-}
-
-
