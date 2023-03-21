@@ -1,6 +1,6 @@
+#include <pololu_3pi_2040_robot.h>
 #include <pico/stdlib.h>
 #include <hardware/adc.h>
-#include <pololu_3pi_2040_robot.h>
 
 uint16_t battery_get_level_millivolts()
 {

@@ -65,7 +65,7 @@ void display_init(void);
 /// Sets the font to be used in text drawing operations.
 ///
 /// @param font A pointer to one of the fonts declared in this header.
-void display_set_font(const uint32_t * font);
+void display_set_font(const uint8_t * font);
 
 /// Fills the entire graphics buffer with zeroes or ones.
 /// @param color 0 or 1

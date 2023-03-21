@@ -7,6 +7,8 @@
 #include "display.h"
 #include "ir_sensors.h"
 #include "motors.h"
+#include "rgb_leds.h"
+#include "sh1106.h"
 
 /// Turns the yellow LED on if the argument is 1, or off if the argument is 0.
 void yellow_led(bool);

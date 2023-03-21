@@ -1,11 +1,10 @@
 // Copyright (C) Pololu Corporation.  See LICENSE.txt for details.
 
+#include <ir_sensors.h>
 #include <string.h>
-
 #include <pico/stdlib.h>
 #include <hardware/pio.h>
 
-#include <pololu_3pi_2040_robot.h>
 #include <qtr_sensor_counter.pio.h>
 
 #define IR_PIO pio1

@@ -1,6 +1,6 @@
 // Copyright (C) Pololu Corporation.  See LICENSE.txt for details.
 
-#include <pololu_3pi_2040_robot.h>
+#include <motors.h>
 #include <hardware/gpio.h>
 #include <hardware/pwm.h>
 

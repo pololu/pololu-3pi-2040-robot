@@ -1,8 +1,8 @@
 // Copyright (C) Pololu Corporation.  See LICENSE.txt for details.
 
+#include <rgb_leds.h>
 #include <pico/stdlib.h>
 #include <hardware/spi.h>
-#include <pololu_3pi_2040_robot.h>
 
 #define RGB_DATA_PIN 3
 #define RGB_CLOCK_PIN 6
@@ -35,7 +35,7 @@ static void rgb_leds_end_frame(size_t count)
   gpio_set_function(RGB_CLOCK_PIN, GPIO_FUNC_SIO);  // drive low
 }
 
-void rgb_leds_write(rgb_color * colors, size_t count, uint8_t brightness)
+void rgb_leds_write(rgb_color * colors, uint32_t count, uint8_t brightness)
 {
   rgb_leds_start_frame();
   uint8_t frame[4] = { 0xE0 | (brightness & 0x1F) };

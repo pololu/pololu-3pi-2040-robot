@@ -1,7 +1,7 @@
 // Copyright (C) Pololu Corporation.  See LICENSE.txt for details.
 
-#include <pico/stdlib.h>
 #include <pololu_3pi_2040_robot.h>
+#include <pico/stdlib.h>
 
 void yellow_led(bool b)
 {

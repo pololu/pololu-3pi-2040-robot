@@ -1,8 +1,9 @@
 // Copyright (C) Pololu Corporation.  See LICENSE.txt for details.
 
-#include <pololu_3pi_2040_robot.h>
+#include <display.h>
 #include <string.h>
 #include <assert.h>
+#include <sh1106.h>
 
 typedef struct font_header {
   uint32_t size;
@@ -28,7 +29,7 @@ const font_header * display_font = (void *)font_8x8;
 
 uint8_t display_buffer[1024];
 
-void display_set_font(const uint32_t * font)
+void display_set_font(const uint8_t * font)
 {
   display_font = (void *)font;
 }

@@ -2,9 +2,9 @@
 
 // Low-level library for the SH1106 OLED display.
 
+#include <sh1106.h>
 #include <pico/stdlib.h>
 #include <hardware/spi.h>
-#include <pololu_3pi_2040_robot.h>
 
 #define SH1106_DC_PIN 0
 #define SH1106_RES_PIN 1

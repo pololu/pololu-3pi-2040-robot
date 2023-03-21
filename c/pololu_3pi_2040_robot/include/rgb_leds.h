@@ -28,7 +28,7 @@ typedef struct rgb_color {
 ///   to LED B, and so on.
 /// @param count The number of colors in the array.
 /// @param brightness The global brightness, from 0 to 31.
-void rgb_leds_write(rgb_color * colors, size_t count, uint8_t brightness);
+void rgb_leds_write(rgb_color * colors, uint32_t count, uint8_t brightness);
 
 /// Turns off the first six RGB LEDs by setting them to black.
 void rgb_leds_off(void);

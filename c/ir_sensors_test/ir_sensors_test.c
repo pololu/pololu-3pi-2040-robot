@@ -3,16 +3,15 @@
 // printed to the USB virtual serial port.
 
 #include <stdio.h>
+#include <string.h>
 #include <pico/stdlib.h>
 #include <pololu_3pi_2040_robot.h>
 
 void show_bar(uint8_t page, uint8_t width)
 {
-  sh1106_start_page_write(page);
-  for (uint8_t x = 0; x < 128; x++)
-  {
-    sh1106_write(x < width ? 0xFE : 0x00);
-  }
+  uint8_t data[128] = { 0 };
+  memset(data, 0xFE, width);
+  sh1106_write(page, 0, data, 128);
 }
 
 int main()
