@@ -6,14 +6,15 @@
 
 #pragma once
 
-// A font where each character is 8 pixels wide and 16 pixels tall.
-// Refer to the comments in font_8x16.c to see which Unicode characters are
-// included and how to write them in a C string.
+#include <stdbool.h>
+#include <stdint.h>
+
+/// A font where each character is 8 pixels wide and 16 pixels tall,
+/// defined in font_8x16.c.
 extern const uint8_t font_8x16[];
 
-// A font where each character is 8 pixels wide and 8 pixels tall.
-// Refer to the comments in font_8x8.c to see which Unicode characters are
-// included and how to write them in a C string.
+/// A font where each character is 8 pixels wide and 8 pixels tall,
+/// defined in font_8x8.c.
 extern const uint8_t font_8x8[];
 
 /// The width of the display, in pixels.
@@ -63,8 +64,7 @@ void display_init(void);
 
 /// Sets the font to be used in text drawing operations.
 ///
-/// @param A pointer to one of the fonts declared in this header, or a font
-/// data structure with a compatible format.
+/// @param font A pointer to one of the fonts declared in this header.
 void display_set_font(const uint32_t * font);
 
 /// Fills the entire graphics buffer with zeroes or ones.
@@ -92,6 +92,7 @@ bool display_get_pixel(uint32_t x, uint32_t y);
 
 /// @brief Writes text to the frame buffer and optionally to the display.
 ///
+/// The default font is font_8x8 (8 pixels wide, 8 pixels tall).
 /// You can specify which font to use by calling display_set_font().
 ///
 /// For good performance, the text should be aligned:
