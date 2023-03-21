@@ -1,5 +1,10 @@
 // Copyright (C) Pololu Corporation.  See LICENSE.txt for details.
 
+/// @file pololu_3pi_2040_robot.h
+///
+/// This is the main header file for the C library for the
+/// Pololu 3pi+ 2040 Robot.
+
 #pragma once
 
 #include <stdbool.h>
