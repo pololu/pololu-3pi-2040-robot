@@ -11,7 +11,7 @@ void show_bar(uint8_t page, uint8_t width)
 {
   uint8_t data[128] = { 0 };
   memset(data, 0xFE, width);
-  sh1106_write(page, 0, data, 128);
+  sh1106_write_page(page, 0, data, 128);
 }
 
 int main()
