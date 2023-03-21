@@ -47,11 +47,8 @@ static void ir_sensors_read(uint16_t * output)
 
   sleep_us(10);
 
-  // TODO: run the state machine at 25 MHz with a higher timeout for more resolution?
-
   pio_sm_config cfg = qtr_sensor_counter_program_get_default_config(counter_offset);
-  //sm_config_set_clkdiv_int_frac(&cfg, 15, 160);   // 125/(15+160/256) = 8 MHz
-  sm_config_set_clkdiv(&cfg, 25);   // 125/25 = 5 MHz
+  sm_config_set_clkdiv_int_frac(&cfg, 15, 160);   // 125/(15+160/256) = 8 MHz
   sm_config_set_in_pins(&cfg, 16);
   sm_config_set_out_pins(&cfg, 16, 7);
   sm_config_set_fifo_join(&cfg, PIO_FIFO_JOIN_RX);
@@ -61,7 +58,7 @@ static void ir_sensors_read(uint16_t * output)
   pio_sm_clear_fifos(IR_PIO, counter_sm);
   pio_sm_restart(IR_PIO, counter_sm);
 
-  const uint16_t timeout = 1023;
+  const uint16_t timeout = 1024;
 
   // Set the counter (y) to the timeout (10 ones).
   pio_sm_exec_wait_blocking(IR_PIO, counter_sm, 0xA0EB);  // mov osr, !null
