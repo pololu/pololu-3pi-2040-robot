@@ -23,7 +23,9 @@ static uint8_t counter_offset;
 #define STATE_READ_BUMP 2
 uint8_t state;
 
-uint16_t bump_sensor_left, bump_sensor_right;
+uint16_t bump_sensors[2];
+uint16_t bump_sensors_threshold[2] = { 1024, 1024 };
+bool bump_sensors_pressed[2];
 
 uint16_t line_sensors[5];
 uint16_t line_sensors_cal_min[5] = { 1024, 1024, 1024, 1024, 1024 };
@@ -198,6 +200,30 @@ void line_sensors_read_calibrated()
   }
 }
 
+void bump_sensors_reset_calibration()
+{
+  bump_sensors_threshold[0] = 1024;
+  bump_sensors_threshold[1] = 1024;
+}
+
+void bump_sensors_calibrate()
+{
+  const unsigned int count = 50;
+  uint32_t sum[2] = { 0, 0 };
+  for (unsigned int trial = 0; trial < count; trial++)
+  {
+    bump_sensors_read();
+    sum[0] += bump_sensors[0];
+    sum[1] += bump_sensors[1];
+  }
+
+  // Set the threshold to 150% of the average reading.
+  for (uint8_t i = 0; i < 2; i++)
+  {
+    bump_sensors_threshold[i] = (sum[i] * 150) / (count * 100);
+  }
+}
+
 void bump_sensors_start_read()
 {
   gpio_init(IR_EMITTER_LINE);
@@ -223,6 +249,9 @@ void bump_sensors_read()
   gpio_init(IR_EMITTER_BUMP);
   state = STATE_DONE;
 
-  bump_sensor_left = output[0];
-  bump_sensor_right = output[1];
+  for (uint8_t i = 0; i < 2; i ++)
+  {
+    bump_sensors[i] = output[1 - i];
+    bump_sensors_pressed[i] = bump_sensors[i] > bump_sensors_threshold[i];
+  }
 }
