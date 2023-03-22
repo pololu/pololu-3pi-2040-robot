@@ -132,7 +132,7 @@ void line_sensors_read()
   gpio_init(IR_EMITTER_BUMP);
   state = STATE_DONE;
 
-  for (uint8_t i = 0; i < 5; i++) { line_sensors[i] = output[i + 2]; }
+  for (uint8_t i = 0; i < 5; i++) { line_sensors[4 - i] = output[i + 2]; }
 }
 
 void bump_sensors_start_read()
