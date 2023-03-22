@@ -23,10 +23,12 @@ static uint8_t counter_offset;
 #define STATE_READ_BUMP 2
 uint8_t state;
 
-uint16_t bump_sensor_left, bump_sensor_right, line_sensors[5];
+uint16_t bump_sensor_left, bump_sensor_right;
 
-// TODO: uint16_t line_sensors_cal_min[5] = { 1024, 1024, 1024, 1024, 1024 };
-// TODO: uint16_t line_sensors_cal_max[5] = { 0, 0, 0, 0, 0 };
+uint16_t line_sensors[5];
+uint16_t line_sensors_cal_min[5] = { 1024, 1024, 1024, 1024, 1024 };
+uint16_t line_sensors_cal_max[5] = { 0, 0, 0, 0, 0 };
+uint16_t line_sensors_calibrated[5];
 
 static void ir_sensors_start_read()
 {
@@ -109,6 +111,44 @@ static void ir_sensors_read(uint16_t * output)
   pio_sm_set_enabled(IR_PIO, counter_sm, false);  // stop the state machine
 }
 
+void line_sensors_reset_calibration()
+{
+  for (unsigned int i = 0; i < 5; i++)
+  {
+    line_sensors_cal_min[i] = 1024;
+    line_sensors_cal_max[i] = 0;
+  }
+}
+
+void line_sensors_calibrate()
+{
+  uint16_t tmp_min[5] = { 1024, 1024, 1024, 1024, 1024 };
+  uint16_t tmp_max[5] = { 0, 0, 0, 0, };
+
+  for (unsigned int trial = 0; trial < 10; trial++)
+  {
+    line_sensors_read();
+    for (unsigned int i = 0; i < 5; i++)
+    {
+      if (line_sensors[i] < tmp_min[i]) { tmp_min[i] = line_sensors[i]; }
+      if (line_sensors[i] > tmp_max[i]) { tmp_max[i] = line_sensors[i]; }
+    }
+  }
+
+  // Update the calibration range if all trials indicate it is too narrow.
+  for (unsigned int i = 0; i < 5; i++)
+  {
+    if (tmp_min[i] > line_sensors_cal_max[i])
+    {
+      line_sensors_cal_max[i] = tmp_min[i];
+    }
+    if (tmp_max[i] < line_sensors_cal_min[i])
+    {
+      line_sensors_cal_min[i] = tmp_max[i];
+    }
+  }
+}
+
 void line_sensors_start_read()
 {
   gpio_init(IR_EMITTER_BUMP);
@@ -133,6 +173,29 @@ void line_sensors_read()
   state = STATE_DONE;
 
   for (uint8_t i = 0; i < 5; i++) { line_sensors[4 - i] = output[i + 2]; }
+}
+
+void line_sensors_read_calibrated()
+{
+  line_sensors_read();
+
+  for (uint8_t i = 0; i < 5; i++)
+  {
+    if (line_sensors_cal_min[i] >= line_sensors_cal_max[i] ||
+      line_sensors[i] < line_sensors_cal_min[i])
+    {
+      line_sensors_calibrated[i] = 0;
+    }
+    else if (line_sensors[i] > line_sensors_cal_max[i])
+    {
+      line_sensors_calibrated[i] = 1000;
+    }
+    else
+    {
+      line_sensors_calibrated[i] = (line_sensors[i] - line_sensors_cal_min[i])
+        * 1000 / (line_sensors_cal_max[i] - line_sensors_cal_min[i]);
+    }
+  }
 }
 
 void bump_sensors_start_read()

@@ -17,9 +17,28 @@ extern uint16_t bump_sensor_left;
 /// The latest reading from the right bump sensor.  See ir_sensors_read_bump().
 extern uint16_t bump_sensor_right;
 
-/// The latest readings from the down-facing line sensors.
+/// The latest raw readings from the down-facing line sensors.
 /// See ir_sensors_read_line().
 extern uint16_t line_sensors[5];
+
+/// Minimum sensor values detected during line sensor calibration.
+/// Raw readings at this level or below are mapped to 0.
+extern uint16_t line_sensors_cal_min[5];
+
+/// Maximum sensor values detected during line sensor calibration.
+/// Raw readings at this level or above are mapped to 1000.
+extern uint16_t line_sensors_cal_max[5];
+
+/// The latest calibrated readings from the down-facing line sensors.
+/// See ir_sensors_read_line_calibrated().
+extern uint16_t line_sensors_calibrated[5];
+
+/// Resets the calibration to its initial state.
+/// In this state, all the calibrated readings are 0.
+void line_sensors_reset_calibration(void);
+
+/// Reads the line sensors 10 times to update the calibration.
+void line_sensors_calibrate(void);
 
 /// Starts a reading of the down-facing line sensors on the robot.
 ///
@@ -37,6 +56,13 @@ void line_sensors_start_read(void);
 /// The readings are stored in the line_sensors array.
 /// A higher reading indicates less light was reflected.
 void line_sensors_read(void);
+
+/// Reads the down-facing line sensors on the robot and calculates calibrated
+/// readings for them.
+///
+/// This is like line_sensors_read() but it additionally stores calibrated
+/// readings in line_sensors_calibrated.
+void line_sensors_read_calibrated(void);
 
 /// Starts a reading of the bump sensors on the front of the robot.
 ///
