@@ -9,57 +9,57 @@
 
 char last_report[64];
 
+button button_a;
+button button_b;
+button button_c;
+
+uint32_t cursor_x;
+
+void oled_print(const char * str)
+{
+  display_set_font(font_8x16);
+  cursor_x = display_text(str, cursor_x, 48, COLOR_WHITE_ON_BLACK | DISPLAY_NOW);
+  if (cursor_x >= DISPLAY_WIDTH)
+  {
+    // TODO: display_fill_rect(0, 48, DISPLAY_WIDTH, 8, COLOR_BLACK | DISPLAY_NOW);
+    memset(display_buffer + 6 * DISPLAY_WIDTH, 0, 2 * DISPLAY_WIDTH);
+    display_show();
+    cursor_x = 0;
+  }
+}
+
 int main()
 {
   stdio_init_all();
-  rgb_leds_init();
-  sh1106_init();
+  display_init();
+
+  button_a_init(&button_a);
+  button_b_init(&button_b);
+  button_c_init(&button_c);
+
+  button_a.debounce_us = 500000;
+
+  display_text("A:", 0, 0, 1);
+  display_text("B:", 0, 8, 1);
+  display_text("C:", 0, 16, 1);
+
+  display_text("Debounced output", 0, 28, 1);
+  display_text("with A at 500ms:", 0, 36, 1);
+  display_show();
 
   while (true)
   {
-    // Blink the yellow LED.
-    yellow_led(time_us_32() >> 18 & 1);
-
-    // Print the button states to USB if they have changed.
-    char report[64];
-    sprintf(report, "%c%c%c",
-      button_a_is_pressed() ? 'A' : '-',
-      button_b_is_pressed() ? 'B' : '-',
-      button_c_is_pressed() ? 'C' : '-'
-    );
-    if (strcmp(last_report, report))
-    {
-      printf("%s\n", report);
-      strcpy(last_report, report);
-    }
-
     bool a_pressed = button_a_is_pressed();
     bool b_pressed = button_b_is_pressed();
     bool c_pressed = button_c_is_pressed();
 
     // Show the button states on the OLED.
-    uint8_t page_data[128] = { 0 };
-    if (a_pressed) { memset(page_data + 2, 0xFF, 40); }
-    if (b_pressed) { memset(page_data + 44, 0xFF, 40); }
-    if (c_pressed) { memset(page_data + 86, 0xFF, 40); }
-    sh1106_transfer_start();
-    for (uint8_t page = 0; page < 8; page++)
-    {
-      if (page == 7)
-      {
-        memset(page_data + 2, 0xFF, 40);
-        memset(page_data + 44, 0xFF, 40);
-        memset(page_data + 86, 0xFF, 40);
-      }
-      sh1106_write_page(page, 0, page_data, 128);
-    }
-    sh1106_transfer_end();
-
-    // Show the button states on the RGB LEDs.
-    rgb_color colors[6] = { 0 };
-    if (a_pressed) { colors[0] = colors[5] = (rgb_color){ 80, 0, 0 }; }
-    if (b_pressed) { colors[1] = colors[4] = (rgb_color){ 0, 80, 0 }; }
-    if (c_pressed) { colors[2] = colors[3] = (rgb_color){ 0, 0, 80 }; }
-    rgb_leds_write(colors, 6, 2);
+    display_set_font(font_8x8);
+    display_text(a_pressed ? "1" : "0", 24, 0, COLOR_WHITE_ON_BLACK | DISPLAY_NOW);
+    display_text(b_pressed ? "1" : "0", 24, 8, COLOR_WHITE_ON_BLACK | DISPLAY_NOW);
+    display_text(c_pressed ? "1" : "0", 24, 16, COLOR_WHITE_ON_BLACK | DISPLAY_NOW);
+    if (button_check(&button_a) == 1) { oled_print("A"); }
+    if (button_check(&button_b) == 1) { oled_print("B"); }
+    if (button_check(&button_c) == 1) { oled_print("C"); }
   }
 }

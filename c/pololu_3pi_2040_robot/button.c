@@ -50,3 +50,40 @@ bool button_c_is_pressed()
   gpio_set_oeover(0, GPIO_OVERRIDE_NORMAL);
   return r;
 }
+
+static void button_init(button * self, bool (*is_pressed)())
+{
+  self->is_pressed = is_pressed;
+  self->debounce_us = 10000;
+  self->last_event_time = time_us_32() - 10000000;
+  self->last_event = 0;
+}
+
+void button_a_init(button * self)
+{
+  button_init(self, button_a_is_pressed);
+}
+
+void button_b_init(button * self)
+{
+  button_init(self, button_b_is_pressed);
+}
+
+void button_c_init(button * self)
+{
+  button_init(self, button_c_is_pressed);
+}
+
+int button_check(button * self)
+{
+  uint8_t s = self->is_pressed();
+  uint32_t t = time_us_32();
+  if (s != self->last_event && (uint32_t)(t - self->last_event_time) > self->debounce_us)
+  {
+    int edge = s - self->last_event;
+    self->last_event = s;
+    self->last_event_time = t;
+    return edge;
+  }
+  return 0;
+}
