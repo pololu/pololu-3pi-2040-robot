@@ -1,10 +1,25 @@
-// This shows how to read the IR sensors (5 line sensors and 2 bump sensors)
-// on the Pololu 3pi+ 2040 Robot.
+// Demonstrates the IR sensors on the 3pi+ robot: the left and right
+// bump sensors on the front of the robot and the five downward-looking
+// reflectance/line sensors.
+//
+// Press button A to calibrate both sets of sensors.
+//
+// Press button C to switch the line sensors to display calibrated or
+// uncalibrated values.
+//
+// On the USB virtual serial port, you can type "a" or "c" to perform the
+// same same functions as the corresponding buttons.
+// Type "d" to dump relevant sensor data and calibration values.
+// Type "r" to reset the calibration.
 
 #include <stdio.h>
 #include <string.h>
 #include <pico/stdlib.h>
 #include <pololu_3pi_2040_robot.h>
+
+button button_a;
+button button_b;
+button button_c;
 
 bool calibrate = 0;
 bool use_calibrated_read = 0;
@@ -35,13 +50,14 @@ void draw_mode()
   }
 }
 
-// Draws a bar at the bottom of the screen, 8 pixels wide and up to 32 pixels
-// tall.
-// value should be between 0 and 1024.
+// Draws a bar at the bottom of the screen to indicate an IR sensor reading
+// between 0 and 1024.
+// The number of illuminated pixels in the bar will be value/4, meaning
+// each pixel represents 4 counts.
+// Also draws small notches indicating the calibration range.
 void draw_bar(uint32_t x, uint32_t value, uint32_t cal_min, uint32_t cal_max)
 {
-  // Draw the main bar, indicating the value.
-  // Number of pixels = value / 4.
+  // Draw the main bar.
   int height = value / 32;
   uint8_t remainder = value / 4 & 7;
   for (uint8_t page = 7; page >= 4; page--)
@@ -77,12 +93,27 @@ void draw_bar(uint32_t x, uint32_t value, uint32_t cal_min, uint32_t cal_max)
   }
 }
 
+// This non-blocking function returns a character representing a press event
+// for a button on the robot, or a character received from the virtual serial
+// port, or -1 if there is no input from either source.
+char check_input()
+{
+  if (button_check(&button_a) == 1) { return 'a'; }
+  if (button_check(&button_b) == 1) { return 'b'; }
+  if (button_check(&button_c) == 1) { return 'c'; }
+  return getchar_timeout_us(0);
+}
+
 int main()
 {
   stdio_init_all();
   display_init();
   draw_options();
   draw_mode();
+
+  button_a_init(&button_a);
+  button_b_init(&button_b);
+  button_c_init(&button_c);
 
   while (1)
   {
@@ -91,8 +122,7 @@ int main()
 
     if (calibrate) { line_sensors_calibrate(); }
 
-    // TODO: use button presses instead of just USB commands
-    int cmd = getchar_timeout_us(0);
+    int cmd = check_input();
     if (cmd == 'a')
     {
       calibrate = !calibrate;
@@ -150,6 +180,7 @@ int main()
     if (cmd == 'r')
     {
       line_sensors_reset_calibration();
+      bump_sensors_reset_calibration();
     }
 
     if (use_calibrated_read)
