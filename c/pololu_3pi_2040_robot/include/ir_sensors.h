@@ -132,3 +132,11 @@ void bump_sensors_start_read(void);
 /// That array will only be valid if the bump sensors have been calibrated:
 /// see bump_sensors_calibrate().
 void bump_sensors_read(void);
+
+/// Just returns bump_sensors_pressed[0].
+/// Call bump_sensors_read() to actually read the bump sensors.
+bool bump_sensor_left_is_pressed(void);
+
+/// Just returns bump_sensors_pressed[1].
+/// Call bump_sensors_read() to actually read the bump sensors.
+bool bump_sensor_right_is_pressed(void);

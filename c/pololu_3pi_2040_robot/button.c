@@ -1,6 +1,7 @@
 // Copyright (C) Pololu Corporation.  See LICENSE.txt for details.
 
 #include <button.h>
+#include <ir_sensors.h>
 #include <pico/stdlib.h>
 #include <hardware/structs/ioqspi.h>
 #include <hardware/sync.h>
@@ -72,6 +73,16 @@ void button_b_init(button * self)
 void button_c_init(button * self)
 {
   button_init(self, button_c_is_pressed);
+}
+
+void button_bump_left_init(button * self)
+{
+  button_init(self, bump_sensor_left_is_pressed);
+}
+
+void button_bump_right_init(button * self)
+{
+  button_init(self, bump_sensor_right_is_pressed);
 }
 
 int button_check(button * self)

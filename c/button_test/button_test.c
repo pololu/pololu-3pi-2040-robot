@@ -1,6 +1,9 @@
-// This example shows how to read the buttons on the Pololu 3p+ 2040 Robot and
-// simultaneously blink the yellow LED, blink the RGB LEDs, print to the USB
-// serial port, and display info on the OLED.
+// This example shows how to read the buttons on the Pololu 3p+ 2040 Robot.
+// This includes the three pushbuttons on the control board and the two bump
+// sensors on the front of the robot, which can be used as buttons.
+//
+// The bump sensors are calibrated when the program starts running: they should
+// not be pressed at that time in order to get an accurate calibration.
 
 #include <string.h>
 #include <stdio.h>
@@ -9,9 +12,14 @@
 
 char last_report[64];
 
+// Pushbuttons on the control board.
 button button_a;
 button button_b;
 button button_c;
+
+// Bump sensors on the front of the robot.
+button button_l;
+button button_r;
 
 uint32_t cursor_x;
 
@@ -32,16 +40,21 @@ int main()
 {
   stdio_init_all();
   display_init();
+  bump_sensors_calibrate();
 
   button_a_init(&button_a);
   button_b_init(&button_b);
   button_c_init(&button_c);
+  button_bump_left_init(&button_l);
+  button_bump_right_init(&button_r);
 
   button_a.debounce_us = 500000;
 
   display_text("A:", 0, 0, 1);
   display_text("B:", 0, 8, 1);
   display_text("C:", 0, 16, 1);
+  display_text("L:", 64, 0, 1);
+  display_text("R:", 64, 8, 1);
 
   display_text("Debounced output", 0, 28, 1);
   display_text("with A at 500ms:", 0, 36, 1);
@@ -49,6 +62,7 @@ int main()
 
   while (true)
   {
+    bump_sensors_read();
     bool a_pressed = button_a_is_pressed();
     bool b_pressed = button_b_is_pressed();
     bool c_pressed = button_c_is_pressed();
@@ -58,8 +72,13 @@ int main()
     display_text(a_pressed ? "1" : "0", 24, 0, COLOR_WHITE_ON_BLACK | DISPLAY_NOW);
     display_text(b_pressed ? "1" : "0", 24, 8, COLOR_WHITE_ON_BLACK | DISPLAY_NOW);
     display_text(c_pressed ? "1" : "0", 24, 16, COLOR_WHITE_ON_BLACK | DISPLAY_NOW);
+    display_text(bump_sensors_pressed[0] ? "1" : "0", 88, 0, COLOR_WHITE_ON_BLACK | DISPLAY_NOW);
+    display_text(bump_sensors_pressed[1] ? "1" : "0", 88, 8, COLOR_WHITE_ON_BLACK | DISPLAY_NOW);
+
     if (button_check(&button_a) == 1) { oled_print("A"); }
     if (button_check(&button_b) == 1) { oled_print("B"); }
     if (button_check(&button_c) == 1) { oled_print("C"); }
+    if (button_check(&button_l) == 1) { oled_print("L"); }
+    if (button_check(&button_r) == 1) { oled_print("R"); }
   }
 }

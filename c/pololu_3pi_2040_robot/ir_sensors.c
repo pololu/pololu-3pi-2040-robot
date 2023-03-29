@@ -238,6 +238,8 @@ void bump_sensors_start_read()
   ir_sensors_start_read();
 }
 
+// TODO: need to keep track of the last state and add hysteresis in order to
+// use this as a button properly
 void bump_sensors_read()
 {
   if (state != STATE_READ_BUMP) { bump_sensors_start_read(); }
@@ -254,4 +256,14 @@ void bump_sensors_read()
     bump_sensors[i] = output[1 - i];
     bump_sensors_pressed[i] = bump_sensors[i] > bump_sensors_threshold[i];
   }
+}
+
+bool bump_sensor_left_is_pressed(void)
+{
+  return bump_sensors_pressed[0];
+}
+
+bool bump_sensor_right_is_pressed(void)
+{
+  return bump_sensors_pressed[1];
 }
