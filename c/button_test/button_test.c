@@ -26,7 +26,6 @@ uint32_t cursor_x;
 void oled_print(const char * str)
 {
   display_set_font(font_8x16);
-  cursor_x = display_text(str, cursor_x, 48, COLOR_WHITE_ON_BLACK | DISPLAY_NOW);
   if (cursor_x >= DISPLAY_WIDTH)
   {
     // TODO: display_fill_rect(0, 48, DISPLAY_WIDTH, 8, COLOR_BLACK | DISPLAY_NOW);
@@ -34,6 +33,7 @@ void oled_print(const char * str)
     display_show();
     cursor_x = 0;
   }
+  cursor_x = display_text(str, cursor_x, 48, COLOR_WHITE_ON_BLACK | DISPLAY_NOW);
 }
 
 int main()
