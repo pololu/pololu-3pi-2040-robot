@@ -44,11 +44,23 @@ extern uint16_t line_sensors_calibrated[5];
 /// The bump_sensors_read() function updates this array.
 extern uint16_t bump_sensors[2];
 
-/// Bump sensor thresholds calculated during calibration.
+/// Bump sensor lower thresholds calculated during calibration.
 ///
-/// A raw reading larger than this threshold indicates the bump sensor is
-/// pressed.
-extern uint16_t bump_sensors_threshold[2];
+/// The first element corresponds ot the left sensor.
+///
+/// If the bump sensor is currently considered to be pressed, the bump sensor
+/// raw reading has to drop below this level before it is considered to be
+/// not pressed.
+extern uint16_t bump_sensors_threshold_min[2];
+
+/// Bump sensor higher thresholds calculated during calibration.
+///
+/// The first element corresponds ot the left sensor.
+///
+/// If the bump sensor is currently considered to be not pressed, the bump
+/// sensor raw reading has to rise above this level before it is considered to
+/// be pressed.
+extern uint16_t bump_sensors_threshold_max[2];
 
 /// The latest calibrated readings from the bump sensors.
 ///
@@ -134,9 +146,9 @@ void bump_sensors_start_read(void);
 void bump_sensors_read(void);
 
 /// Just returns bump_sensors_pressed[0].
-/// Call bump_sensors_read() to actually read the bump sensors.
+/// This value is updated when you call bump_sensors_read().
 bool bump_sensor_left_is_pressed(void);
 
 /// Just returns bump_sensors_pressed[1].
-/// Call bump_sensors_read() to actually read the bump sensors.
+/// This value is updated when you call bump_sensors_read().
 bool bump_sensor_right_is_pressed(void);

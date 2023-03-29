@@ -24,11 +24,12 @@ static uint8_t counter_offset;
 uint8_t state;
 
 uint16_t bump_sensors[2];
-uint16_t bump_sensors_threshold[2] = { 1024, 1024 };
+uint16_t bump_sensors_threshold_min[2] = { 1025, 1025 };
+uint16_t bump_sensors_threshold_max[2] = { 1025, 1025 };
 bool bump_sensors_pressed[2];
 
 uint16_t line_sensors[5];
-uint16_t line_sensors_cal_min[5] = { 1024, 1024, 1024, 1024, 1024 };
+uint16_t line_sensors_cal_min[5] = { 1025, 1025, 1025, 1025, 1025 };
 uint16_t line_sensors_cal_max[5] = { 0, 0, 0, 0, 0 };
 uint16_t line_sensors_calibrated[5];
 
@@ -66,7 +67,7 @@ static void ir_sensors_start_read()
 
   pio_sm_config cfg = qtr_sensor_counter_program_get_default_config(counter_offset);
   sm_config_set_clkdiv_int_frac(&cfg, 15, 160);   // 125/(15+160/256) = 8 MHz
-  // sm_config_set_clkdiv_int_frac(&cfg, 31, 64);   // 125/(31+64/256) = 4 MHz
+  sm_config_set_clkdiv_int_frac(&cfg, 31, 64);   // 125/(31+64/256) = 4 MHz
   sm_config_set_in_pins(&cfg, 16);
   sm_config_set_out_pins(&cfg, 16, 7);
   sm_config_set_fifo_join(&cfg, PIO_FIFO_JOIN_RX);
@@ -117,14 +118,14 @@ void line_sensors_reset_calibration()
 {
   for (unsigned int i = 0; i < 5; i++)
   {
-    line_sensors_cal_min[i] = 1024;
+    line_sensors_cal_min[i] = 1025;
     line_sensors_cal_max[i] = 0;
   }
 }
 
 void line_sensors_calibrate()
 {
-  uint16_t tmp_min[5] = { 1024, 1024, 1024, 1024, 1024 };
+  uint16_t tmp_min[5] = { 1025, 1025, 1025, 1025, 1025 };
   uint16_t tmp_max[5] = { 0, 0, 0, 0, };
 
   for (unsigned int trial = 0; trial < 10; trial++)
@@ -202,8 +203,10 @@ void line_sensors_read_calibrated()
 
 void bump_sensors_reset_calibration()
 {
-  bump_sensors_threshold[0] = 1024;
-  bump_sensors_threshold[1] = 1024;
+  bump_sensors_threshold_min[0] = 1025;
+  bump_sensors_threshold_max[0] = 1025;
+  bump_sensors_threshold_min[1] = 1025;
+  bump_sensors_threshold_max[1] = 1025;
 }
 
 void bump_sensors_calibrate()
@@ -217,10 +220,11 @@ void bump_sensors_calibrate()
     sum[1] += bump_sensors[1];
   }
 
-  // Set the threshold to 150% of the average reading.
+  // Set the thresholds to 140% and 160% of the average reading.
   for (uint8_t i = 0; i < 2; i++)
   {
-    bump_sensors_threshold[i] = (sum[i] * 150) / (count * 100);
+    bump_sensors_threshold_min[i] = (sum[i] * 140) / (count * 100);
+    bump_sensors_threshold_max[i] = (sum[i] * 160) / (count * 100);
   }
 }
 
@@ -238,8 +242,6 @@ void bump_sensors_start_read()
   ir_sensors_start_read();
 }
 
-// TODO: need to keep track of the last state and add hysteresis in order to
-// use this as a button properly
 void bump_sensors_read()
 {
   if (state != STATE_READ_BUMP) { bump_sensors_start_read(); }
@@ -254,7 +256,9 @@ void bump_sensors_read()
   for (uint8_t i = 0; i < 2; i ++)
   {
     bump_sensors[i] = output[1 - i];
-    bump_sensors_pressed[i] = bump_sensors[i] > bump_sensors_threshold[i];
+    uint16_t threshold = bump_sensors_pressed[i] ?
+      bump_sensors_threshold_min[i] : bump_sensors_threshold_max[i];
+    bump_sensors_pressed[i] = bump_sensors[i] > threshold;
   }
 }
 

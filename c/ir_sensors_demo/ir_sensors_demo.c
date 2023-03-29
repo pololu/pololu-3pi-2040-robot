@@ -17,9 +17,9 @@
 #include <pico/stdlib.h>
 #include <pololu_3pi_2040_robot.h>
 
-button button_a;
-button button_b;
-button button_c;
+button button_a = BUTTON_INIT(button_a_is_pressed);
+button button_b = BUTTON_INIT(button_b_is_pressed);
+button button_c = BUTTON_INIT(button_c_is_pressed);
 
 bool calibrate = 0;
 bool use_calibrated_read = 0;
@@ -75,14 +75,14 @@ void draw_bar(uint32_t x, uint32_t value, uint32_t cal_min, uint32_t cal_max)
 
   // Draw the notches indicating the calibration range.
   uint32_t cal_mask = 0;
-  if (cal_min < 1024)
+  if (cal_min <= 1024)
   {
     cal_mask |= 1 << (31 - cal_min / 32);
   }
-  if (cal_max > 0)
+  if (cal_max > 0 && cal_max <= 1024)
   {
     // Prevent a left shift by a negative amount below.
-    if (cal_max >= 1024) { cal_max = 1023; }
+    if (cal_max > 1023) { cal_max = 1023; }
     cal_mask |= 1 << (31 - cal_max / 32);
   }
   for (uint8_t page = 4; page < 8; page++)
@@ -110,10 +110,6 @@ int main()
   display_init();
   draw_options();
   draw_mode();
-
-  button_a_init(&button_a);
-  button_b_init(&button_b);
-  button_c_init(&button_c);
 
   while (1)
   {
@@ -155,19 +151,21 @@ int main()
         line_sensors[4],
         bump_sensors[1]);
       printf("cal_min:    %4u %4u %4u %4u %4u %4u %4u\n",
-        bump_sensors_threshold[0],
+        bump_sensors_threshold_min[0],
         line_sensors_cal_min[0],
         line_sensors_cal_min[1],
         line_sensors_cal_min[2],
         line_sensors_cal_min[3],
         line_sensors_cal_min[4],
-        bump_sensors_threshold[1]);
-      printf("cal_max:       - %4u %4u %4u %4u %4u    -\n",
+        bump_sensors_threshold_min[1]);
+      printf("cal_max:    %4u %4u %4u %4u %4u %4u %4u\n",
+        bump_sensors_threshold_max[0],
         line_sensors_cal_max[0],
         line_sensors_cal_max[1],
         line_sensors_cal_max[2],
         line_sensors_cal_max[3],
-        line_sensors_cal_max[4]);
+        line_sensors_cal_max[4],
+        bump_sensors_threshold_max[1]);
       printf("calibrated: %4u %4u %4u %4u %4u %4u %4u\n\n",
         bump_sensors_pressed[0],
         line_sensors_calibrated[0],
@@ -185,22 +183,24 @@ int main()
 
     if (use_calibrated_read)
     {
-      draw_bar(0, bump_sensors_pressed[0] * 1024, 1024, 0);
+      draw_bar(0, bump_sensors_pressed[0] * 1024, 1025, 1025);
       for (unsigned int i = 0; i < 5; i++)
       {
-        draw_bar(24 + i * 16, line_sensors_calibrated[i], 1024, 0);
+        draw_bar(24 + i * 16, line_sensors_calibrated[i], 1025, 1025);
       }
-      draw_bar(112, bump_sensors_pressed[1] * 1024, 1024, 0);
+      draw_bar(112, bump_sensors_pressed[1] * 1024, 1025, 1025);
     }
     else
     {
-      draw_bar(0, bump_sensors[0], bump_sensors_threshold[0], 0);
+      draw_bar(0, bump_sensors[0],
+        bump_sensors_threshold_min[0], bump_sensors_threshold_max[0]);
       for (unsigned int i = 0; i < 5; i++)
       {
         draw_bar(24 + i * 16, line_sensors[i],
           line_sensors_cal_min[i], line_sensors_cal_max[i]);
       }
-      draw_bar(112, bump_sensors[1], bump_sensors_threshold[1], 0);
+      draw_bar(112, bump_sensors[1],
+        bump_sensors_threshold_min[1], bump_sensors_threshold_max[1]);
     }
 
     display_show();
