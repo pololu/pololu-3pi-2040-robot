@@ -1,7 +1,6 @@
 // Copyright (C) Pololu Corporation.  See LICENSE.txt for details.
 
 #include <button.h>
-#include <ir_sensors.h>
 #include <pico/stdlib.h>
 #include <hardware/structs/ioqspi.h>
 #include <hardware/sync.h>
@@ -50,39 +49,6 @@ bool button_c_is_pressed()
   bool r = !gpio_get(0);
   gpio_set_oeover(0, GPIO_OVERRIDE_NORMAL);
   return r;
-}
-
-static void button_init(button * self, bool (*is_pressed)())
-{
-  self->is_pressed = is_pressed;
-  self->debounce_us = 10000;
-  self->last_event_time = time_us_32() - 10000000;
-  self->last_event = 0;
-}
-
-void button_a_init(button * self)
-{
-  button_init(self, button_a_is_pressed);
-}
-
-void button_b_init(button * self)
-{
-  button_init(self, button_b_is_pressed);
-}
-
-void button_c_init(button * self)
-{
-  button_init(self, button_c_is_pressed);
-}
-
-void button_bump_left_init(button * self)
-{
-  button_init(self, bump_sensor_left_is_pressed);
-}
-
-void button_bump_right_init(button * self)
-{
-  button_init(self, bump_sensor_right_is_pressed);
 }
 
 int button_check(button * self)

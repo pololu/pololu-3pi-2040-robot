@@ -13,13 +13,13 @@
 char last_report[64];
 
 // Pushbuttons on the control board.
-button button_a;
-button button_b;
-button button_c;
+button button_a = BUTTON_INIT(button_a_is_pressed);
+button button_b = BUTTON_INIT(button_b_is_pressed);
+button button_c = BUTTON_INIT(button_c_is_pressed);
 
 // Bump sensors on the front of the robot.
-button button_l;
-button button_r;
+button button_l = BUTTON_INIT(bump_sensor_left_is_pressed);
+button button_r = BUTTON_INIT(bump_sensor_right_is_pressed);
 
 uint32_t cursor_x;
 
@@ -42,12 +42,9 @@ int main()
   display_init();
   bump_sensors_calibrate();
 
-  button_a_init(&button_a);
-  button_b_init(&button_b);
-  button_c_init(&button_c);
-  button_bump_left_init(&button_l);
-  button_bump_right_init(&button_r);
-
+  // Set the debouncing on button A to 500 ms so it is easy to tell that the
+  // debouncing works: if you press button A twice quickly, only one press
+  // will register.
   button_a.debounce_us = 500000;
 
   display_text("A:", 0, 0, 1);
@@ -62,10 +59,11 @@ int main()
 
   while (true)
   {
-    bump_sensors_read();
+    // Read the buttons.
     bool a_pressed = button_a_is_pressed();
     bool b_pressed = button_b_is_pressed();
     bool c_pressed = button_c_is_pressed();
+    bump_sensors_read();
 
     // Show the button states on the OLED.
     display_set_font(font_8x8);
@@ -75,6 +73,7 @@ int main()
     display_text(bump_sensors_pressed[0] ? "1" : "0", 88, 0, COLOR_WHITE_ON_BLACK | DISPLAY_NOW);
     display_text(bump_sensors_pressed[1] ? "1" : "0", 88, 8, COLOR_WHITE_ON_BLACK | DISPLAY_NOW);
 
+    // At the bottom of the OLED, print a record of button press events.
     if (button_check(&button_a) == 1) { oled_print("A"); }
     if (button_check(&button_b) == 1) { oled_print("B"); }
     if (button_check(&button_c) == 1) { oled_print("C"); }

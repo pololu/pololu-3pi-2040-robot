@@ -38,28 +38,10 @@ typedef struct button {
   uint8_t last_event;
 } button;
 
-/// Initializes the provided button struct to track the state of button A.
-void button_a_init(button *);
-
-/// Initializes the provided button struct to track the state of button B.
-void button_b_init(button *);
-
-/// Initializes the provided button struct to track the state of button C.
-void button_c_init(button *);
-
-/// Initializes the provided button struct to track the state of the
-/// left bump sensor on the front of the robot.
-///
-/// You must call bump_sensors_calibrate() when starting up and then
-/// regularly call bump_sensors_read() to use a bump sensor as a button.
-void button_bump_left_init(button *);
-
-/// Initializes the provided button struct to track the state of the
-/// right bump sensor on the front of the robot.
-///
-/// You must call bump_sensors_calibrate() when starting up and then
-/// regularly call bump_sensors_read() to use a bump sensor as a button.
-void button_bump_right_init(button *);
+/// Creates a button struct to debounce an arbitrary function
+/// that takes no arguments and returns a bool.
+/// Pass the struct to button_check to check for press and release events.
+#define BUTTON_INIT(is_pressed) ((button){ is_pressed, 0, 0, 0 })
 
 /// @brief Checks for a debounced button press or release event.
 ///
