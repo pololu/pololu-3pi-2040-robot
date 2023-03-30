@@ -1,9 +1,19 @@
 // Copyright (C) Pololu Corporation.  See LICENSE.txt for details.
 
+// TODO: change display_text to take 'int' arguments for
+// easier porting back to AVRs and consistency with display_fill_rect.
+// TODO: use 'unsigned int' and 'int' wherever it makes sense, for easier porting
+// to AVRs.
+// TODO: make 'flags' be a uint8_t everywhere for the same reason?
+// TODO: change display_show_partial args to be the same as the first four of
+// display_fill_rect, or at least justify the difference
+
 #include <display.h>
 #include <string.h>
 #include <assert.h>
 #include <sh1106.h>
+
+static inline unsigned int to_unsigned(int x) { return x < 0 ? 0 : x; }
 
 typedef struct font_header {
   uint32_t size;
@@ -109,35 +119,54 @@ void display_fill(uint8_t color)
   }
 }
 
-void color_0(uint32_t * dest, uint32_t src) { *dest &= ~src; }
-void color_1(uint32_t * dest, uint32_t src) { *dest |= src; }
-void color_0_on_1(uint32_t * dest, uint32_t src) { *dest = ~src; }
-void color_1_on_0(uint32_t * dest, uint32_t src) { *dest = src; }
-void color_xor(uint32_t * dest, uint32_t src) { *dest ^= src; }
-
-typedef void (* color_func)(uint32_t *, uint32_t);
-color_func color_funcs[] = {
-  // The first two colors are the same as MicroPython's framebuf.text().
-  color_0,
-  color_1,
-  color_0_on_1,
-  color_1_on_0,
-  color_xor,
-  color_1,  // reserved
-  color_1,  // reserved
-  color_1,  // reserved
-};
 #define COLOR_MASK 7
+
+void color32_0(uint32_t * dest, uint32_t src) { *dest &= ~src; }
+void color32_1(uint32_t * dest, uint32_t src) { *dest |= src; }
+void color32_0_on_1(uint32_t * dest, uint32_t src) { *dest = ~src; }
+void color32_1_on_0(uint32_t * dest, uint32_t src) { *dest = src; }
+void color32_xor(uint32_t * dest, uint32_t src) { *dest ^= src; }
+void color32_nop(uint32_t * dest, uint32_t src) { (void)dest; (void)src; }
+
+typedef void (* color32_func)(uint32_t *, uint32_t);
+color32_func color32_funcs[] = {
+  // The first two colors are the same as MicroPython's framebuf.text().
+  color32_0,
+  color32_1,
+  color32_0_on_1,
+  color32_1_on_0,
+  color32_xor,
+  color32_nop,
+  color32_1,  // reserved
+  color32_1,  // reserved
+};
+
+void color8_0(uint8_t * dest, uint8_t src) { *dest &= ~src; }
+void color8_1(uint8_t * dest, uint8_t src) { *dest |= src; }
+void color8_0_on_1(uint8_t * dest, uint8_t src) { *dest = ~src; }
+void color8_1_on_0(uint8_t * dest, uint8_t src) { *dest = src; }
+void color8_xor(uint8_t * dest, uint8_t src) { *dest ^= src; }
+void color8_nop(uint8_t * dest, uint8_t src) { (void)dest; (void)src; }
+
+typedef void (* color8_func)(uint8_t *, uint8_t);
+color8_func color8_funcs[] = {
+  // The first two colors are the same as MicroPython's framebuf.text().
+  color8_0,
+  color8_1,
+  color8_0_on_1,
+  color8_1_on_0,
+  color8_xor,
+  color8_nop,
+  color8_1,  // reserved
+  color8_1,  // reserved
+};
 
 void display_pixel(uint32_t x, uint32_t y, uint32_t flags)
 {
   if (x >= DISPLAY_WIDTH || y >= DISPLAY_HEIGHT) { return; }
   uint8_t page = y >> 3;
-  uint8_t mask = 1 << (y & 7);
-  uint8_t * p = &display_buffer[page * DISPLAY_WIDTH + x];
-  uint32_t sliver = *p;
-  color_funcs[flags & COLOR_MASK](&sliver, mask);
-  *p = (*p & ~mask) | (sliver & mask);
+  uint8_t * p = display_buffer + page * DISPLAY_WIDTH + x;
+  color8_funcs[flags & COLOR_MASK](p, 1 << (y & 7));
   if (flags & DISPLAY_NOW) { display_show_partial(x, x, y, y); }
 }
 
@@ -157,7 +186,7 @@ static uint32_t display_text_aligned(const char * text, uint32_t x, uint32_t y,
   uint32_t font_height = display_font->font_height;
   uint32_t max_x = DISPLAY_WIDTH - font_width;
 
-  color_func color = color_funcs[flags & COLOR_MASK];
+  color32_func color = color32_funcs[flags & COLOR_MASK];
 
   if (y + font_height > 64) { return 0; }
 
@@ -195,6 +224,10 @@ static bool glyph_get_pixel(const uint8_t * glyph, uint32_t gx, uint32_t gy)
   return glyph[(gy & ~7) + gx] >> (gy & 7) & 1;
 }
 
+// TODO: fix the behavior when x < 0 but still aligned, I think no text will get displayed
+// TODO: fix the behavior when y is -8, I think there will be out of bounds writes in display_text_aligned
+// TODO: make sure we can draw 8x16 text where only the top or bottom half is visible,
+// preferably with draw_text_aligned but maybe that's asking too much
 uint32_t display_text(const char * text, int32_t x, int32_t y, uint32_t flags)
 {
   if (x >= DISPLAY_WIDTH || y >= DISPLAY_HEIGHT) { return 0; }
@@ -208,7 +241,13 @@ uint32_t display_text(const char * text, int32_t x, int32_t y, uint32_t flags)
   uint32_t font_width = display_font->font_width;
   uint32_t font_height = display_font->font_height;
 
-  uint32_t color = flags & COLOR_MASK;
+  uint8_t fg = flags & COLOR_MASK;
+  uint8_t bg = COLOR_NOP;
+  switch (fg)
+  {
+  case COLOR_BLACK_ON_WHITE: fg = COLOR_BLACK; bg = COLOR_WHITE; break;
+  case COLOR_WHITE_ON_BLACK: fg = COLOR_WHITE; bg = COLOR_BLACK; break;
+  }
 
   while (1)
   {
@@ -224,15 +263,11 @@ uint32_t display_text(const char * text, int32_t x, int32_t y, uint32_t flags)
       {
         if (glyph_get_pixel(glyph, gx, gy))
         {
-          display_pixel(x + gx, y + gy, color);
+          display_pixel(x + gx, y + gy, fg);
         }
-        else if (color == COLOR_BLACK_ON_WHITE)
+        else
         {
-          display_pixel(x + gx, y + gy, COLOR_WHITE);
-        }
-        else if (color == COLOR_WHITE_ON_BLACK)
-        {
-          display_pixel(x + gx, y + gy, COLOR_BLACK);
+          display_pixel(x + gx, y + gy, bg);
         }
       }
     }
@@ -246,6 +281,31 @@ uint32_t display_text(const char * text, int32_t x, int32_t y, uint32_t flags)
 
   if (x > DISPLAY_WIDTH) { x = DISPLAY_WIDTH; }
   return x;
+}
+
+void display_fill_rect(int x, int y, int width, int height, uint32_t flags)
+{
+  if (x >= DISPLAY_WIDTH || y >= DISPLAY_HEIGHT) { return; }
+  if (width <= 0 || height <= 0) { return; }  // Avoid underflows below
+  if (x < 0) { width += x; x = 0; }
+  if (y < 0) { height += y; y = 0; }
+  if (width <= 0 || height <= 0) { return; }
+
+  color8_func color = color8_funcs[flags & COLOR_MASK];
+
+  unsigned int last_page = (y + height - 1) >> 3;
+  for (unsigned int page = y >> 3; page <= last_page; page++)
+  {
+    uint8_t * p = display_buffer + page * DISPLAY_WIDTH + x;
+    int rel_y = y - page * 8;
+    uint8_t mask = 0xFFu << to_unsigned(rel_y) & 0xFFu >> to_unsigned(8 - rel_y - height);
+    for (int i = 0; i < width; i++) { color(p + i, mask); }
+  }
+
+  if (flags & DISPLAY_NOW)
+  {
+    display_show_partial(x, x + width - 1, y, y + height - 1);
+  }
 }
 
 void display_show_partial(uint32_t x_left, uint32_t x_right,

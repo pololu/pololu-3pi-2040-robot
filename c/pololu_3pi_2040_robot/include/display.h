@@ -34,10 +34,16 @@ extern uint8_t display_buffer[1024];
 
 /// In a drawing operation, this specifies changing foreground pixels to
 /// 0 (which is normally black) and leaving background pixels unchanged.
+///
+/// For compatibility with the MicroPython framebuf class, this macro should
+/// always have a value of 0.
 #define COLOR_BLACK 0
 
 /// In a drawing operation, this specifies changing foreground pixels to
 /// 1 (which is normally white) and leaving background pixels unchanged.
+///
+/// For compatibility with the MicroPython framebuf class, this macro should
+/// always have a value of 1.
 #define COLOR_WHITE 1
 
 /// In a drawing operation, this specifies changing foreground pixels to
@@ -51,6 +57,9 @@ extern uint8_t display_buffer[1024];
 /// In a drawing operation, this specifies inverting the color of foreground
 /// pixels and leaving background pixels unchanged.
 #define COLOR_XOR 4
+
+/// In a drawing operation, this specifies not changing any pixels.
+#define COLOR_NOP 5
 
 /// A flag that can be passed to certain display functions indicating that they
 /// should show their changes to the OLED before returning.
@@ -103,9 +112,7 @@ bool display_get_pixel(uint32_t x, uint32_t y);
 /// @param x The left-most column of the text (0 = left side of screen).
 /// @param y The top-most row of the text (0 = top side of screen).
 /// @param flags
-///   The lower byte of this argument should be 1 for white text,
-///   0 for black text, or one of the other COLOR_* macros to indicate how
-///   to draw the text.
+///   The lower byte of this argument should be one of the COLOR_* macros.
 ///   If you want to immediately write the text to the OLED display, use
 ///   bitwise OR (|) to combine this color with DISPLAY_NOW.
 /// @return A number between 0 and 128 that is one plus the x coordinate of the
@@ -113,6 +120,18 @@ bool display_get_pixel(uint32_t x, uint32_t y);
 ///   (If none of the text is on the screen, the return value is unspecified.)
 ///   This can be used to measure text.
 uint32_t display_text(const char * string, int32_t x, int32_t y, uint32_t flags);
+
+/// @brief Draws a solid rectangle.
+/// @param x The left-most column of the rectangle (0 = left side of screen).
+/// @param y The top-most row of the rectangle (0 = top side of screen).
+/// @param width The width of the rectangle.
+/// @param height The height of the rectangle.
+/// @param flags
+///   The lower byte of this argument should be 1 or 0 to indicate
+///   what color to set the pixels in the rectangle to, or COLOR_XOR.
+///   If you want to immediately write the text to the OLED display, use
+///   bitwise OR (|) to combine this color with DISPLAY_NOW.
+void display_fill_rect(int x, int y, int width, int height, uint32_t flags);
 
 /// Writes the specified rectangular region of the graphics buffer to the
 /// display.

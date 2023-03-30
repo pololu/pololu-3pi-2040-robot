@@ -28,12 +28,10 @@ void oled_print(const char * str)
   display_set_font(font_8x16);
   if (cursor_x >= DISPLAY_WIDTH)
   {
-    // TODO: display_fill_rect(0, 48, DISPLAY_WIDTH, 8, COLOR_BLACK | DISPLAY_NOW);
-    memset(display_buffer + 6 * DISPLAY_WIDTH, 0, 2 * DISPLAY_WIDTH);
-    display_show();
+    display_fill_rect(0, 48, DISPLAY_WIDTH, 16, 0 | DISPLAY_NOW);
     cursor_x = 0;
   }
-  cursor_x = display_text(str, cursor_x, 48, COLOR_WHITE_ON_BLACK | DISPLAY_NOW);
+  cursor_x = display_text(str, cursor_x, 48, 1 | DISPLAY_NOW);
 }
 
 int main()

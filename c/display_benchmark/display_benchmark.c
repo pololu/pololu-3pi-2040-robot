@@ -8,6 +8,7 @@ void report(uint32_t time, const char * name)
   for (size_t i = name_length; i < 40; i++) { putchar(' '); }
   printf("%ld\n", time);
 
+  display_show();
   sleep_ms(500);
   while (button_a_is_pressed());
 }
@@ -31,9 +32,13 @@ int main()
     start = time_us_32();
     for (uint8_t i = 0; i < 128; i++)
     {
-      display_pixel(i, (i * 13) % 128, DISPLAY_NOW | 1);
+      display_pixel(i, (i * 13) % 128, 1);
     }
-    report(time_us_32() - start, "64 pixels");
+    report(time_us_32() - start, "64 pixels draw");
+
+    start = time_us_32();
+    display_fill_rect(40, 10, 40, 50, COLOR_XOR);
+    report(time_us_32() - start, "2000-pixel fill_rect draw");
 
     //// 8x16 text /////////////////////////////////////////////////////////////
     display_set_font(font_8x16);
