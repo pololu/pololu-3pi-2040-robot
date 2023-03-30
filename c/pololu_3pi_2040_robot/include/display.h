@@ -46,20 +46,20 @@ extern uint8_t display_buffer[1024];
 /// always have a value of 1.
 #define COLOR_WHITE 1
 
+/// In a drawing operation, this specifies inverting the color of foreground
+/// pixels and leaving background pixels unchanged.
+#define COLOR_XOR 2
+
+/// In a drawing operation, this specifies not changing any pixels.
+#define COLOR_NOP 3
+
 /// In a drawing operation, this specifies changing foreground pixels to
 /// 0 and changing background pixels to 1.
-#define COLOR_BLACK_ON_WHITE 2
+#define COLOR_BLACK_ON_WHITE 4
 
 /// In a drawing operation, this specifies changing foreground pixels to
 /// 1 and changing background pixels to 0.
-#define COLOR_WHITE_ON_BLACK 3
-
-/// In a drawing operation, this specifies inverting the color of foreground
-/// pixels and leaving background pixels unchanged.
-#define COLOR_XOR 4
-
-/// In a drawing operation, this specifies not changing any pixels.
-#define COLOR_NOP 5
+#define COLOR_WHITE_ON_BLACK 5
 
 /// A flag that can be passed to certain display functions indicating that they
 /// should show their changes to the OLED before returning.
@@ -87,7 +87,7 @@ void display_fill(uint8_t color);
 /// @param x The column of the pixel (0 = left side).
 /// @param y The row of the pixel (0 = top side).
 /// @param flags The lower byte of this argument should be 1 or 0 to indicate
-///   what color to set the pixel to, or COLOR_XOR to toggle the color.
+///   what color to set the pixel to, or COLOR_XOR or COLOR_NOP.
 ///   If you want to immediately write the specified pixel to the OLED display,
 ///   use bitwise OR (|) to combine this color with DISPLAY_NOW.
 void display_pixel(uint32_t x, uint32_t y, uint32_t flags);
@@ -127,8 +127,8 @@ uint32_t display_text(const char * string, int32_t x, int32_t y, uint32_t flags)
 /// @param width The width of the rectangle.
 /// @param height The height of the rectangle.
 /// @param flags
-///   The lower byte of this argument should be 1 or 0 to indicate
-///   what color to set the pixels in the rectangle to, or COLOR_XOR.
+//    The lower byte of this argument should be 1 or 0 to indicate
+///   what color to set the pixel to, or COLOR_XOR or COLOR_NOP.
 ///   If you want to immediately write the text to the OLED display, use
 ///   bitwise OR (|) to combine this color with DISPLAY_NOW.
 void display_fill_rect(int x, int y, int width, int height, uint32_t flags);

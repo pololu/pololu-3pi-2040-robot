@@ -119,6 +119,7 @@ void display_fill(uint8_t color)
   }
 }
 
+#define COLOR_MASK_NO_BG 3
 #define COLOR_MASK 7
 
 void color32_0(uint32_t * dest, uint32_t src) { *dest &= ~src; }
@@ -133,12 +134,12 @@ color32_func color32_funcs[] = {
   // The first two colors are the same as MicroPython's framebuf.text().
   color32_0,
   color32_1,
-  color32_0_on_1,
-  color32_1_on_0,
   color32_xor,
   color32_nop,
-  color32_1,  // reserved
-  color32_1,  // reserved
+  color32_0_on_1,
+  color32_1_on_0,
+  color32_nop,  // reserved
+  color32_nop,  // reserved
 };
 
 void color8_0(uint8_t * dest, uint8_t src) { *dest &= ~src; }
@@ -153,12 +154,12 @@ color8_func color8_funcs[] = {
   // The first two colors are the same as MicroPython's framebuf.text().
   color8_0,
   color8_1,
-  color8_0_on_1,
-  color8_1_on_0,
   color8_xor,
   color8_nop,
-  color8_1,  // reserved
-  color8_1,  // reserved
+  color8_0_on_1,
+  color8_1_on_0,
+  color8_nop,  // reserved
+  color8_nop,  // reserved
 };
 
 void display_pixel(uint32_t x, uint32_t y, uint32_t flags)
@@ -166,7 +167,7 @@ void display_pixel(uint32_t x, uint32_t y, uint32_t flags)
   if (x >= DISPLAY_WIDTH || y >= DISPLAY_HEIGHT) { return; }
   uint8_t page = y >> 3;
   uint8_t * p = display_buffer + page * DISPLAY_WIDTH + x;
-  color8_funcs[flags & COLOR_MASK](p, 1 << (y & 7));
+  color8_funcs[flags & COLOR_MASK_NO_BG](p, 1 << (y & 7));
   if (flags & DISPLAY_NOW) { display_show_partial(x, x, y, y); }
 }
 
@@ -241,8 +242,7 @@ uint32_t display_text(const char * text, int32_t x, int32_t y, uint32_t flags)
   uint32_t font_width = display_font->font_width;
   uint32_t font_height = display_font->font_height;
 
-  uint8_t fg = flags & COLOR_MASK;
-  uint8_t bg = COLOR_NOP;
+  uint8_t fg = flags & COLOR_MASK, bg = COLOR_NOP;
   switch (fg)
   {
   case COLOR_BLACK_ON_WHITE: fg = COLOR_BLACK; bg = COLOR_WHITE; break;
@@ -265,7 +265,7 @@ uint32_t display_text(const char * text, int32_t x, int32_t y, uint32_t flags)
         {
           display_pixel(x + gx, y + gy, fg);
         }
-        else
+        else if (bg != COLOR_NOP)
         {
           display_pixel(x + gx, y + gy, bg);
         }
@@ -291,7 +291,7 @@ void display_fill_rect(int x, int y, int width, int height, uint32_t flags)
   if (y < 0) { height += y; y = 0; }
   if (width <= 0 || height <= 0) { return; }
 
-  color8_func color = color8_funcs[flags & COLOR_MASK];
+  color8_func color = color8_funcs[flags & COLOR_MASK_NO_BG];
 
   unsigned int last_page = (y + height - 1) >> 3;
   for (unsigned int page = y >> 3; page <= last_page; page++)

@@ -5,7 +5,7 @@
 void report(uint32_t time, const char * name)
 {
   size_t name_length = printf("%s: ", name);
-  for (size_t i = name_length; i < 40; i++) { putchar(' '); }
+  for (size_t i = name_length; i < 44; i++) { putchar(' '); }
   printf("%ld\n", time);
 
   display_show();
@@ -64,10 +64,16 @@ int main()
     report(end - start, "8x16: 16-char Unicode draw");
 
     start = time_us_32();
-    display_text("°±²µΔΘΩθμπ…←↑→☺𝟅", 0, 36, COLOR_BLACK_ON_WHITE);
+    display_text("°±²µΔΘΩθμπ…←↑→☺𝟅", 0, 36, COLOR_WHITE);
     end = time_us_32();
     display_show();
     report(end - start, "8x16: 16-char Unicode draw unaligned");
+
+    start = time_us_32();
+    display_text("°±²µΔΘΩθμπ…←↑→☺𝟅", 0, 36, COLOR_BLACK_ON_WHITE);
+    end = time_us_32();
+    display_show();
+    report(end - start, "8x16: 16-char Unicode draw unaligned+BG");
 
     start = time_us_32();
     display_fill(0);
@@ -102,10 +108,16 @@ int main()
     report(end - start, "8x8: 16-char Unicode draw");
 
     start = time_us_32();
-    display_text("°±²µΔΘΩθμπ…←↑→☺𝟅", 0, 20, COLOR_BLACK_ON_WHITE);
+    display_text("°±²µΔΘΩθμπ…←↑→☺𝟅", 0, 20, COLOR_WHITE);
     end = time_us_32();
     display_show();
     report(end - start, "8x8: 16-char Unicode draw unaligned");
+
+    start = time_us_32();
+    display_text("°±²µΔΘΩθμπ…←↑→☺𝟅", 0, 20, COLOR_BLACK_ON_WHITE);
+    end = time_us_32();
+    display_show();
+    report(end - start, "8x8: 16-char Unicode draw unaligned+BG");
 
     start = time_us_32();
     display_fill(0);
