@@ -192,15 +192,19 @@ int main()
     }
     else
     {
-      draw_bar(0, bump_sensors[0],
-        bump_sensors_threshold_min[0], bump_sensors_threshold_max[0]);
+      // Scale the bump sensor readings up so they are easier to see
+      const uint8_t bump_scale = 4;
+      draw_bar(0, bump_sensors[0] * bump_scale,
+        bump_sensors_threshold_min[0] * bump_scale,
+        bump_sensors_threshold_max[0] * bump_scale);
       for (unsigned int i = 0; i < 5; i++)
       {
         draw_bar(24 + i * 16, line_sensors[i],
           line_sensors_cal_min[i], line_sensors_cal_max[i]);
       }
-      draw_bar(112, bump_sensors[1],
-        bump_sensors_threshold_min[1], bump_sensors_threshold_max[1]);
+      draw_bar(112, bump_sensors[1] * bump_scale,
+        bump_sensors_threshold_min[1] * bump_scale,
+        bump_sensors_threshold_max[1] * bump_scale);
     }
 
     display_show();
