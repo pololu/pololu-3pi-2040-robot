@@ -77,18 +77,41 @@ void sh1106_clear()
   sh1106_transfer_end();
 }
 
-void sh1106_configure_default()
+static void sh1106_cmd(const uint8_t * cmd, uint32_t size)
 {
   sh1106_transfer_start();
   sh1106_command_mode();
+  spi_write_blocking(spi0, cmd, size);
+  sh1106_transfer_end();
+}
+
+void sh1106_configure_default()
+{
   uint8_t cmd[] = {
     SH1106_SET_SEGMENT_REMAP | 1,  // flip horizontally
     SH1106_SET_COM_SCAN_DIR | 8,   // flip vertically
     SH1106_SET_CONTRAST, 0xFF,     // maximum brightness
     SH1106_SET_DISPLAY_ON | 1,
   };
-  spi_write_blocking(spi0, cmd, sizeof(cmd));
-  sh1106_transfer_end();
+  sh1106_cmd(cmd, sizeof(cmd));
+}
+
+void sh1106_sleep(bool sleep)
+{
+  uint8_t cmd[] = { SH1106_SET_DISPLAY_ON | !sleep };
+  sh1106_cmd(cmd, sizeof(cmd));
+}
+
+void sh1106_contrast(uint8_t contrast)
+{
+  uint8_t cmd[] = { SH1106_SET_CONTRAST, contrast };
+  sh1106_cmd(cmd, sizeof(cmd));
+}
+
+void sh1106_invert(bool invert)
+{
+  uint8_t cmd[] = { SH1106_SET_INVERT_DISPLAY | invert };
+  sh1106_cmd(cmd, sizeof(cmd));
 }
 
 void sh1106_init()

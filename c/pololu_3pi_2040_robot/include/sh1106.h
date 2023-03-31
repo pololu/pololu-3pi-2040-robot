@@ -7,6 +7,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #define SH1106_SET_COLUMN_ADDR_LOW 0x00
 #define SH1106_SET_COLUMN_ADDR_HIGH 0x10
@@ -25,4 +26,7 @@ void sh1106_data_mode(void);
 void sh1106_write_page(uint8_t page, uint8_t x, const uint8_t * data, uint32_t length);
 void sh1106_clear(void);
 void sh1106_configure_default(void);
+void sh1106_sleep(bool sleep);
+void sh1106_contrast(uint8_t contrast);
+void sh1106_invert(bool invert);
 void sh1106_init(void);
