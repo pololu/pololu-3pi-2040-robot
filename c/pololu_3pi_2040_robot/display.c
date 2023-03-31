@@ -1,8 +1,5 @@
 // Copyright (C) Pololu Corporation.  See LICENSE.txt for details.
 
-// TODO: change display_show_partial args to be the same as the first four of
-// display_fill_rect, or at least justify the difference
-
 #include <display.h>
 #include <string.h>
 #include <assert.h>
@@ -162,7 +159,7 @@ void display_pixel(unsigned int x, unsigned int y, uint8_t flags)
   if (x >= DISPLAY_WIDTH || y >= DISPLAY_HEIGHT) { return; }
   uint8_t * p = display_buffer + (y >> 3) * DISPLAY_WIDTH + x;
   color8_funcs[flags & COLOR_MASK_NO_BG](p, 1 << (y & 7));
-  if (flags & DISPLAY_NOW) { display_show_partial(x, x, y, y); }
+  if (flags & DISPLAY_NOW) { display_show_partial(x, y, 1, 1); }
 }
 
 bool display_get_pixel(unsigned int x, unsigned int y)
@@ -227,9 +224,7 @@ static int display_text_aligned(const char * text, int x, int y,
 
   if (flags & DISPLAY_NOW)
   {
-    if (left_x < 0) { left_x = 0; }
-    if (y < 0) { y = 0; font_height += y; }
-    display_show_partial(left_x, x - 1, y, y + font_height - 1);
+    display_show_partial(left_x, y, (unsigned int)x - left_x, font_height);
   }
 
   return x;
@@ -286,9 +281,7 @@ int display_text(const char * text, int x, int y, uint8_t flags)
 
   if (flags & DISPLAY_NOW)
   {
-    if (left_x < 0) { left_x = 0; }
-    if (y < 0) { y = 0; font_height += y; }
-    display_show_partial(left_x, x - 1, y, y + font_height - 1);
+    display_show_partial(left_x, y, (unsigned int)x - left_x, font_height);
   }
 
   return x;
@@ -301,6 +294,8 @@ void display_fill_rect(int x, int y, int width, int height, uint8_t flags)
   if (x < 0) { width += x; x = 0; }
   if (y < 0) { height += y; y = 0; }
   if (width <= 0 || height <= 0) { return; }
+  if (width > DISPLAY_WIDTH - x) { width = DISPLAY_WIDTH - x; }
+  if (height > DISPLAY_HEIGHT - y) { height = DISPLAY_HEIGHT - y; }
 
   color8_func color = color8_funcs[flags & COLOR_MASK_NO_BG];
 
@@ -315,22 +310,26 @@ void display_fill_rect(int x, int y, int width, int height, uint8_t flags)
 
   if (flags & DISPLAY_NOW)
   {
-    display_show_partial(x, x + width - 1, y, y + height - 1);
+    display_show_partial(x, y, width, height);
   }
 }
 
-void display_show_partial(uint32_t x_left, uint32_t x_right,
-  uint32_t y_top, uint32_t y_bottom)
+void display_show_partial(int x, int y, int width, int height)
 {
-  if (x_left >= DISPLAY_WIDTH || y_top >= DISPLAY_HEIGHT) { return; }
-  if (x_left > x_right || y_top > y_bottom) { return; }
-  if (x_right >= DISPLAY_WIDTH) { x_right = DISPLAY_WIDTH - 1; }
-  if (y_bottom >= DISPLAY_HEIGHT) { y_bottom = DISPLAY_HEIGHT - 1; }
+  if (x >= DISPLAY_WIDTH || y >= DISPLAY_HEIGHT) { return; }
+  if (width <= 0 || height <= 0) { return; }  // Avoid underflows below
+  if (x < 0) { width += x; x = 0; }
+  if (y < 0) { height += y; y = 0; }
+  if (width <= 0 || height <= 0) { return; }
+  if (width > DISPLAY_WIDTH - x) { width = DISPLAY_WIDTH - x; }
+  if (height > DISPLAY_HEIGHT - y) { height = DISPLAY_HEIGHT - y; }
+
   sh1106_transfer_start();
-  for (unsigned int page = y_top >> 3; page <= y_bottom >> 3; page++)
+  unsigned int last_page = (y + height - 1) >> 3;
+  for (unsigned int page = y >> 3; page <= last_page; page++)
   {
-    sh1106_write_page(page, x_left,
-      display_buffer + page * DISPLAY_WIDTH + x_left, x_right + 1 - x_left);
+    sh1106_write_page(page, x,
+      display_buffer + page * DISPLAY_WIDTH + x, width);
   }
   sh1106_transfer_end();
 }

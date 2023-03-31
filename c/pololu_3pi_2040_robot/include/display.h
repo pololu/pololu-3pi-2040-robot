@@ -134,14 +134,14 @@ void display_fill_rect(int x, int y, int width, int height, uint8_t flags);
 /// Writes the specified rectangular region of the graphics buffer to the
 /// display.
 ///
-/// It is OK to pass coordinates that are outside the bounds of the screen.
+/// It is OK to pass coordinates that are partially or fully outside the bounds
+/// of the screen.
 ///
-/// @param x_left The left-most column of the rectangle.
-/// @param x_right The right-most column of the rectangle.
-/// @param y_top The top-most row of the rectangle.
-/// @param y_bottom The bottom-most row of the rectangle.
-void display_show_partial(uint32_t x_left, uint32_t x_right,
-  uint32_t y_top, uint32_t y_bottom);
+/// @param x The left-most column of the rectangle (0 = left side of screen).
+/// @param y The top-most row of the rectangle (0 = top side of screen).
+/// @param width The width of the rectangle.
+/// @param height The height of the rectangle.
+void display_show_partial(int x, int y, int width, int height);
 
 /// Writes the entire graphics buffer to the display.
 void display_show(void);
