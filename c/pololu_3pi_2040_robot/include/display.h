@@ -115,11 +115,9 @@ bool display_get_pixel(unsigned int x, unsigned int y);
 ///   The lower 3 bits of this argument should be one of the COLOR_* macros.
 ///   If you want to immediately write the text to the OLED display, use
 ///   bitwise OR (|) to combine this color with DISPLAY_NOW.
-/// @return A number between 0 and 128 that is one plus the x coordinate of the
-///   rightmost column the on-screen portion of the text.
-///   (If none of the text is on the screen, the return value is unspecified.)
-///   This can be used to measure text.
-unsigned int display_text(const char * string, int x, int y, uint8_t flags);
+/// @return Returns one plus the x coordinate of the rightmost column of the
+///   text.
+int display_text(const char * string, int x, int y, uint8_t flags);
 
 /// @brief Draws a solid rectangle.
 /// @param x The left-most column of the rectangle (0 = left side of screen).

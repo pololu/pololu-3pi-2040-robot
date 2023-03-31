@@ -175,7 +175,7 @@ bool display_get_pixel(unsigned int x, unsigned int y)
 //
 // It does 32-bit writes (8x4 pixels), so x must be 4-aligned
 // and y must be 8-aligned.
-static unsigned int display_text_aligned(const char * text, int x, int y,
+static int display_text_aligned(const char * text, int x, int y,
   uint8_t flags)
 {
   int left_x = x;
@@ -184,14 +184,12 @@ static unsigned int display_text_aligned(const char * text, int x, int y,
 
   color32_func color = color32_funcs[flags & COLOR_MASK];
 
-  if (y <= -font_height || y > DISPLAY_HEIGHT - 8) { return 0; }
-
   // Address of the upper left sliver of the next display_buffer location.
   // Use uintptr_t instead of a pointer type because this could point to invalid
   // locations before or after display_buffer.
-  uintptr_t b = ((uintptr_t)&display_buffer) + y * 16 + x;
+  uintptr_t b = ((uintptr_t)&display_buffer) + (unsigned int)y * 16 + x;
 
-  while (x <= DISPLAY_WIDTH - 4)
+  while (1)
   {
     uint32_t c = *text++;
     if (c & 0x80) { c = read_utf8_continuation(&text, c); }
@@ -199,35 +197,33 @@ static unsigned int display_text_aligned(const char * text, int x, int y,
 
     const uint32_t * glyph = (const uint32_t *)find_glyph(display_font, c);
 
-    if (y >= 0)
+    if ((unsigned int)y < DISPLAY_HEIGHT)
     {
-      if (x >= 0)
+      if ((unsigned int)x < DISPLAY_WIDTH)
       {
-        color((void *)b, glyph[0]);
+        color((void *)b, glyph[0]);                         // Upper left 8x4
       }
-      if (x + 4 >= 0 && x + 4 <= DISPLAY_WIDTH - 4)
+      if ((unsigned int)(x + 4) < DISPLAY_WIDTH)
       {
-        color((void *)(b + 4), glyph[1]);
+        color((void *)(b + 4), glyph[1]);                   // Upper right 8x4
       }
     }
 
-    if (font_height > 8 && y + 8 <= DISPLAY_HEIGHT - 8)
+    if (font_height > 8 && (unsigned int)(y + 8) < DISPLAY_HEIGHT)
     {
-      if (x >= 0)
+      if ((unsigned int)x < DISPLAY_WIDTH)
       {
-        color((void *)(b + DISPLAY_WIDTH), glyph[2]);
+        color((void *)(b + DISPLAY_WIDTH), glyph[2]);       // Lower left 8x4
       }
-      if (x + 4 >= 0 && x + 4 <= DISPLAY_WIDTH - 4)
+      if ((unsigned int)(x + 4) < DISPLAY_WIDTH)
       {
-        color((void *)(b + DISPLAY_WIDTH + 4), glyph[3]);
+        color((void *)(b + DISPLAY_WIDTH + 4), glyph[3]);   // Lower right 8x4
       }
     }
 
     b += font_width;
-    x += font_width;
+    x = (unsigned int)x + font_width;  // avoid C undefined behavior
   }
-
-  if (x > DISPLAY_WIDTH) { x = DISPLAY_WIDTH; }
 
   if (flags & DISPLAY_NOW)
   {
@@ -245,10 +241,8 @@ static bool glyph_get_pixel(const uint8_t * glyph, unsigned int gx, unsigned int
   return glyph[(gy & ~7) + gx] >> (gy & 7) & 1;
 }
 
-unsigned int display_text(const char * text, int x, int y, uint8_t flags)
+int display_text(const char * text, int x, int y, uint8_t flags)
 {
-  if (x >= DISPLAY_WIDTH || y >= DISPLAY_HEIGHT) { return 0; }
-
   if ((x & 3) == 0 && (y & 7) == 0)
   {
     return display_text_aligned(text, x, y, flags);
@@ -287,7 +281,7 @@ unsigned int display_text(const char * text, int x, int y, uint8_t flags)
         }
       }
     }
-    x += font_width;
+    x = (unsigned int)x + font_width;  // avoid C undefined behavior
   }
 
   if (flags & DISPLAY_NOW)
@@ -297,7 +291,6 @@ unsigned int display_text(const char * text, int x, int y, uint8_t flags)
     display_show_partial(left_x, x - 1, y, y + font_height - 1);
   }
 
-  if (x > DISPLAY_WIDTH) { x = DISPLAY_WIDTH; }
   return x;
 }
 
