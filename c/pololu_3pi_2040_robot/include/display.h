@@ -90,14 +90,14 @@ void display_fill(uint8_t color);
 ///   what color to set the pixel to, or COLOR_XOR or COLOR_NOP.
 ///   If you want to immediately write the specified pixel to the OLED display,
 ///   use bitwise OR (|) to combine this color with DISPLAY_NOW.
-void display_pixel(uint32_t x, uint32_t y, uint8_t flags);
+void display_pixel(unsigned int x, unsigned int y, uint8_t flags);
 
 /// Gets the color of a specific pixel.
 ///
 /// @param x The column of the pixel (0 = left side).
 /// @param y The row of the pixel (0 = top side).
 /// @return 0 or 1
-bool display_get_pixel(uint32_t x, uint32_t y);
+bool display_get_pixel(unsigned int x, unsigned int y);
 
 /// @brief Writes text to the frame buffer and optionally to the display.
 ///
@@ -119,7 +119,7 @@ bool display_get_pixel(uint32_t x, uint32_t y);
 ///   rightmost column the on-screen portion of the text.
 ///   (If none of the text is on the screen, the return value is unspecified.)
 ///   This can be used to measure text.
-uint32_t display_text(const char * string, int x, int y, uint8_t flags);
+unsigned int display_text(const char * string, int x, int y, uint8_t flags);
 
 /// @brief Draws a solid rectangle.
 /// @param x The left-most column of the rectangle (0 = left side of screen).

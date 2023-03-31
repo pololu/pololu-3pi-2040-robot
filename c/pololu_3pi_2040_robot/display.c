@@ -1,7 +1,5 @@
 // Copyright (C) Pololu Corporation.  See LICENSE.txt for details.
 
-// TODO: use 'unsigned int' and 'int' wherever it makes sense, for easier porting
-// to AVRs.
 // TODO: change display_show_partial args to be the same as the first four of
 // display_fill_rect, or at least justify the difference
 
@@ -43,11 +41,11 @@ void display_set_font(const uint8_t * font)
 
 static const uint8_t * find_glyph(const font_header * font, uint32_t code)
 {
-  uint32_t glyph_count = font->glyph_count;
-  uint32_t mask = font->mask;
-  uint32_t glyph_size = font->glyph_size;
+  size_t glyph_count = font->glyph_count;
+  size_t mask = font->mask;
+  uint8_t glyph_size = font->glyph_size;
   const uint8_t * data = font->data;
-  uint32_t i = 0;
+  size_t i = 0;
   while (mask)
   {
     mask >>= 1;
@@ -159,7 +157,7 @@ color8_func color8_funcs[] = {
   color8_nop,  // reserved
 };
 
-void display_pixel(uint32_t x, uint32_t y, uint8_t flags)
+void display_pixel(unsigned int x, unsigned int y, uint8_t flags)
 {
   if (x >= DISPLAY_WIDTH || y >= DISPLAY_HEIGHT) { return; }
   uint8_t * p = display_buffer + (y >> 3) * DISPLAY_WIDTH + x;
@@ -167,15 +165,17 @@ void display_pixel(uint32_t x, uint32_t y, uint8_t flags)
   if (flags & DISPLAY_NOW) { display_show_partial(x, x, y, y); }
 }
 
-bool display_get_pixel(uint32_t x, uint32_t y)
+bool display_get_pixel(unsigned int x, unsigned int y)
 {
   if (x >= DISPLAY_WIDTH || y >= DISPLAY_HEIGHT) { return 0; }
   return display_buffer[(y >> 3) * DISPLAY_WIDTH + x] >> (y & 7) & 1;
 }
 
-// We do 32-bit writes (8x4 pixels), so x should be 4-aligned.
-// SH1106 pages are 8 pixels tall, so y should be 8-aligned.
-static uint32_t display_text_aligned(const char * text, int x, int y,
+// Faster version of display_text.
+//
+// It does 32-bit writes (8x4 pixels), so x must be 4-aligned
+// and y must be 8-aligned.
+static unsigned int display_text_aligned(const char * text, int x, int y,
   uint8_t flags)
 {
   int left_x = x;
@@ -245,7 +245,7 @@ static bool glyph_get_pixel(const uint8_t * glyph, unsigned int gx, unsigned int
   return glyph[(gy & ~7) + gx] >> (gy & 7) & 1;
 }
 
-uint32_t display_text(const char * text, int x, int y, uint8_t flags)
+unsigned int display_text(const char * text, int x, int y, uint8_t flags)
 {
   if (x >= DISPLAY_WIDTH || y >= DISPLAY_HEIGHT) { return 0; }
 
