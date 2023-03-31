@@ -255,9 +255,9 @@ uint32_t display_text(const char * text, int x, int y, uint32_t flags)
     return display_text_aligned(text, x, y, flags);
   }
 
-  size_t left_x = x;  // TODO: this will be bad for negative x, right?
-  uint32_t font_width = display_font->font_width;
-  uint32_t font_height = display_font->font_height;
+  int left_x = x;
+  uint8_t font_width = display_font->font_width;
+  uint8_t font_height = display_font->font_height;
 
   uint8_t fg = flags & COLOR_MASK, bg = COLOR_NOP;
   switch (fg)
@@ -274,9 +274,9 @@ uint32_t display_text(const char * text, int x, int y, uint32_t flags)
 
     const uint8_t * glyph = find_glyph(display_font, c);
 
-    for (uint32_t gx = 0; gx < font_width; gx++)
+    for (uint8_t gx = 0; gx < font_width; gx++)
     {
-      for (uint32_t gy = 0; gy < font_height; gy++)
+      for (uint8_t gy = 0; gy < font_height; gy++)
       {
         if (glyph_get_pixel(glyph, gx, gy))
         {
@@ -293,6 +293,8 @@ uint32_t display_text(const char * text, int x, int y, uint32_t flags)
 
   if (flags & DISPLAY_NOW)
   {
+    if (left_x < 0) { left_x = 0; }
+    if (y < 0) { y = 0; font_height += y; }
     display_show_partial(left_x, x - 1, y, y + font_height - 1);
   }
 
