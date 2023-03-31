@@ -2,7 +2,6 @@
 
 // TODO: use 'unsigned int' and 'int' wherever it makes sense, for easier porting
 // to AVRs.
-// TODO: make 'flags' be a uint8_t everywhere for the same reason?
 // TODO: change display_show_partial args to be the same as the first four of
 // display_fill_rect, or at least justify the difference
 
@@ -160,7 +159,7 @@ color8_func color8_funcs[] = {
   color8_nop,  // reserved
 };
 
-void display_pixel(uint32_t x, uint32_t y, uint32_t flags)
+void display_pixel(uint32_t x, uint32_t y, uint8_t flags)
 {
   if (x >= DISPLAY_WIDTH || y >= DISPLAY_HEIGHT) { return; }
   uint8_t * p = display_buffer + (y >> 3) * DISPLAY_WIDTH + x;
@@ -177,7 +176,7 @@ bool display_get_pixel(uint32_t x, uint32_t y)
 // We do 32-bit writes (8x4 pixels), so x should be 4-aligned.
 // SH1106 pages are 8 pixels tall, so y should be 8-aligned.
 static uint32_t display_text_aligned(const char * text, int x, int y,
-  uint32_t flags)
+  uint8_t flags)
 {
   int left_x = x;
   uint8_t font_width = display_font->font_width;
@@ -246,7 +245,7 @@ static bool glyph_get_pixel(const uint8_t * glyph, unsigned int gx, unsigned int
   return glyph[(gy & ~7) + gx] >> (gy & 7) & 1;
 }
 
-uint32_t display_text(const char * text, int x, int y, uint32_t flags)
+uint32_t display_text(const char * text, int x, int y, uint8_t flags)
 {
   if (x >= DISPLAY_WIDTH || y >= DISPLAY_HEIGHT) { return 0; }
 
@@ -302,7 +301,7 @@ uint32_t display_text(const char * text, int x, int y, uint32_t flags)
   return x;
 }
 
-void display_fill_rect(int x, int y, int width, int height, uint32_t flags)
+void display_fill_rect(int x, int y, int width, int height, uint8_t flags)
 {
   if (x >= DISPLAY_WIDTH || y >= DISPLAY_HEIGHT) { return; }
   if (width <= 0 || height <= 0) { return; }  // Avoid underflows below

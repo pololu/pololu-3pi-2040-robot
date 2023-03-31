@@ -63,7 +63,7 @@ extern uint8_t display_buffer[1024];
 
 /// A flag that can be passed to certain display functions indicating that they
 /// should show their changes to the OLED before returning.
-#define DISPLAY_NOW 0x100
+#define DISPLAY_NOW 0x80
 
 /// Calls sh1106_init() to initialize the OLED and also clears the graphics
 /// buffer.
@@ -86,11 +86,11 @@ void display_fill(uint8_t color);
 ///
 /// @param x The column of the pixel (0 = left side).
 /// @param y The row of the pixel (0 = top side).
-/// @param flags The lower byte of this argument should be 1 or 0 to indicate
+/// @param flags The lower 2 bits of this argument should be 1 or 0 to indicate
 ///   what color to set the pixel to, or COLOR_XOR or COLOR_NOP.
 ///   If you want to immediately write the specified pixel to the OLED display,
 ///   use bitwise OR (|) to combine this color with DISPLAY_NOW.
-void display_pixel(uint32_t x, uint32_t y, uint32_t flags);
+void display_pixel(uint32_t x, uint32_t y, uint8_t flags);
 
 /// Gets the color of a specific pixel.
 ///
@@ -112,14 +112,14 @@ bool display_get_pixel(uint32_t x, uint32_t y);
 /// @param x The left-most column of the text (0 = left side of screen).
 /// @param y The top-most row of the text (0 = top side of screen).
 /// @param flags
-///   The lower byte of this argument should be one of the COLOR_* macros.
+///   The lower 3 bits of this argument should be one of the COLOR_* macros.
 ///   If you want to immediately write the text to the OLED display, use
 ///   bitwise OR (|) to combine this color with DISPLAY_NOW.
 /// @return A number between 0 and 128 that is one plus the x coordinate of the
 ///   rightmost column the on-screen portion of the text.
 ///   (If none of the text is on the screen, the return value is unspecified.)
 ///   This can be used to measure text.
-uint32_t display_text(const char * string, int x, int y, uint32_t flags);
+uint32_t display_text(const char * string, int x, int y, uint8_t flags);
 
 /// @brief Draws a solid rectangle.
 /// @param x The left-most column of the rectangle (0 = left side of screen).
@@ -127,11 +127,11 @@ uint32_t display_text(const char * string, int x, int y, uint32_t flags);
 /// @param width The width of the rectangle.
 /// @param height The height of the rectangle.
 /// @param flags
-//    The lower byte of this argument should be 1 or 0 to indicate
-///   what color to set the pixel to, or COLOR_XOR or COLOR_NOP.
+//    The lower 2 bits of this argument should be 1 or 0 to indicate
+///   what color to fill the rectangle with, or COLOR_XOR or COLOR_NOP.
 ///   If you want to immediately write the text to the OLED display, use
 ///   bitwise OR (|) to combine this color with DISPLAY_NOW.
-void display_fill_rect(int x, int y, int width, int height, uint32_t flags);
+void display_fill_rect(int x, int y, int width, int height, uint8_t flags);
 
 /// Writes the specified rectangular region of the graphics buffer to the
 /// display.
