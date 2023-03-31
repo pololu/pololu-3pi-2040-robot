@@ -1,7 +1,5 @@
 // Copyright (C) Pololu Corporation.  See LICENSE.txt for details.
 
-// TODO: change display_text to take 'int' arguments for
-// easier porting back to AVRs and consistency with display_fill_rect.
 // TODO: use 'unsigned int' and 'int' wherever it makes sense, for easier porting
 // to AVRs.
 // TODO: make 'flags' be a uint8_t everywhere for the same reason?
@@ -165,8 +163,7 @@ color8_func color8_funcs[] = {
 void display_pixel(uint32_t x, uint32_t y, uint32_t flags)
 {
   if (x >= DISPLAY_WIDTH || y >= DISPLAY_HEIGHT) { return; }
-  uint8_t page = y >> 3;
-  uint8_t * p = display_buffer + page * DISPLAY_WIDTH + x;
+  uint8_t * p = display_buffer + (y >> 3) * DISPLAY_WIDTH + x;
   color8_funcs[flags & COLOR_MASK_NO_BG](p, 1 << (y & 7));
   if (flags & DISPLAY_NOW) { display_show_partial(x, x, y, y); }
 }
@@ -179,19 +176,23 @@ bool display_get_pixel(uint32_t x, uint32_t y)
 
 // We do 32-bit writes (8x4 pixels), so x should be 4-aligned.
 // SH1106 pages are 8 pixels tall, so y should be 8-aligned.
-static uint32_t display_text_aligned(const char * text, uint32_t x, uint32_t y,
+static uint32_t display_text_aligned(const char * text, int x, int y,
   uint32_t flags)
 {
-  size_t left_x = x;
-  uint32_t font_width = display_font->font_width;
-  uint32_t font_height = display_font->font_height;
-  uint32_t max_x = DISPLAY_WIDTH - font_width;
+  int left_x = x;
+  uint8_t font_width = display_font->font_width;
+  uint8_t font_height = display_font->font_height;
 
   color32_func color = color32_funcs[flags & COLOR_MASK];
 
-  if (y + font_height > 64) { return 0; }
+  if (y <= -font_height || y > DISPLAY_HEIGHT - 8) { return 0; }
 
-  while (x <= max_x)
+  // Address of the upper left sliver of the next display_buffer location.
+  // Use uintptr_t instead of a pointer type because this could point to invalid
+  // locations before or after display_buffer.
+  uintptr_t b = ((uintptr_t)&display_buffer) + y * 16 + x;
+
+  while (x <= DISPLAY_WIDTH - 4)
   {
     uint32_t c = *text++;
     if (c & 0x80) { c = read_utf8_continuation(&text, c); }
@@ -199,20 +200,40 @@ static uint32_t display_text_aligned(const char * text, uint32_t x, uint32_t y,
 
     const uint32_t * glyph = (const uint32_t *)find_glyph(display_font, c);
 
-    uint32_t * b = (uint32_t *)&display_buffer[y * 16 + x];
-    color(&b[0], glyph[0]);
-    color(&b[1], glyph[1]);
-    if (font_height > 8)
+    if (y >= 0)
     {
-      color(&b[32], glyph[2]);
-      color(&b[33], glyph[3]);
+      if (x >= 0)
+      {
+        color((void *)b, glyph[0]);
+      }
+      if (x + 4 >= 0 && x + 4 <= DISPLAY_WIDTH - 4)
+      {
+        color((void *)(b + 4), glyph[1]);
+      }
     }
 
+    if (font_height > 8 && y + 8 <= DISPLAY_HEIGHT - 8)
+    {
+      if (x >= 0)
+      {
+        color((void *)(b + DISPLAY_WIDTH), glyph[2]);
+      }
+      if (x + 4 >= 0 && x + 4 <= DISPLAY_WIDTH - 4)
+      {
+        color((void *)(b + DISPLAY_WIDTH + 4), glyph[3]);
+      }
+    }
+
+    b += font_width;
     x += font_width;
   }
 
+  if (x > DISPLAY_WIDTH) { x = DISPLAY_WIDTH; }
+
   if (flags & DISPLAY_NOW)
   {
+    if (left_x < 0) { left_x = 0; }
+    if (y < 0) { y = 0; font_height += y; }
     display_show_partial(left_x, x - 1, y, y + font_height - 1);
   }
 
@@ -220,16 +241,12 @@ static uint32_t display_text_aligned(const char * text, uint32_t x, uint32_t y,
 }
 
 // Assumption: the font width is 8, and gx and gy are valid coordinates.
-static bool glyph_get_pixel(const uint8_t * glyph, uint32_t gx, uint32_t gy)
+static bool glyph_get_pixel(const uint8_t * glyph, unsigned int gx, unsigned int gy)
 {
   return glyph[(gy & ~7) + gx] >> (gy & 7) & 1;
 }
 
-// TODO: fix the behavior when x < 0 but still aligned, I think no text will get displayed
-// TODO: fix the behavior when y is -8, I think there will be out of bounds writes in display_text_aligned
-// TODO: make sure we can draw 8x16 text where only the top or bottom half is visible,
-// preferably with draw_text_aligned but maybe that's asking too much
-uint32_t display_text(const char * text, int32_t x, int32_t y, uint32_t flags)
+uint32_t display_text(const char * text, int x, int y, uint32_t flags)
 {
   if (x >= DISPLAY_WIDTH || y >= DISPLAY_HEIGHT) { return 0; }
 
@@ -238,7 +255,7 @@ uint32_t display_text(const char * text, int32_t x, int32_t y, uint32_t flags)
     return display_text_aligned(text, x, y, flags);
   }
 
-  size_t left_x = x;
+  size_t left_x = x;  // TODO: this will be bad for negative x, right?
   uint32_t font_width = display_font->font_width;
   uint32_t font_height = display_font->font_height;
 

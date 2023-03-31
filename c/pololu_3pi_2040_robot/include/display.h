@@ -119,7 +119,7 @@ bool display_get_pixel(uint32_t x, uint32_t y);
 ///   rightmost column the on-screen portion of the text.
 ///   (If none of the text is on the screen, the return value is unspecified.)
 ///   This can be used to measure text.
-uint32_t display_text(const char * string, int32_t x, int32_t y, uint32_t flags);
+uint32_t display_text(const char * string, int x, int y, uint32_t flags);
 
 /// @brief Draws a solid rectangle.
 /// @param x The left-most column of the rectangle (0 = left side of screen).
