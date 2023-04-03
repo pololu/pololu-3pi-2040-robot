@@ -91,6 +91,7 @@ void sh1106_configure_default()
     SH1106_SET_SEGMENT_REMAP | 1,  // flip horizontally
     SH1106_SET_COM_SCAN_DIR | 8,   // flip vertically
     SH1106_SET_CONTRAST, 0xFF,     // maximum brightness
+    SH1106_SET_INVERT_DISPLAY,     // no invert
     SH1106_SET_DISPLAY_ON | 1,
   };
   sh1106_cmd(cmd, sizeof(cmd));
