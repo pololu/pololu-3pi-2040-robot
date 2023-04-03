@@ -193,7 +193,7 @@ int main()
     else
     {
       // Scale the bump sensor readings up so they are easier to see
-      const uint8_t bump_scale = 4;
+      const uint8_t bump_scale = 2;
       draw_bar(0, bump_sensors[0] * bump_scale,
         bump_sensors_threshold_min[0] * bump_scale,
         bump_sensors_threshold_max[0] * bump_scale);

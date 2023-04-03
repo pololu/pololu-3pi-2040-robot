@@ -63,11 +63,10 @@ static void ir_sensors_start_read()
   gpio_set_function(21, IR_FUNC);
   gpio_set_function(22, IR_FUNC);
 
-  sleep_us(10);
+  sleep_us(32);
 
   pio_sm_config cfg = qtr_sensor_counter_program_get_default_config(counter_offset);
   sm_config_set_clkdiv_int_frac(&cfg, 15, 160);   // 125/(15+160/256) = 8 MHz
-  sm_config_set_clkdiv_int_frac(&cfg, 31, 64);   // 125/(31+64/256) = 4 MHz
   sm_config_set_in_pins(&cfg, 16);
   sm_config_set_out_pins(&cfg, 16, 7);
   sm_config_set_fifo_join(&cfg, PIO_FIFO_JOIN_RX);
@@ -235,8 +234,6 @@ void bump_sensors_start_read()
   gpio_init(IR_EMITTER_BUMP);
   gpio_put(IR_EMITTER_BUMP, 1);
   gpio_set_dir(IR_EMITTER_BUMP, GPIO_OUT);
-
-  sleep_us(200);
 
   state = STATE_READ_BUMP;
   ir_sensors_start_read();
