@@ -4,6 +4,7 @@
 # pressing the button quickly.
 
 from pololu_3pi_2040_robot import robot
+
 display = robot.Display()
 button_a = robot.ButtonA()
 button_a.debounce_ms = 500

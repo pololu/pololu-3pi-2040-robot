@@ -1,11 +1,8 @@
 # This demo spins the robot in place by driving one motor forward and
 # the other back, while playing a tune on the buzzer.
 
-import time
-import random
-import rp2
-from machine import Pin
 from pololu_3pi_2040_robot import robot
+import time
 
 rgb_leds = robot.RGBLEDs()
 motors = robot.Motors()
@@ -16,8 +13,6 @@ display.fill(1)
 display.text("Spinning", 30, 20, 0)
 display.text("WATCH OUT", 27, 30, 0)
 display.show()
-
-rgb_leds.off()
 
 buzzer.play("L16 o4 cfa>cra>c4r4")
 
