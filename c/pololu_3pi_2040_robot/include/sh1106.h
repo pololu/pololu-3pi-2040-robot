@@ -29,4 +29,5 @@ void sh1106_configure_default(void);
 void sh1106_sleep(bool sleep);
 void sh1106_contrast(uint8_t contrast);
 void sh1106_invert(bool invert);
+void sh1106_rotate(uint16_t angle);  // 0 or 180
 void sh1106_init(void);

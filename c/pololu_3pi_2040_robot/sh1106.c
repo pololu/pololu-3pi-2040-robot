@@ -115,6 +115,19 @@ void sh1106_invert(bool invert)
   sh1106_cmd(cmd, sizeof(cmd));
 }
 
+void sh1106_rotate(uint16_t angle)
+{
+  if (angle == 0 || angle == 180)
+  {
+    bool flip = angle == 0;
+    uint8_t cmd[] = {
+      SH1106_SET_SEGMENT_REMAP | flip,      // flip horizontally
+      SH1106_SET_COM_SCAN_DIR | flip << 3,  // flip vertically
+    };
+    sh1106_cmd(cmd, sizeof(cmd));
+  }
+}
+
 void sh1106_init()
 {
   // The SH1106 datasheet specifies a maximum SPI frequency of 4 MHz, but it
