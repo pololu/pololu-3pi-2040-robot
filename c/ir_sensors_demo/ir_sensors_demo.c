@@ -50,6 +50,14 @@ void draw_mode()
   }
 }
 
+void draw_notch(uint32_t x, uint32_t value)
+{
+  uint32_t y = DISPLAY_HEIGHT - 1 - value / 32;
+  if (y < 32) { y = 32; }
+  if (y >= DISPLAY_HEIGHT) { y = DISPLAY_HEIGHT - 1; }
+  display_fill_rect(x, y, 2, 1, 1);
+}
+
 // Draws a bar at the bottom of the screen to indicate an IR sensor reading
 // between 0 and 1024.
 // The number of illuminated pixels in the bar will be value/4, meaning
@@ -57,39 +65,26 @@ void draw_mode()
 // Also draws small notches indicating the calibration range.
 void draw_bar(uint32_t x, uint32_t value, uint32_t cal_min, uint32_t cal_max)
 {
+  if (value > 1024) { value = 1024; }
+
+  uint32_t pixels = value / 4;
+
   // Draw the main bar.
-  int height = value / 32;
-  uint8_t remainder = value / 4 & 7;
-  for (uint8_t page = 7; page >= 4; page--)
-  {
-    for (uint32_t i = 0; i < 8; i++)
-    {
-      uint8_t mask = 0;
-      int local_height = height + (i < remainder);
-      if (local_height >= 0) { mask = -256 >> local_height; }
+  uint32_t height = pixels / 8;
+  display_fill_rect(x, DISPLAY_HEIGHT - height, 8, height, 1);
 
-      display_buffer[page * DISPLAY_WIDTH + x + i] = mask;
-    }
-    height -= 8;
-  }
+  // Draw extra pixels on top of the bar to provide 3 more bits of resolution.
+  uint8_t remainder = pixels % 8;
+  display_fill_rect(x, DISPLAY_HEIGHT - 1 - height, remainder, 1, 1);
 
-  // Draw the notches indicating the calibration range.
-  uint32_t cal_mask = 0;
+  // Draw the notches indicating the calibration values.
   if (cal_min <= 1024)
   {
-    cal_mask |= 1 << (31 - cal_min / 32);
+    draw_notch(x + 8, cal_min);
   }
   if (cal_max > 0 && cal_max <= 1024)
   {
-    // Prevent a left shift by a negative amount below.
-    if (cal_max > 1023) { cal_max = 1023; }
-    cal_mask |= 1 << (31 - cal_max / 32);
-  }
-  for (uint8_t page = 4; page < 8; page++)
-  {
-    display_buffer[page * DISPLAY_WIDTH + x + 8] = cal_mask;
-    display_buffer[page * DISPLAY_WIDTH + x + 9] = cal_mask;
-    cal_mask >>= 8;
+    draw_notch(x + 8, cal_max);
   }
 }
 
@@ -181,6 +176,8 @@ int main()
       bump_sensors_reset_calibration();
     }
 
+    // Redraw the bottom half of the display.
+    display_fill_rect(0, 32, 128, 32, 0);
     if (use_calibrated_read)
     {
       draw_bar(0, bump_sensors_pressed[0] * 1024, 1025, 1025);
