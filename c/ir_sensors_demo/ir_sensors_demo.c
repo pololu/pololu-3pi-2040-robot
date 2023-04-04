@@ -28,7 +28,8 @@ void draw_options()
 {
   if (calibrate)
   {
-    display_text("cal line sensor\u2026", 0, 0, COLOR_WHITE_ON_BLACK);
+    // Uses Unicode 0x2026 (…) instead of "..." to save two characters.
+    display_text("cal line sensor…", 0, 0, COLOR_WHITE_ON_BLACK);
     display_text("A: stop         ", 0, 8, COLOR_WHITE_ON_BLACK);
   }
   else
