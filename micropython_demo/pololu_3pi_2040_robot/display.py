@@ -17,3 +17,12 @@ class Display(sh1106_shared_spi.SH1106SharedSpi):
         f.readline() # Dimensions
         data = bytearray(f.read())
         return framebuf.FrameBuffer(data, 128, 64, framebuf.MONO_HLSB)
+
+    def save_pbm(self, filename):
+        buf = bytearray(self.bufsize)
+        data = framebuf.FrameBuffer(buf, self.width, self.height, framebuf.MONO_HLSB)
+        data.blit(self, 0, 0)
+        f = open(filename, 'wb')
+        f.write("P4\n128 64\n")
+        f.write(data)
+        f.close()
