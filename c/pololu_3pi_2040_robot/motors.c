@@ -1,6 +1,6 @@
 // Copyright (C) Pololu Corporation.  See LICENSE.txt for details.
 
-#include <pololu_3pi_2040_robot.h>
+#include <motors.h>
 #include <hardware/gpio.h>
 #include <hardware/pwm.h>
 
@@ -21,6 +21,7 @@ void motors_init()
   pwm_set_clkdiv_int_frac(7, 1, 0);
   pwm_set_wrap(7, MOTORS_MAX_SPEED - 1);
   pwm_set_enabled(7, true);
+  motors_set_speeds(0, 0);
 }
 
 void motors_flip_left(bool flip)

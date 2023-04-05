@@ -24,7 +24,7 @@ while True:
     bump = bump_sensors.read()
 
     # Start a background read; we'll time how long the
-    # non-blocking part takes alter.
+    # non-blocking part takes later.
     line_sensors.start_read()
 
     # In a real program you could do slow things while
@@ -56,7 +56,7 @@ while True:
             display.text('A: calibrate', 0, 10)
             display.text('C: switch mode', 0, 20)
         elif calibrate == 1:
-            display.text('cal line sensors...', 0, 10)
+            display.text('cal line sens...', 0, 10)
             display.text('A: stop', 0, 20)
 
     if button_a.check():

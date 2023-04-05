@@ -1,9 +1,9 @@
 // Copyright (C) Pololu Corporation.  See LICENSE.txt for details.
 
+#include <button.h>
 #include <pico/stdlib.h>
 #include <hardware/structs/ioqspi.h>
 #include <hardware/sync.h>
-#include <pololu_3pi_2040_robot.h>
 
 // Temporarily changes pin 25 to be an input in order to read button A.
 bool button_a_is_pressed()
@@ -49,4 +49,18 @@ bool button_c_is_pressed()
   bool r = !gpio_get(0);
   gpio_set_oeover(0, GPIO_OVERRIDE_NORMAL);
   return r;
+}
+
+int button_check(button * self)
+{
+  uint8_t s = self->is_pressed();
+  uint32_t t = time_us_32();
+  if (s != self->last_event && (uint32_t)(t - self->last_event_time) > self->debounce_us)
+  {
+    int edge = s - self->last_event;
+    self->last_event = s;
+    self->last_event_time = t;
+    return edge;
+  }
+  return 0;
 }

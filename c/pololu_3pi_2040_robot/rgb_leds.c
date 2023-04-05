@@ -1,13 +1,23 @@
 // Copyright (C) Pololu Corporation.  See LICENSE.txt for details.
 
+#include <rgb_leds.h>
 #include <pico/stdlib.h>
 #include <hardware/spi.h>
-#include <pololu_3pi_2040_robot.h>
+
+#define RGB_DATA_PIN 3
+#define RGB_CLOCK_PIN 6
+
+static uint16_t rgb_leds_cpsr;
+static uint16_t rgb_leds_cr0;
 
 static void rgb_leds_start_frame()
 {
-  gpio_set_function(6, GPIO_FUNC_SPI);
-  gpio_set_function(3, GPIO_FUNC_SPI);
+  // Quickly restore the correct clock frequency and format options.
+  spi0_hw->cpsr = rgb_leds_cpsr;
+  spi0_hw->cr0 = rgb_leds_cr0;
+
+  gpio_set_function(RGB_CLOCK_PIN, GPIO_FUNC_SPI);
+  gpio_set_function(RGB_DATA_PIN, GPIO_FUNC_SPI);
 
   uint8_t start_frame[] = { 0, 0, 0, 0 };
   spi_write_blocking(spi0, start_frame, sizeof(start_frame));
@@ -21,11 +31,11 @@ static void rgb_leds_end_frame(size_t count)
     spi_write_blocking(spi0, &zero, 1);
   }
 
-  gpio_set_function(6, GPIO_FUNC_SIO);
-  gpio_deinit(3);
+  gpio_set_function(RGB_DATA_PIN, GPIO_FUNC_NULL);  // stop driving
+  gpio_set_function(RGB_CLOCK_PIN, GPIO_FUNC_SIO);  // drive low
 }
 
-void rgb_leds_write(rgb_color * colors, size_t count, uint8_t brightness)
+void rgb_leds_write(rgb_color * colors, uint32_t count, uint8_t brightness)
 {
   rgb_leds_start_frame();
   uint8_t frame[4] = { 0xE0 | (brightness & 0x1F) };
@@ -47,11 +57,12 @@ void rgb_leds_off()
 
 void rgb_leds_init()
 {
-  // Note: We'd have to rethink how we are initializing things here if we
-  // want the OLED to also use hardware SPI.
-
   spi_init(spi0, 20000000);
-  spi_set_format(spi0, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_LSB_FIRST);
+  rgb_leds_cpsr = spi0_hw->cpsr;
+  rgb_leds_cr0 = spi0_hw->cr0;
+
+  gpio_init(RGB_CLOCK_PIN);
+  gpio_set_dir(RGB_CLOCK_PIN, GPIO_OUT);
 
   rgb_leds_off();
 }

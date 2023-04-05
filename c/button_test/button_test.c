@@ -1,5 +1,9 @@
-// This example shows how to read the buttons on the Pololu 3p+ 2040 Robot and
-// print to the USB serial port.
+// This example shows how to read the buttons on the Pololu 3p+ 2040 Robot.
+// This includes the three pushbuttons on the control board and the two bump
+// sensors on the front of the robot, which can be used as buttons.
+//
+// The bump sensors are calibrated when the program starts running: they should
+// not be pressed at that time in order to get an accurate calibration.
 
 #include <string.h>
 #include <stdio.h>
@@ -8,46 +12,70 @@
 
 char last_report[64];
 
+// Pushbuttons on the control board.
+button button_a = BUTTON_INIT(button_a_is_pressed);
+button button_b = BUTTON_INIT(button_b_is_pressed);
+button button_c = BUTTON_INIT(button_c_is_pressed);
+
+// Bump sensors on the front of the robot.
+button button_l = BUTTON_INIT(bump_sensor_left_is_pressed);
+button button_r = BUTTON_INIT(bump_sensor_right_is_pressed);
+
+uint32_t cursor_x;
+
+void oled_print(const char * str)
+{
+  display_set_font(font_8x16);
+  if (cursor_x >= DISPLAY_WIDTH)
+  {
+    display_fill_rect(0, 48, DISPLAY_WIDTH, 16, 0 | DISPLAY_NOW);
+    cursor_x = 0;
+  }
+  cursor_x = display_text(str, cursor_x, 48, 1 | DISPLAY_NOW);
+}
+
 int main()
 {
   stdio_init_all();
-  rgb_leds_init();
-  sh1106_init();
+  display_init();
+  bump_sensors_calibrate();
+
+  // Set the debouncing on button A to 500 ms so it is easy to tell that the
+  // debouncing works: if you press button A twice quickly, only one press
+  // will register.
+  button_a.debounce_us = 500000;
+
+  display_text("A:", 0, 0, 1);
+  display_text("B:", 0, 8, 1);
+  display_text("C:", 0, 16, 1);
+  display_text("L:", 64, 0, 1);
+  display_text("R:", 64, 8, 1);
+
+  display_text("Debounced output", 0, 28, 1);
+  display_text("with A at 500ms:", 0, 36, 1);
+  display_show();
 
   while (true)
   {
-    yellow_led(time_us_32() >> 18 & 1);
-
-    // Print the button states to USB if they have changed.
-    char report[64];
-    sprintf(report, "%c%c%c",
-      button_a_is_pressed() ? 'A' : '-',
-      button_b_is_pressed() ? 'B' : '-',
-      button_c_is_pressed() ? 'C' : '-'
-    );
-    if (strcmp(last_report, report))
-    {
-      printf("%s\n", report);
-      strcpy(last_report, report);
-    }
-
-    // Show the button states on the OLED.
+    // Read the buttons.
     bool a_pressed = button_a_is_pressed();
     bool b_pressed = button_b_is_pressed();
     bool c_pressed = button_c_is_pressed();
-    sh1106_transfer_start();
-    for (uint8_t page = 0; page < 8; page++)
-    {
-      if (page == 7) { a_pressed = b_pressed = c_pressed = true; }
-      sh1106_start_page_write(page);
-      uint8_t x = 0;
-      while (x < 2) { x++; }
-      while (x < 42) { x++; sh1106_write(a_pressed ? 0xFF : 0x00); }
-      while (x < 44) { x++; sh1106_write(0); }
-      while (x < 84) { x++; sh1106_write(b_pressed ? 0xFF : 0x00); }
-      while (x < 86) { x++; sh1106_write(0); }
-      while (x < 126) { x++; sh1106_write(c_pressed ? 0xFF : 0x00); }
-    }
-    sh1106_transfer_end();
+    bump_sensors_read();
+
+    // Show the button states on the OLED.
+    display_set_font(font_8x8);
+    display_text(a_pressed ? "1" : "0", 24, 0, COLOR_WHITE_ON_BLACK | DISPLAY_NOW);
+    display_text(b_pressed ? "1" : "0", 24, 8, COLOR_WHITE_ON_BLACK | DISPLAY_NOW);
+    display_text(c_pressed ? "1" : "0", 24, 16, COLOR_WHITE_ON_BLACK | DISPLAY_NOW);
+    display_text(bump_sensors_pressed[0] ? "1" : "0", 88, 0, COLOR_WHITE_ON_BLACK | DISPLAY_NOW);
+    display_text(bump_sensors_pressed[1] ? "1" : "0", 88, 8, COLOR_WHITE_ON_BLACK | DISPLAY_NOW);
+
+    // At the bottom of the OLED, print a record of button press events.
+    if (button_check(&button_a) == 1) { oled_print("A"); }
+    if (button_check(&button_b) == 1) { oled_print("B"); }
+    if (button_check(&button_c) == 1) { oled_print("C"); }
+    if (button_check(&button_l) == 1) { oled_print("L"); }
+    if (button_check(&button_r) == 1) { oled_print("R"); }
   }
 }

@@ -2,26 +2,19 @@
 
 // Low-level library for the SH1106 OLED display.
 
-// TODO: Use hardware SPI instead of GPIO
-
+#include <sh1106.h>
 #include <pico/stdlib.h>
-#include <pololu_3pi_2040_robot.h>
+#include <hardware/spi.h>
 
 #define SH1106_DC_PIN 0
 #define SH1106_RES_PIN 1
 #define SH1106_CLK_PIN 2
 #define SH1106_MOS_PIN 3
 
-void sh1106_init_pins(void)
-{
-  gpio_init(SH1106_RES_PIN);
-  gpio_set_dir(SH1106_RES_PIN, GPIO_OUT);
+static uint16_t sh1106_cpsr;
+static uint16_t sh1106_cr0;
 
-  gpio_init(SH1106_CLK_PIN);
-  gpio_set_dir(SH1106_CLK_PIN, GPIO_OUT);
-}
-
-void sh1106_reset(void)
+void sh1106_reset()
 {
   gpio_put(SH1106_RES_PIN, 0);
   sleep_us(10);
@@ -29,100 +22,129 @@ void sh1106_reset(void)
   sleep_us(10);
 }
 
-void sh1106_transfer_start(void)
+void sh1106_transfer_start()
 {
-  gpio_init(SH1106_MOS_PIN);
-  gpio_set_dir(SH1106_MOS_PIN, GPIO_OUT);
+  // Quickly restore the correct clock frequency and format options.
+  spi0_hw->cpsr = sh1106_cpsr;
+  spi0_hw->cr0 = sh1106_cr0;
 
-  gpio_init(SH1106_DC_PIN);
+  gpio_set_function(SH1106_CLK_PIN, GPIO_FUNC_SPI);
+  gpio_set_function(SH1106_MOS_PIN, GPIO_FUNC_SPI);
+  gpio_set_function(SH1106_DC_PIN, GPIO_FUNC_SIO);
   gpio_set_dir(SH1106_DC_PIN, GPIO_OUT);
 }
 
-void sh1106_transfer_end(void)
+void sh1106_transfer_end()
 {
-  gpio_deinit(SH1106_MOS_PIN);
-  gpio_deinit(SH1106_DC_PIN);
+  gpio_set_function(SH1106_DC_PIN, GPIO_FUNC_NULL);   // stop driving
+  gpio_set_function(SH1106_MOS_PIN, GPIO_FUNC_NULL);  // stop driving
+  gpio_set_function(SH1106_CLK_PIN, GPIO_FUNC_SIO);   // drive low
 }
 
-void sh1106_command_mode(void)
+void sh1106_command_mode()
 {
   gpio_put(SH1106_DC_PIN, 0);
 }
 
-void sh1106_data_mode(void)
+void sh1106_data_mode()
 {
   gpio_put(SH1106_DC_PIN, 1);
 }
 
-// Experimentally, we found that there needs to be one NOP between "str"
-// instructions writing to OLED pins or else the communication is too fast.
-// Let's use 4 to be a little extra safe.
-static void sh1106_delay(void)
-{
-  __asm__("nop\n" "nop\n" "nop\n" "nop\n");
-}
-
-// Note: We should try rewriting this to use hardware SPI.
-void sh1106_write(uint8_t d)
-{
-  for (uint8_t i = 0; i < 8; i++)
-  {
-    gpio_put(SH1106_CLK_PIN, 0);
-    sh1106_delay();
-    gpio_put(SH1106_MOS_PIN, d & 0x80);
-    sh1106_delay();
-    gpio_put(SH1106_CLK_PIN, 1);
-    sh1106_delay();
-    d <<= 1;
-  }
-}
-
-void sh1106_start_page_write(uint8_t page)
+void sh1106_write_page(uint8_t page, uint8_t x, const uint8_t * data, uint32_t length)
 {
   sh1106_command_mode();
-  sh1106_write(SH1106_SET_PAGE_ADDR | page);
-  sh1106_write(SH1106_SET_COLUMN_ADDR_HIGH | 0);
-  sh1106_write(SH1106_SET_COLUMN_ADDR_LOW | 2);
+  uint8_t column = x + 2;
+  uint8_t cmd[] = {
+    SH1106_SET_PAGE_ADDR | page,
+    SH1106_SET_COLUMN_ADDR_HIGH | (column >> 4),
+    SH1106_SET_COLUMN_ADDR_LOW | (column & 0xF),
+  };
+  spi_write_blocking(spi0, cmd, sizeof(cmd));
   sh1106_data_mode();
+  spi_write_blocking(spi0, data, length);
 }
 
-void sh1106_clear(void)
+void sh1106_clear()
 {
+  uint8_t empty[128] = { 0 };
   sh1106_transfer_start();
   sh1106_command_mode();
-  sh1106_write(SH1106_SET_COLUMN_ADDR_LOW | 2);
   for (uint8_t page = 0; page < 8; page++)
   {
-    sh1106_start_page_write(page);
-    for (uint8_t i = 0; i < 128; i++)
-    {
-      sh1106_write(0);
-    }
+    sh1106_write_page(page, 0, empty, 128);
   }
   sh1106_transfer_end();
 }
 
-void sh1106_configure_default(void)
+static void sh1106_cmd(const uint8_t * cmd, uint32_t size)
 {
   sh1106_transfer_start();
   sh1106_command_mode();
-  sh1106_write(SH1106_SET_SEGMENT_REMAP | 1);  // flip horizontally
-  sh1106_write(SH1106_SET_COM_SCAN_DIR | 8);   // flip vertically
-  sh1106_write(SH1106_SET_CONTRAST);
-  sh1106_write(0xFF);                // maximum brightness
-  sh1106_write(SH1106_SET_DISPLAY_ON | 1);
+  spi_write_blocking(spi0, cmd, size);
   sh1106_transfer_end();
 }
 
-void sh1106_init(void)
+void sh1106_configure_default()
 {
-  sh1106_init_pins();
+  uint8_t cmd[] = {
+    SH1106_SET_SEGMENT_REMAP | 1,  // flip horizontally
+    SH1106_SET_COM_SCAN_DIR | 8,   // flip vertically
+    SH1106_SET_CONTRAST, 0xFF,     // maximum brightness
+    SH1106_SET_INVERT_DISPLAY,     // no invert
+    SH1106_SET_DISPLAY_ON | 1,
+  };
+  sh1106_cmd(cmd, sizeof(cmd));
+}
 
-  // Sometimes the OLED doesn't get initialized properly and stays off,
-  // or displays its pages in the incorrect positions,
-  // especially when plugging USB into an unpowered 3pi04a board.
-  // This delay seems to fix that, but I haven't characterized the necessary
-  // timing carefully.
+void sh1106_sleep(bool sleep)
+{
+  uint8_t cmd[] = { SH1106_SET_DISPLAY_ON | !sleep };
+  sh1106_cmd(cmd, sizeof(cmd));
+}
+
+void sh1106_contrast(uint8_t contrast)
+{
+  uint8_t cmd[] = { SH1106_SET_CONTRAST, contrast };
+  sh1106_cmd(cmd, sizeof(cmd));
+}
+
+void sh1106_invert(bool invert)
+{
+  uint8_t cmd[] = { SH1106_SET_INVERT_DISPLAY | invert };
+  sh1106_cmd(cmd, sizeof(cmd));
+}
+
+void sh1106_rotate(uint16_t angle)
+{
+  if (angle == 0 || angle == 180)
+  {
+    bool flip = angle == 0;
+    uint8_t cmd[] = {
+      SH1106_SET_SEGMENT_REMAP | flip,      // flip horizontally
+      SH1106_SET_COM_SCAN_DIR | flip << 3,  // flip vertically
+    };
+    sh1106_cmd(cmd, sizeof(cmd));
+  }
+}
+
+void sh1106_init()
+{
+  // The SH1106 datasheet specifies a maximum SPI frequency of 4 MHz, but it
+  // seems to work fine up to at least 31 MHz.
+  spi_init(spi0, 20000000);
+  sh1106_cpsr = spi0_hw->cpsr;
+  sh1106_cr0 = spi0_hw->cr0;
+
+  gpio_init(SH1106_RES_PIN);
+  gpio_set_dir(SH1106_RES_PIN, GPIO_OUT);
+
+  gpio_init(SH1106_CLK_PIN);
+  gpio_set_dir(SH1106_CLK_PIN, GPIO_OUT);
+
+  // Give the OLED some time to start up.  Without this, it sometimes gets
+  // misconfigured and displays things in the wrong positions, espcially
+  // when plugging USB into a robot that has been unpowered for a while.
   absolute_time_t oled_ready;
   update_us_since_boot(&oled_ready, 20000);
   sleep_until(oled_ready);
