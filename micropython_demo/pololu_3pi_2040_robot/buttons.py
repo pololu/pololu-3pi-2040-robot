@@ -1,5 +1,6 @@
 from machine import Pin
 import machine
+import rp2
 from time import ticks_us, sleep_us
 
 class Button():
@@ -27,8 +28,7 @@ class ButtonA(Button):
     
 class ButtonB(Button):
     def is_pressed(self):
-        from ._lib.read_bootsel import read_bootsel
-        return not read_bootsel()
+        return rp2.bootsel_button()
         
 class ButtonC(Button):
     def __init__(self):
