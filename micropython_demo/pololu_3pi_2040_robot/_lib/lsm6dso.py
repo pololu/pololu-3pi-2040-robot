@@ -118,7 +118,7 @@ class LSM6DSOGyro(imu_sensor.IMUSensor):
 
     def enable_default(self):
         self.set_output_data_rate(208)
-        self.set_full_scale(250)
+        self.set_full_scale(2000)
 
     def data_ready(self):
         # STATUS_REG.GDA
