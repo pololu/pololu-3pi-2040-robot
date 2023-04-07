@@ -58,7 +58,7 @@ class Menu:
                 self.buzzer.play_in_background(self.select_button_beep)
             return self.index
 
-    def run():
+    def run(self):
         self.first_update = True
         while self.update() is None: pass
         return self.index

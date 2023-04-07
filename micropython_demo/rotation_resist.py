@@ -1,6 +1,17 @@
-# TODO: tune the PID parameters for standard edition
-# TODO: make it work well on the other editions too (with a menu to select them?)
-# TODO: abstract the gyro calibration stuff into pololu_3pi_2040_robot.extras.turn_sensor?
+# This demo shows how the 3pi+ can use its gyroscope to detect when it is being
+# rotated, and use the motors to resist that rotation.
+#
+# In the "Choose edition" menu, use the A and C buttons to select what type of
+# 3pi+ robot you have.
+#
+# Be careful to not move the robot during gyro calibration, while it says
+# "Calibrating..." on the screen.
+#
+# After the gyro calibration is done, press button A to start the motors.
+# If you try to turn the 3pi+, or put it on a surface that is turning, it will
+# drive its motors to counteract the turning.  This demo only uses the Z axis
+# of the gyro, so it is possible to pick up the 3pi+, rotate it about its X
+# and Y axes, and then put it down facing in a new position.
 
 from pololu_3pi_2040_robot import robot
 from pololu_3pi_2040_robot.extras import editions
@@ -12,23 +23,36 @@ button_c = robot.ButtonC()
 display = robot.Display()
 yellow_led = robot.YellowLED()
 
+display.fill(0)
+display.text("Starting IMU...", 0, 0, 1)
+display.show()
 imu = robot.IMU()
 imu.reset()
 imu.enable_default()
 imu_start = time.ticks_ms()
 
-edition = editions.menu()
+edition = editions.select()
 
-# Standard edition motion parameters:
-max_speed = 3000
-kp = 160
-kd = 4
+if edition == "Standard":
+    max_speed = 3000
+    kp = 160
+    kd = 4
+elif edition == "Turtle":   # TODO: tune
+    max_speed = 6000
+    kp = 200
+    kd = 0
+elif edition == "Hyper":    # TODO: tune
+    motors.flip_left(True)
+    motors.flip_right(True)
+    max_speed = 1500
+    kp = 200
+    kd = 0
 
 display.fill(0)
 display.text("Calibrating...", 0, 0, 1)
 display.show()
 # skip spurious readings at startup
-while time.ticks_diff(time.ticks_ms(), imu_state) < 500: pass
+while time.ticks_diff(time.ticks_ms(), imu_start) < 500: pass
 calibration_start = time.ticks_ms()
 stationary_gz = 0.0
 reading_count = 0
@@ -55,7 +79,7 @@ def draw_text():
   display.text(a, 0, 0, 1)
   display.text(f"Angle:", 0, 32, 1)
   if log: display.text("Logging", 0, 48, 1)
-  display.text(f"PD: {kp}, {kd}", 0, 56, 1)
+  display.text(edition, 0, 56, 1)
 
 draw_text()
 
@@ -108,4 +132,3 @@ while True:
     else:
         motors.off()
         yellow_led.off()
-
