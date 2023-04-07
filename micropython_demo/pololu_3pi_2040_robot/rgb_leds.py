@@ -33,11 +33,21 @@ class RGBLEDs():
         else:
             for l in range(self._led_count):
                 self.set_brightness(value, led=l)
+    
+    def get_brightness(self, led=0):
+        return self.data[4 + led*4] & 0x1f
 
     def set(self, led, rgb):
         self.data[4 + led*4 + 1] = round(rgb[2])
         self.data[4 + led*4 + 2] = round(rgb[1])
         self.data[4 + led*4 + 3] = round(rgb[0])
+
+    def get(self, led):
+        return [
+            self.data[4 + led*4 + 3],
+            self.data[4 + led*4 + 2],
+            self.data[4 + led*4 + 1]
+            ]
     
     def set_hsv(self, led, hsv, h_scale=360):
         self.set(led, self.hsv2rgb(hsv[0], hsv[1], hsv[2], h_scale=h_scale))
@@ -52,9 +62,9 @@ class RGBLEDs():
         h = h % h_scale
         region = h // sixth
         remainder = (h - (region * sixth)) * 6
-        p = (v * (255 - s)) // 256
-        q = (v * (255 - ((s * remainder) // h_scale))) // 256
-        t = (v * (255 - ((s * (h_scale - remainder)) // h_scale))) // 256
+        p = (v * (255 - s)) // 255
+        q = (v * (255 - ((s * remainder) // h_scale))) // 255
+        t = (v * (255 - ((s * (h_scale - remainder)) // h_scale))) // 255
 
         if region == 0:
             return [v, t, p]

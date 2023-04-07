@@ -48,11 +48,11 @@ class Menu:
         if self.next_button and self.next_button.check():
             if self.buzzer and self.next_button_beep:
                 self.buzzer.play_in_background(self.next_button_beep)
-            self.index = min(self.index + 1, count - 1)
+            self.index = (self.index + 1) % count
         if self.previous_button and self.previous_button.check():
             if self.buzzer and self.previous_button_beep:
                 self.buzzer.play_in_background(self.previous_button_beep)
-            self.index = max(self.index - 1, 0)
+            self.index = (self.index - 1) % count
         if self.select_button and self.select_button.check():
             if self.buzzer and self.select_button_beep:
                 self.buzzer.play_in_background(self.select_button_beep)
