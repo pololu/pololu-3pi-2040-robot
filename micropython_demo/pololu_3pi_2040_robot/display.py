@@ -11,9 +11,28 @@ class Display(sh1106_shared_spi.SH1106SharedSpi):
         super().__init__(128, 64, spi, dc, sck_pin, res=res, rotate=180)
 
     def load_pbm(self, filename):
-        f = open(filename, 'rb')
-        f.readline() # Magic number
-        f.readline() # Creator comment
-        f.readline() # Dimensions
-        data = bytearray(f.read())
+        with open(filename, 'rb') as f:
+          f.readline() # Magic number
+          f.readline() # Creator comment
+          f.readline() # Dimensions
+          data = bytearray(f.read())
         return framebuf.FrameBuffer(data, 128, 64, framebuf.MONO_HLSB)
+
+    def exception(self, e):
+        self.text(type(e).__name__ + ":", 0, 0, 1)
+        try:
+            from sys import _exc_traceback
+            traceback = ",".join(map(str, _exc_traceback(e)[1::3]))
+            self.text(traceback, 0, 56, 1)
+            msg_line_count = 6
+        except ImportError:
+            msg_line_count = 7
+        msg = str(e)
+        for i in range(msg_line_count):
+            msg_line = msg[i*16:(i+1)*16]
+            self.text(msg_line, 0, 8 * (i + 1), 1)
+
+    def show_exception(e):
+        display = Display()
+        display.exception(e)
+        display.show()
