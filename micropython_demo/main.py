@@ -20,7 +20,9 @@
 # If your default program exits normally, this script
 # will try to shut off the RGB LEDs, motors, and
 # buzzer.  If it raises an exception, it will be
-# shown on the screen.
+# shown on the screen.  You can get more details about
+# the exception from the REPL by running:
+#   sys.print_exception(exc)
 #
 # If you don't need these features, you can of course
 # replace this script with your own main.py.
@@ -36,19 +38,14 @@ try:
 except Exception as e:
     from pololu_3pi_2040_robot.motors import Motors
     Motors()   # turn off Motors ASAP
+    exc = e    # enable access to original exception in REPL
     from pololu_3pi_2040_robot.rgb_leds import RGBLEDs
     RGBLEDs()  # turn off RGB LEDs
     from pololu_3pi_2040_robot.buzzer import Buzzer
     buzzer = Buzzer()
 
     from pololu_3pi_2040_robot.display import Display
-    display = Display()
-    display.text(type(e).__name__+":", 0, 0, 1)
-    msg = str(e)
-    msglines = [msg[i:i+16] for i in range(0, len(msg), 16)]
-    for i in range(len(msglines)):
-        display.text(msglines[i], 0, 8*(i+1), 1)
-    display.show()
+    Display.show_exception(e)
     buzzer.play("O2c4")
     raise
 
@@ -65,3 +62,4 @@ finally:
 
     # make the REPL friendlier, if you enter it the right way
     from pololu_3pi_2040_robot import robot
+    import sys
