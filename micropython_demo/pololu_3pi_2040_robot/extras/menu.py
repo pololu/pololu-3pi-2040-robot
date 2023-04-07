@@ -24,12 +24,12 @@ class Menu:
             if self.next_button:
                 self.next_button.check()
             self.first_update = False
-        
+
         count = len(self.options)
-        
+
         if self.display:
             self.display.fill(0)
-                
+
             y = 18
             self.display.fill_rect(0, y-1, 127, 10, 1)
             for i in range(count):
@@ -37,13 +37,13 @@ class Menu:
                     self.display.text(self.options[i], 0, y - self.index*10, 0)
                 else:
                     self.display.text(self.options[i], 0, y - self.index*10)
-                
+
                 y += 10
-                
+
             self.display.fill_rect(0, 0, 127, 10, 0)
             self.display.line(0, 10, 127, 10, 1)
             self.display.text(self.top_message, 0, 0)
-        
+
             self.display.show()
         if self.next_button and self.next_button.check():
             if self.buzzer and self.next_button_beep:
@@ -58,3 +58,7 @@ class Menu:
                 self.buzzer.play_in_background(self.select_button_beep)
             return self.index
 
+    def run():
+        self.first_update = True
+        while self.update() is None: pass
+        return self.index
