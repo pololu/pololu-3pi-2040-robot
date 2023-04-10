@@ -21,24 +21,36 @@ display.show()
 imu = robot.IMU()
 imu.reset()
 imu.enable_default()
-imu.acc.set_output_data_rate(12.5)  # TODO: needed?
+#imu.acc.set_output_data_rate(12.5)  # TODO: needed?
 
 edition = editions.select()
 
+# 12.5 Hz ODR: oscillation happened around 16000, with period of 0.25 s.
+# Regular ODS: oscillation happened at 25000, with period of ~0.125 s
 if edition == "Standard":   # TODO: tune
     max_speed = 3000
     ke = 15
-    kp = 6144
+    kp = 20000
+    # TODO: kp = 12800, kd = 500
 elif edition == "Turtle":   # TODO: tune
     max_speed = 6000
     ke = 15
-    kp = 6144
+    kp = 8000
 elif edition == "Hyper":    # TODO: tune
     motors.flip_left(True)
     motors.flip_right(True)
     max_speed = 1500
     ke = 15
-    kp = 6144
+    kp = 8000
+
+last_display_time = 0
+log = None
+log_start_time = None
+x = 0
+y = 0
+gz = 0
+last_acc_read_time = 0
+sy = 0
 
 def constrain_speed(speed):
   if speed < -max_speed: return -max_speed
@@ -50,21 +62,42 @@ def draw_text():
   display.text(f"x:", 0, 24, 1)
   display.text(f"y:", 0, 32, 1)
   display.text(f"e:", 0, 40, 1)
+  if log: display.text("Logging", 0, 48, 1)
   display.text(edition, 0, 56, 1)
+
+def log_time():
+    return time.ticks_diff(time.ticks_us(), log_start_time)
 
 draw_text()
 display.show()
 
 time.sleep_ms(500)  # Delay before running motors.
 
-last_display_time = 0
-
 while True:
     # Read the accelerometer and encoders.
-    imu.acc.read()
-    x = imu.acc.last_reading_g[0]
-    y = imu.acc.last_reading_g[1]
-    encoder_counts = sum(encoders.get_counts())
+    if imu.acc.data_ready():
+        imu.acc.read()
+        dt = time.ticks_diff(time.ticks_us(), last_acc_read_time)
+        sy = (imu.acc.last_reading_g[1] - y) * 1000000 / dt
+        x = imu.acc.last_reading_g[0]
+        y = imu.acc.last_reading_g[1]
+        encoder_counts = sum(encoders.get_counts())
+        if log: print(f"{log_time()},{x:.3f},{y:.3f},{sy:.4f},{gz:.3f}", file=log)
+        last_acc_read_time = time.ticks_us()
+
+    if imu.gyro.data_ready():
+        imu.gyro.read()
+        gz = imu.gyro.last_reading_dps[2]
+
+    # If the user pressed button C, toggle data logging.
+    if button_c.check() == True:
+        if log:
+            log.close()
+            log = None
+        else:
+            log = open("face_uphill.log", "w")
+            log_start_time = time.ticks_us()
+        draw_text()
 
     # Display sensor readings on the OLED every 150 ms.
     if time.ticks_diff(time.ticks_ms(), last_display_time) > 150:
