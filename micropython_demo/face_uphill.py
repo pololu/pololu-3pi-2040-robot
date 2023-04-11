@@ -25,21 +25,20 @@ imu.enable_default()
 edition = editions.select()
 if edition == "Standard":
     max_speed = 3000
-    kp = 160
+    kp = 140
     kd = 4
-    ke = 15
-elif edition == "Turtle":   # TODO: tune
+elif edition == "Turtle":
     max_speed = 6000
-    kp = 200
-    kd = 0
-    ke = 15
-elif edition == "Hyper":    # TODO: tune
+    kp = 350
+    kd = 7
+elif edition == "Hyper":
     motors.flip_left(True)
     motors.flip_right(True)
+    encoders.flip(True)
     max_speed = 1500
-    kp = 200
-    kd = 0
-    ke = 15
+    kp = 140
+    kd = 4
+ke = 15
 
 drive_motors = False
 last_time_gyro_reading = None
