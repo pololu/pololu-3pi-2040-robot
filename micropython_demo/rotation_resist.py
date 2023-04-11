@@ -63,8 +63,8 @@ stationary_gz /= reading_count
 
 drive_motors = False
 last_time_gyro_reading = None
-turn_rate = 0.0
-robot_angle = 0.0
+turn_rate = 0.0    # degrees per second
+robot_angle = 0.0  # degrees
 
 def draw_text():
     display.fill(0)
@@ -108,11 +108,11 @@ while True:
 
     # Drive motors.
     if drive_motors:
-        speed = robot_angle * kp + turn_rate * kd
-        if speed > max_speed: speed = max_speed
-        if speed < -max_speed: speed = -max_speed
-        motors.set_speeds(speed, -speed)
-        yellow_led.on()
+        turn_speed = -robot_angle * kp - turn_rate * kd
+        if turn_speed > max_speed: turn_speed = max_speed
+        if turn_speed < -max_speed: turn_speed = -max_speed
+        motors.set_speeds(-turn_speed, turn_speed)
     else:
         motors.off()
-        yellow_led.off()
+
+    yellow_led.value(drive_motors)
