@@ -25,10 +25,10 @@ imu.enable_default()
 edition = editions.select()
 if edition == "Standard":
     standard_turn_speed = 1000
-elif edition == "Turtle":  # TODO: test
+elif edition == "Turtle":
     standard_turn_speed = 2000
-elif edition == "Hyper":   # TODO: test
-    standard_turn_speed = 500
+elif edition == "Hyper":
+    standard_turn_speed = 750
     motors.flip_left(True)
     motors.flip_right(True)
     encoders.flip(True)
@@ -36,22 +36,24 @@ max_speed = standard_turn_speed * 1.5
 ke = 15
 
 drive_motors = False
+ax = ay = 0
 tilted = False
 
 def constrain_speed(speed):
-  if speed < -max_speed: return -max_speed
-  if speed > max_speed: return max_speed
-  return speed
+    if speed < -max_speed: return -max_speed
+    if speed > max_speed: return max_speed
+    return speed
 
 def draw_text():
-  display.fill(0)
-  if drive_motors:
+    display.fill(0)
+    if drive_motors:
         display.text("A: Stop motors", 0, 0, 1)
-  else:
+    else:
         display.text("A: Start motors", 0, 0, 1)
-  display.text(f"ay:", 0, 24, 1)
-  display.text(f"enc:", 0, 32, 1)
-  display.text(edition, 0, 56, 1)
+    display.text(f"ax:", 0, 24, 1)
+    display.text(f"ay:", 0, 32, 1)
+    display.text(f"enc:", 0, 40, 1)
+    display.text(edition, 0, 56, 1)
 
 draw_text()
 display.show()
@@ -76,9 +78,10 @@ while True:
         encoders.get_counts(reset=True)
 
     # Update the display.
-    display.fill_rect(48, 24, 72, 16, 0)
-    display.text(f"{ay:>9.3f}",           48, 24, 1)
-    display.text(f"{encoder_counts:>5}",  48, 32, 1)
+    display.fill_rect(48, 24, 72, 24, 0)
+    display.text(f"{ax:>9.3f}",           48, 24, 1)
+    display.text(f"{ay:>9.3f}",           48, 32, 1)
+    display.text(f"{encoder_counts:>5}",  48, 40, 1)
     display.show()
 
     if drive_motors:
