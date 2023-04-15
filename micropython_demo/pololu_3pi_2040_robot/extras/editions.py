@@ -9,7 +9,7 @@ from pololu_3pi_2040_robot.buzzer import Buzzer
 editions = [ "Standard", "Turtle", "Hyper" ]
 
 # This function always attempts to read the "edition.conf" file to determine
-# which choice to highlight be default.
+# which choice to highlight by default.
 # If 'remember' is True (the default), it also stores the user's answer in
 # edition.conf.
 def select(*, remember=True):
