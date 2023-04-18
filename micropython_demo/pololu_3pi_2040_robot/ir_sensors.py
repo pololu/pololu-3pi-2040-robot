@@ -20,13 +20,28 @@ class QTRSensors:
         fifo_join=PIO.JOIN_RX
         )
     def counter():
-        # set pins to inputs
-        mov(osr, null) # sm.restart() does not clear OSR
+        # Set OSR to 32 bits of 1s for future shifting out to intialize pindirs,
+        # y, y again, and x. This requires 7 + 8 + 10 + 7 = 32 bits.
+        mov(osr, invert(null))
+
+        # Set pindirs to 7 bits of 1s to enable output and start charging the capacitor.
         out(pindirs, 7)
 
-        # load 1023 (10 bits of 1s) into y as a counter
-        mov(osr, invert(null))
+        # Charge up the capacitors for ~32us.
+        # Set Y counter to 255 by pulling another 8 bits from OSR.
+        out(y, 8)
+        label("charge")
+        jmp(y_dec, "charge")
+
+        # Load 1023 (10 bits of 1s) into Y as a counter
         out(y, 10)
+
+        # Initialize X (last pin state) to 7 bits of 1s.
+        out(x, 7)
+
+        # Set pins back to inputs by writing 0s to pindirs.
+        mov(osr, null)
+        out(pindirs, 7)
 
         # loop is 8 instructions long = 1us
         label("loop")
@@ -59,10 +74,6 @@ class QTRSensors:
 
         # END OF PROGRAM
         label("finish")
-
-        # Set pins back to outputs
-        mov(osr, invert(null))
-        out(pindirs, 7)
 
         # Send 0xFFFFFFFF to tell the CPU we are done.
         in_(y, 32)
@@ -248,12 +259,6 @@ class BumpSensors(_IRSensors):
         global _state
         self.ir_down.init(Pin.IN)
         self.ir_bump.init(Pin.OUT, value=1)
-
-        # Bump sensors seem to be slower than
-        # the line sensors and need about 200us
-        # of illumination to reach consistent
-        # levels.
-        time.sleep_us(200)
 
         _state = _READ_BUMP
         self.qtr.run()
