@@ -94,7 +94,7 @@ while True:
         drive_motors = not drive_motors
         if drive_motors:
             display.fill(1)
-            display.text("Spinning", 30, 20, 0)
+            display.text("Starting", 30, 20, 0)
             display.text("WATCH OUT", 27, 30, 0)
             display.show()
             time.sleep_ms(500)
