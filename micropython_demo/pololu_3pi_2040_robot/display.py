@@ -28,11 +28,19 @@ class Display(sh1106_shared_spi.SH1106SharedSpi):
 
     def exception(self, e):
         self.text(type(e).__name__ + ":", 0, 0, 1)
-        # Try to use our experimental MicroPython patch to get line numbers.
         try:
+            # Try to use https://github.com/micropython/micropython/pull/11244
             from sys import _exc_traceback
-            traceback = ",".join(map(str, _exc_traceback(e)[1::3]))
-            self.text(traceback, 0, 56, 1)
+            tb = _exc_traceback(e)
+            line_numbers = []
+            i = len(tb) - 3
+            while i >= 0:
+                line_numbers.append(tb[i + 1])
+                if tb[i + 2] == 'run_file': line_numbers.clear()
+                i -= 3
+            tb_line = ",".join(map(str, line_numbers))
+            if len(tb_line) <= 11: tb_line = "Line " + tb_line
+            self.text(tb_line, 0, 56, 1)
             msg_line_count = 6
         except ImportError:
             msg_line_count = 7

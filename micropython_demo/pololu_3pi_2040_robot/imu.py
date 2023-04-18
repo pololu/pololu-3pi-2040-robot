@@ -4,6 +4,11 @@ class IMU:
         if i2c is None:
             from machine import I2C, Pin
             i2c = I2C(id=0, scl=Pin(5), sda=Pin(4), freq=400_000)
+            # Send low pulses on SCL to fix devices that are stuck
+            # driving SDA low.
+            for i in range(10):
+                try: i2c.writeto(0, "")
+                except OSError: pass
         self._lsm6dso = lsm6dso.LSM6DSO(i2c)
         self._lis3mdl = lis3mdl.LIS3MDL(i2c)
         self.gyro = self._lsm6dso.gyro
