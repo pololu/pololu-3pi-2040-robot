@@ -21,24 +21,24 @@ class QTRSensors:
         fifo_join=PIO.JOIN_RX
         )
     def counter():
-        # Set OSR to 32 bits of 1s for future shifting out to intialize pindirs,
-        # y, y again, and x. This requires 7 + 8 + 10 + 7 = 32 bits.
-        mov(osr, invert(null))
+        # The CPU initializes a few of the registers before this PIO program is restarted.
+        #   OSR = 17 bits of 1s for future shifting out to initialize pindirs and Y.
+        #         This requires 7 + 10  = 17 bits.
+        #   Y = 255 this will result in the loop at 'change' below delaying for ~32usec.
+        #   X = 7 bits of 1s as the last pin state.
 
+        # OSR already contains 19 bits of 1s put there by the CPU before restarting the state machine.
         # Set pindirs to 7 bits of 1s to enable output and start charging the capacitor.
         out(pindirs, 7)
 
         # Charge up the capacitors for ~32us.
-        # Set Y counter to 255 by pulling another 8 bits from OSR.
-        out(y, 8)
+        # Y was initialized already by the CPU before restarting the state machine.
         label("charge")
         jmp(y_dec, "charge")
 
+        # Use bits still in OSR from previous CPU initialization.
         # Load 1023 (10 bits of 1s) into Y as a counter
         out(y, 10)
-
-        # Initialize X (last pin state) to 7 bits of 1s.
-        out(x, 7)
 
         # Set pins back to inputs by writing 0s to pindirs.
         mov(osr, null)
@@ -103,10 +103,25 @@ class QTRSensors:
         self.data_bump = array('H', [0,0])
         self.data_line = array('H', [0,0,0,0,0])
 
+        # Compile and save away PIO instructions that initialize registers in
+        # the state machine so that we don't need to waste precious PIO code
+        # space.
+        self.pio_instrs = array('H')
+        # Set OSR to 32 bits of 1s for future shifting out to initialize y, x,
+        # pindirs, and y again. This requires 7 + 8 + 10 + 7 = 32 bits.
+        self.pio_instrs.append(rp2.asm_pio_encode("mov(osr, invert(null))", 0))
+        # Set Y counter to 255 by pulling 8 high bits from OSR. At 8MHz this results in ~32us of charge time.
+        self.pio_instrs.append(rp2.asm_pio_encode("out(y, 8)", 0))
+        # Initialize X (last pin state) to 7 bits of 1s.
+        self.pio_instrs.append(rp2.asm_pio_encode("out(x, 7)", 0))
+
     def run(self):
+        self.sm.active(0)
         while self.sm.rx_fifo():
             self.sm.get()
         self.sm.restart()
+        for instr in self.pio_instrs:
+            self.sm.exec(instr)
         self.sm.active(1)
 
     @micropython.viper
