@@ -77,10 +77,10 @@ def splash_loader(*, default_program, splash_delay_s, run_file_delay_ms):
                 offset = max(-32, -32 * (elapsed - 1000) // 400)
             display.blit(splash, 0, offset)
             display.text('Push C for menu', 0, 68+offset)
-            display.text('Default ({}s):'.format(countdown_s), 0, 78+offset)
+            display.text(f"Default ({countdown_s}s):", 0, 78+offset)
 
             if default_program:
-                display.text('   '+default_program, 0, 88+offset)
+                display.text(f"{default_program:>16}", 0, 88+offset)
             else:
                 display.text('      menu', 0, 88+offset)
 
