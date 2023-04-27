@@ -1,7 +1,13 @@
 # PID line follower demo.
 #
 # Place the robot on the line and press A to calibrate, then press A
-# again to start it following the line.
+# again to start it following the line.  You can also press A later
+# to stop the motors.
+#
+# This demo shows how to use the _thread library to run a fast main
+# loop on one core of the RP2040.  The other core is free to run
+# slower functions like updating the display without impacting the
+# speed of the main loop.
 
 from pololu_3pi_2040_robot import robot
 from pololu_3pi_2040_robot.extras import editions
@@ -74,22 +80,16 @@ starting = False
 run_motors = False
 last_update_ms = 0
 
-def updateDisplay():
-    global display
-    global line_sensors
-    global t1, t2
-    global c
-    global p
-    global line
-    global starting
-
+def update_display():
     display.fill(0)
     display.text("Line Follower", 0, 0)
     if starting:
         display.text("Press A to stop", 0, 10)
     else:
         display.text("Press A to start", 0, 10)
-    display.text("Main loop: "+str((t2-t1)//1000)+'.'+str((t2-t1)//100%10)+ 'ms', 0, 20)
+    
+    ms = (t2 - t1)/1000
+    display.text(f"Main loop: {ms:.1f}ms", 0, 20)
     display.text('p = '+str(p), 0, 30)
 
     # 64-40 = 24
@@ -124,7 +124,7 @@ def follow_line():
         else:
             # estimate line position
             l = (1000*line[1] + 2000*line[2] + 3000*line[3] + 4000*line[4]) // \
-                (line[0] + line[1] + line[2] + line[3] + line[4])
+                sum(line)
 
         p = l - 2000
         d = p - last_p
@@ -145,12 +145,17 @@ _thread.start_new_thread(follow_line, ())
 while True:
     t = time.ticks_ms()
 
-    if time.ticks_diff(t, last_update_ms) > 200:
+    if time.ticks_diff(t, last_update_ms) > 100:
         last_update_ms = t
-        updateDisplay()
+        update_display()
 
     if button_a.check():
-        starting = not starting
-        start_ms = t
+        if not starting:
+            starting = True
+            start_ms = t
+        else:
+            starting = False
+            run_motors = False
 
-    run_motors = starting and time.ticks_diff(t, start_ms) > 1000
+    if starting and time.ticks_diff(t, start_ms) > 1000:
+        run_motors = True
