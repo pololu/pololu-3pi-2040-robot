@@ -4,6 +4,7 @@
 # again to start it following the line.
 
 from pololu_3pi_2040_robot import robot
+from pololu_3pi_2040_robot.extras import editions
 import time
 import _thread
 
@@ -14,6 +15,22 @@ line_sensors = robot.LineSensors()
 # Note: It's not safe to use Button B in a
 # multi-core program.
 button_a = robot.ButtonA()
+
+edition = editions.select()
+if edition == "Standard":
+    max_speed = 6000
+    calibration_speed = 1000
+    calibration_count = 100
+elif edition == "Turtle":
+    max_speed = 6000
+    calibration_speed = 3000
+    calibration_count = 100
+elif edition == "Hyper":
+    max_speed = 2000
+    calibration_speed = 1000
+    calibration_count = 100
+    motors.flip_left(True)
+    motors.flip_right(True)
 
 display.fill(0)
 display.text("Line Follower", 0, 0)
@@ -29,35 +46,32 @@ display.fill(0)
 display.show()
 time.sleep_ms(500)
 
-motors.set_speeds(2000, -2000)
-for i in range(50):
+motors.set_speeds(calibration_speed, -calibration_speed)
+for i in range(calibration_count/4):
     line_sensors.calibrate()
-    time.sleep_ms(20)
 
 motors.off()
 time.sleep_ms(200)
 
-motors.set_speeds(-2000, 2000)
-for i in range(100):
+motors.set_speeds(-calibration_speed, calibration_speed)
+for i in range(calibration_count/2):
     line_sensors.calibrate()
-    time.sleep_ms(20)
 
 motors.off()
 time.sleep_ms(200)
 
-motors.set_speeds(2000, -2000)
-for i in range(50):
+motors.set_speeds(calibration_speed, -calibration_speed)
+for i in range(calibration_count/4):
     line_sensors.calibrate()
-    time.sleep_ms(20)
 
 motors.off()
 
 t1 = 0
 t2 = time.ticks_us()
 p = 0
-max_speed = 0
 line = []
 starting = False
+run_motors = False
 last_update_ms = 0
 
 def updateDisplay():
@@ -70,10 +84,11 @@ def updateDisplay():
     global starting
 
     display.fill(0)
+    display.text("Line Follower", 0, 0)
     if starting:
-        display.text("Line Follower", 0, 0)
+        display.text("Press A to stop", 0, 10)
     else:
-        display.text("Press A", 0, 0)
+        display.text("Press A to start", 0, 10)
     display.text("Main loop: "+str((t2-t1)//1000)+'.'+str((t2-t1)//100%10)+ 'ms', 0, 20)
     display.text('p = '+str(p), 0, 30)
 
@@ -91,7 +106,7 @@ def updateDisplay():
 
 def follow_line():
     last_p = 0
-    global p, ir, t1, t2, line, max_speed
+    global p, ir, t1, t2, line, max_speed, run_motors
     while True:
         # save a COPY of the line sensor data in a global variable
         # to allow the other thread to read it safely.
@@ -119,7 +134,11 @@ def follow_line():
         min_speed = 0
         left = max(min_speed, min(max_speed, max_speed + pid))
         right = max(min_speed, min(max_speed, max_speed - pid))
-        motors.set_speeds(left, right)
+        
+        if run_motors:
+            motors.set_speeds(left, right)
+        else:
+            motors.off()
 
 _thread.start_new_thread(follow_line, ())
 
@@ -131,8 +150,7 @@ while True:
         updateDisplay()
 
     if button_a.check():
-        starting = True
+        starting = not starting
         start_ms = t
 
-    if starting and time.ticks_diff(t, start_ms) > 1000:
-        max_speed = 6000
+    run_motors = starting and time.ticks_diff(t, start_ms) > 1000
