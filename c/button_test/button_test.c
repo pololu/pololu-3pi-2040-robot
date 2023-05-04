@@ -1,4 +1,4 @@
-// This example shows how to read the buttons on the Pololu 3p+ 2040 Robot.
+// This example shows how to read the buttons on the Pololu 3pi+ 2040 Robot.
 // This includes the three pushbuttons on the control board and the two bump
 // sensors on the front of the robot, which can be used as buttons.
 //
