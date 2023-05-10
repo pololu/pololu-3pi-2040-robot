@@ -1,3 +1,4 @@
+from .buttons import Button
 from machine import Pin
 from array import array
 import time
@@ -116,7 +117,7 @@ class QTRSensors:
         data[1] = TIMEOUT
 
         sm = self.sm
-        while(True): # TODO: TIMEOUT?
+        while True:  # TODO: TIMEOUT?
             val = uint(sm.get())
             if(val == uint(0xffffffff)):
                 break
@@ -136,7 +137,7 @@ class QTRSensors:
             data[i] = TIMEOUT
 
         sm = self.sm
-        while(True): # TODO: TIMEOUT?
+        while True:  # TODO: TIMEOUT?
             val = uint(sm.get())
             if(val == uint(0xffffffff)):
                 break
@@ -169,16 +170,15 @@ class _IRSensors():
 class LineSensors(_IRSensors):
     def _state(self):
         # for testing
-        global _state
         return _state
 
     def reset_calibration(self):
-        self.cal_min = array('H', [1024,1024,1024,1024,1024])
-        self.cal_max = array('H', [0,0,0,0,0])
+        self.cal_min = array('H', [1025, 1025, 1025, 1025, 1025])
+        self.cal_max = array('H', [0, 0, 0, 0, 0])
 
     def calibrate(self):
-        tmp_min = array('H', [1024,1024,1024,1024,1024])
-        tmp_max = array('H', [0,0,0,0,0])
+        tmp_min = array('H', [1025, 1025, 1025, 1025, 1025])
+        tmp_max = array('H', [0, 0, 0, 0, 0])
 
         # do 10 measurements
         for trials in range(10):
@@ -227,33 +227,46 @@ class LineSensors(_IRSensors):
                d[i] = (d[i] - cal_min[i])*1000 // (cal_max[i] - cal_min[i])
         return data
 
+class BumpButton(Button):
+    def __init__(self, read_func, is_pressed_func):
+        self._read_func = read_func
+        self._is_pressed_func = is_pressed_func
+        super().__init__()
+
+    def read(self): return self._read_func()
+    def is_pressed(self): return self._is_pressed_func()
+
 class BumpSensors(_IRSensors):
     def __init__(self):
-        self.margin_percentage = 50
         self._left_is_pressed = False
         self._right_is_pressed = False
         self._last_left_is_pressed = False
         self._last_right_is_pressed = False
+        self.left = BumpButton(self.read, self.left_is_pressed)
+        self.right = BumpButton(self.read, self.right_is_pressed)
         super().__init__()
 
     def _state(self):
         # for testing
-        global _state
         return _state
 
     def reset_calibration(self):
-        # start at max so it will not register
-        # a bump without calibration
-        self.cal = array('H', [1023, 1023])
+        # start at 1025 so it will not register a bump without calibration,
+        # and we can easily tell it's not calibrated.
+        self.threshold_min = array('H', [1025, 1025])
+        self.threshold_max = array('H', [1025, 1025])
 
     def calibrate(self, count=50):
-        cal = [0, 0]
+        sum = [0, 0]
         for i in range(count):
             data = self.read()
-            cal[0] += data[0]
-            cal[1] += data[1]
-        self.cal[0] = cal[0] // count
-        self.cal[1] = cal[1] // count
+            sum[0] += data[0]
+            sum[1] += data[1]
+
+        # Set the thresholds to 140% and 160% of the average reading.
+        for i in range(2):
+            self.threshold_min[i] = round(sum[i] * 1.4 / count)
+            self.threshold_max[i] = round(sum[i] * 1.6 / count)
 
     def start_read(self):
         global _state
@@ -276,8 +289,13 @@ class BumpSensors(_IRSensors):
 
         self._last_left_is_pressed = self._left_is_pressed
         self._last_right_is_pressed = self._right_is_pressed
-        self._left_is_pressed = uint(data[0])*100 > uint(self.cal[0])*(100 + uint(self.margin_percentage))
-        self._right_is_pressed = uint(data[1])*100 > uint(self.cal[1])*(100 + uint(self.margin_percentage))
+
+        self._left_is_pressed = data[0] > \
+          (self.threshold_min[0] if self._left_is_pressed else self.threshold_max[0])
+
+        self._right_is_pressed = data[1] > \
+          (self.threshold_min[1] if self._right_is_pressed else self.threshold_max[1])
+
         return data
 
     def left_is_pressed(self):

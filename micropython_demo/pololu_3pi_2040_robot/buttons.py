@@ -8,7 +8,7 @@ class Button():
         self.last_event = False
         self.last_t = ticks_us() - 10*1000*1000
         self.debounce_ms = 10 # configurable
-        
+
     def check(self):
         s = self.is_pressed()
         t = ticks_us()
@@ -25,20 +25,20 @@ class ButtonA(Button):
         ret = 0x1 & machine.mem32[0x400140c8] >> 17
         machine.mem32[0x400140cc] = ctrl
         return not ret
-    
+
 class ButtonB(Button):
     def is_pressed(self):
-        return rp2.bootsel_button()
-        
+        return rp2.bootsel_button() == 1
+
 class ButtonC(Button):
     def __init__(self):
         self.pin = Pin(0)
         super().__init__()
-    
+
     def is_pressed(self):
         self.pin.init(Pin.IN, Pin.PULL_UP)
         ret = self.pin.value()
-        
+
         # keep this pin low by default
         Pin(0).init(Pin.OUT, value=0)
         return not ret
