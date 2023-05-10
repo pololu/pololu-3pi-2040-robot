@@ -13,16 +13,13 @@ class Motors:
         self.left_motor_dir = Pin(11, Pin.OUT, value=0)
         self.right_motor_pwm_pin = Pin(14, Pin.OUT, value=0)
         self.left_motor_pwm_pin = Pin(15, Pin.OUT, value=0)
-        self.right_motor_pwm = PWM(self.right_motor_pwm_pin)
-        self.left_motor_pwm = PWM(self.left_motor_pwm_pin)
-        
-        # Enable PWM with standard commands, then set it up
-        # exactly how we want by writing the registers directly.
-        self.left_motor_pwm.duty_u16(0)
-        self.right_motor_pwm.duty_u16(0)
-        
-        mem32[_CH7_DIV] = 16 # do not divide clock
-        mem32[_CH7_TOP] = MAX_SPEED - 1 # 6000 different speeds, 20833 Hz
+        self.right_motor_pwm = PWM(self.right_motor_pwm_pin, freq=20833, duty_u16=0)
+        self.left_motor_pwm = PWM(self.left_motor_pwm_pin, freq=20833, duty_u16=0)
+
+        # Make sure there are 6000 different speeds, even if the
+        # RP2040 is running at a non-standard frequency.
+        mem32[_CH7_DIV] = 16             # do not divide clock
+        mem32[_CH7_TOP] = MAX_SPEED - 1  # 6000 different speeds, 20833 Hz
 
         # You can edit these lines if your motors are reversed.
         self._flip_left_motor = False
