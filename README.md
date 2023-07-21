@@ -29,4 +29,5 @@ supporting some of the hardware on the robot.
 
 ## See also
 
+* [Pololu3piPlus2040 Arduino library by Adam Green](https://github.com/adamgreen/pololu-3pi-plus-2040-arduino-library)
 * [micropython-build](https://github.com/pololu/micropython-build)
