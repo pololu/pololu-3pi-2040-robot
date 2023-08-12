@@ -5,6 +5,7 @@ import time
 import rp2
 from rp2 import PIO
 
+CHANNELS = const(7)
 TIMEOUT = const(1024)
 _DONE = const(0)
 _READ_LINE = const(1)
@@ -13,20 +14,22 @@ _state = _DONE
 _qtr = None
 
 class QTRSensors:
-    """A 7-channel QTR sensor reader using PIO"""
+    """A QTR sensor reader for up to 7 channels using PIO"""
     @rp2.asm_pio(
-        out_init=(PIO.OUT_HIGH,PIO.OUT_HIGH,PIO.OUT_HIGH,PIO.OUT_HIGH,PIO.OUT_HIGH,PIO.OUT_HIGH,PIO.OUT_HIGH),
+        out_init=(PIO.OUT_HIGH,) * CHANNELS,
         autopush=True, # saves push instructions
-        push_thresh=23,
+        push_thresh=CHANNELS + 16,
         fifo_join=PIO.JOIN_RX
         )
     def counter():
         # Set OSR to 32 bits of 1s for future shifting out to intialize pindirs,
-        # y, y again, and x. This requires 7 + 8 + 10 + 7 = 32 bits.
+        # y, y again, and x. This requires CHANNELS + 8 + 10 + CHANNELS bits
+        # (maximum of 32 bits for CHANNELS = 7).
         mov(osr, invert(null))
 
-        # Set pindirs to 7 bits of 1s to enable output and start charging the capacitor.
-        out(pindirs, 7)
+        # Set pindirs to 1s to enable output and start charging
+        # the capacitor.
+        out(pindirs, CHANNELS)
 
         # Charge up the capacitors for ~32us.
         # Set Y counter to 255 by pulling another 8 bits from OSR.
@@ -37,18 +40,18 @@ class QTRSensors:
         # Load 1023 (10 bits of 1s) into Y as a counter
         out(y, 10)
 
-        # Initialize X (last pin state) to 7 bits of 1s.
-        out(x, 7)
+        # Initialize X (last pin state) to 1s.
+        out(x, CHANNELS)
 
         # Set pins back to inputs by writing 0s to pindirs.
         mov(osr, null)
-        out(pindirs, 7)
+        out(pindirs, CHANNELS)
 
         # loop is 8 instructions long = 1us
         label("loop")
 
-        # read 7 pins into ISR
-        in_(pins, 7)
+        # read pins into ISR
+        in_(pins, CHANNELS)
 
         # save y in OSR
         mov(osr, y)
@@ -84,24 +87,16 @@ class QTRSensors:
         wrap()
 
     def __init__(self, id, pin1):
-        Pin(pin1, Pin.IN, pull=None)
-        Pin(pin1+1, Pin.IN, pull=None)
-        Pin(pin1+2, Pin.IN, pull=None)
-        Pin(pin1+3, Pin.IN, pull=None)
-        Pin(pin1+4, Pin.IN, pull=None)
-        Pin(pin1+5, Pin.IN, pull=None)
-        Pin(pin1+6, Pin.IN, pull=None)
+        for i in range(CHANNELS):
+            Pin(pin1+i, Pin.IN, pull=None)
+
         p = Pin(pin1, Pin.OUT, value=1)
-        Pin(pin1+1, Pin.OUT, value=1)
-        Pin(pin1+2, Pin.OUT, value=1)
-        Pin(pin1+3, Pin.OUT, value=1)
-        Pin(pin1+4, Pin.OUT, value=1)
-        Pin(pin1+5, Pin.OUT, value=1)
-        Pin(pin1+6, Pin.OUT, value=1)
+        for i in range(1, CHANNELS):
+            Pin(pin1+i, Pin.OUT, value=1)
 
         self.sm = rp2.StateMachine(id, self.counter, freq=8000000, in_base=p, out_base=p)
-        self.data_bump = array('H', [0,0])
-        self.data_line = array('H', [0,0,0,0,0])
+        self.data_bump = array('H', [0] * 2)
+        self.data_line = array('H', [0] * 5)
 
     def run(self):
         while self.sm.rx_fifo():
@@ -173,12 +168,12 @@ class LineSensors(_IRSensors):
         return _state
 
     def reset_calibration(self):
-        self.cal_min = array('H', [1025, 1025, 1025, 1025, 1025])
-        self.cal_max = array('H', [0, 0, 0, 0, 0])
+        self.cal_min = array('H', [1025] * 5)
+        self.cal_max = array('H', [0] * 5)
 
     def calibrate(self):
-        tmp_min = array('H', [1025, 1025, 1025, 1025, 1025])
-        tmp_max = array('H', [0, 0, 0, 0, 0])
+        tmp_min = array('H', [1025] * 5)
+        tmp_max = array('H', [0] * 5)
 
         # do 10 measurements
         for trials in range(10):
@@ -210,7 +205,6 @@ class LineSensors(_IRSensors):
         self.ir_bump.init(Pin.IN)
         _state = _DONE
         return data
-        #return array('H', [data[6], data[5], data[4], data[3], data[2]])
 
     @micropython.viper
     def read_calibrated(self):
@@ -253,11 +247,11 @@ class BumpSensors(_IRSensors):
     def reset_calibration(self):
         # start at 1025 so it will not register a bump without calibration,
         # and we can easily tell it's not calibrated.
-        self.threshold_min = array('H', [1025, 1025])
-        self.threshold_max = array('H', [1025, 1025])
+        self.threshold_min = array('H', [1025] * 2)
+        self.threshold_max = array('H', [1025] * 2)
 
     def calibrate(self, count=50):
-        sum = [0, 0]
+        sum = [0] * 2
         for i in range(count):
             data = self.read()
             sum[0] += data[0]
