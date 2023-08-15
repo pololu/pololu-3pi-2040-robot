@@ -14,7 +14,7 @@ _state = _DONE
 _qtr = None
 
 class QTRSensors:
-    """A QTR sensor reader for up to 7 channels using PIO"""
+    """A multi-channel QTR sensor reader using PIO"""
     @rp2.asm_pio(
         out_init=(PIO.OUT_HIGH,) * CHANNELS,
         autopush=True, # saves push instructions
