@@ -2,7 +2,6 @@ import machine
 import utime
 import rp2
 from machine import Pin
-import ctypes
 
 class PIOQuadratureCounter:
     """A quadrature encoder counter implemented in PIO"""

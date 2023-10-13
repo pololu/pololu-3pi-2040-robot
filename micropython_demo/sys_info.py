@@ -12,9 +12,13 @@ button_b = robot.ButtonB()
 
 gc.collect()
 
-match = re.search("MicroPython (v\S+?)-(g\S+)", sys.version)
+# Versions might look like this:
+# MicroPython v1.22.0-preview.10.g0e13e48a8
+# MicroPython v1.20.0-62-g4e4bdbd19
+# MicroPython v1.21.0
+match = re.search("MicroPython (v\S+?)( |(-|\.)(g\S+))", sys.version)
 version1 = match.group(1)
-version2 = match.group(2)
+version2 = match.group(4)
 
 file_stats = os.statvfs('//')
 disk_free_kb = file_stats[0]*file_stats[3]/1024
