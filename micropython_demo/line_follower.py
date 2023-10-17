@@ -134,13 +134,17 @@ def follow_line():
         min_speed = 0
         left = max(min_speed, min(max_speed, max_speed + pid))
         right = max(min_speed, min(max_speed, max_speed - pid))
-        
+
         if run_motors:
             motors.set_speeds(left, right)
         else:
             motors.off()
 
+
+# Sleep immediately after starting a thread to work around this bug:
+# https://github.com/micropython/micropython/issues/10621
 _thread.start_new_thread(follow_line, ())
+time.sleep_ms(1)
 
 while True:
     t = time.ticks_ms()
