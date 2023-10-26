@@ -5,7 +5,7 @@ import time
 import rp2
 from rp2 import PIO
 
-CHANNELS = const(7)
+NUM_SENSORS = const(7)
 TIMEOUT = const(1024)
 _DONE = const(0)
 _READ_LINE = const(1)
@@ -16,9 +16,9 @@ _qtr = None
 class QTRSensors:
     """A multi-channel QTR sensor reader using PIO"""
     @rp2.asm_pio(
-        out_init=(PIO.OUT_HIGH,) * CHANNELS,
+        out_init=(PIO.OUT_HIGH,) * NUM_SENSORS,
         autopush=True, # saves push instructions
-        push_thresh=CHANNELS + 16,
+        push_thresh=NUM_SENSORS + 16,
         fifo_join=PIO.JOIN_RX
         )
     def counter():
@@ -29,7 +29,7 @@ class QTRSensors:
 
         # Set pindirs to 1s to enable output and start charging
         # the capacitor.
-        out(pindirs, CHANNELS)
+        out(pindirs, NUM_SENSORS)
 
         # Charge up the capacitors for ~32us.
         # Set Y counter to 255 by pulling another 8 bits from OSR.
@@ -41,17 +41,17 @@ class QTRSensors:
         out(y, 10)
 
         # Initialize X (last pin state) to 1s.
-        out(x, CHANNELS)
+        out(x, NUM_SENSORS)
 
         # Set pins back to inputs by writing 0s to pindirs.
         mov(osr, null)
-        out(pindirs, CHANNELS)
+        out(pindirs, NUM_SENSORS)
 
         # loop is 8 instructions long = 1us
         label("loop")
 
         # read pins into ISR
-        in_(pins, CHANNELS)
+        in_(pins, NUM_SENSORS)
 
         # save y in OSR
         mov(osr, y)
@@ -87,11 +87,11 @@ class QTRSensors:
         wrap()
 
     def __init__(self, id, pin1):
-        for i in range(CHANNELS):
+        for i in range(NUM_SENSORS):
             Pin(pin1+i, Pin.IN, pull=None)
 
         p = Pin(pin1, Pin.OUT, value=1)
-        for i in range(1, CHANNELS):
+        for i in range(1, NUM_SENSORS):
             Pin(pin1+i, Pin.OUT, value=1)
 
         self.sm = rp2.StateMachine(id, self.counter, freq=8000000, in_base=p, out_base=p)
