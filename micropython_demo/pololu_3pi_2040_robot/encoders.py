@@ -23,4 +23,4 @@ class Encoders:
             self.left_offset += left
             self.right_offset += right
 
-        return [left * self._flip_sign, right * self._flip_sign]
+        return left * self._flip_sign, right * self._flip_sign

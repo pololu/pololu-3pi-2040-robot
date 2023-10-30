@@ -2,6 +2,7 @@ import machine
 import utime
 import rp2
 from machine import Pin
+import array
 
 class PIOQuadratureCounter:
     """A quadrature encoder counter implemented in PIO"""
@@ -68,10 +69,13 @@ class PIOQuadratureCounter:
         Pin(pin2, Pin.IN, Pin.PULL_UP)
         self.sm1 = rp2.StateMachine(pio1, self.counter, freq=125000000, in_base=machine.Pin(pin1))
         self.sm1.active(1)
+        self.buf = array.array('i', [0])
     
     def read(self):
         self.sm1.put(1)
-        v = self.sm1.get()
-        if v & 0x80000000:
-            return v - 0x100000000
-        return v
+
+        # For efficiency, here we use an undocumented feature of
+        # StateMachine to read a SIGNED integer value without
+        # allocating a new object.
+        self.sm1.get(self.buf)
+        return self.buf[0]
