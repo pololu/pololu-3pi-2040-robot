@@ -1,9 +1,14 @@
 from machine import I2C, Pin
 from zumo_2040_robot import robot
+from zumo_2040_robot.extras.menu import Menu
 
-display = robot.Display()
+i2c = I2C(id=0, scl=Pin(5), sda=Pin(4), freq=400_000)
+# Send low pulses on SCL to fix devices that are stuck
+# driving SDA low.
+for i in range(10):
+    try: i2c.writeto(0, "")
+    except OSError: pass
 
-i2c = I2C(id=0, scl=Pin(5), sda=Pin(4))
 addrs = i2c.scan()
 
 device_descriptions = {
@@ -12,19 +17,19 @@ device_descriptions = {
 }
 
 print('I2C0 scan:')
-display.fill(0)
-display.text('I2C0 scan:', 0, 0)
+options = []
 
-y = 0
 for a in addrs:
     line = f"0x{a:02X}{device_descriptions.get(a, '')}"
     print(line)
-    if y < 56:
-        y += 8
-        display.text(line, 0, y)
+    options += [line]
 
-if len(addrs) > 7:
-    display.fill_rect(0, 56, 128, 8, 0)
-    display.text(f"+{len(addrs) - 6} more...", 0, 56)
+menu = Menu(options)
+menu.top_message = 'I2C0: (^A Cv)'
+menu.display = robot.Display()
+menu.buzzer = robot.Buzzer()
+menu.previous_button = robot.ButtonA()
+menu.next_button = robot.ButtonC()
 
-display.show()
+while True:
+    menu.update()
