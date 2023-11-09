@@ -91,17 +91,24 @@ class LSM6DSOAcc(imu_sensor.IMUSensor):
         # STATUS_REG.XLDA
         return bool(self._read_reg(_STATUS_REG) & 0x01)
 
+    def axis_to_g(self, axis_raw):
+        return axis_raw * self._sensitivity / 1000
+
     def to_g(self, raw):
-        return [x * self._sensitivity / 1000 for x in raw]
+        return [self.axis_to_g(x) for x in raw]
 
     def read(self):
         self.last_reading_raw = self._read_axes_s16(_OUTX_L_XL)
         # Updating the converted readings in-place is more memory-efficient than
         # using to_g():
-        for i in range(2):
-            self.last_reading_g[i] = self.last_reading_raw[i] * self._sensitivity / 1000
+        for i in range(3):
+            self.last_reading_g[i] = self.axis_to_g(self.last_reading_raw[i])
 
 class LSM6DSOGyro(imu_sensor.IMUSensor):
+    def __init__(self, i2c, addr):
+        self.last_reading_dps = [None, None, None]
+        super().__init__(i2c, addr)
+
     def set_output_data_rate(self, hz):
         # note: this method doesn't support CTRL7_G.G_HM_MODE = 1
         # (high-performance mode disabled)
@@ -131,12 +138,18 @@ class LSM6DSOGyro(imu_sensor.IMUSensor):
         # STATUS_REG.GDA
         return bool(self._read_reg(_STATUS_REG) & 0x02)
 
+    def axis_to_dps(self, axis_raw):
+        return axis_raw * self._sensitivity / 1000
+
     def to_dps(self, raw):
-        return [x * self._sensitivity / 1000 for x in raw]
+        return [self.axis_to_dps(x) for x in raw]
 
     def read(self):
         self.last_reading_raw = self._read_axes_s16(_OUTX_L_G)
-        self.last_reading_dps = self.to_dps(self.last_reading_raw)
+        # Updating the converted readings in-place is more memory-efficient than
+        # using to_dps():
+        for i in range(3):
+            self.last_reading_dps[i] = self.axis_to_dps(self.last_reading_raw[i])
 
 class LSM6DSO(imu_sensor.IMUSensor):
     def __init__(self, i2c):

@@ -38,6 +38,7 @@ _full_scale_to_sensitivity = {
 
 class LIS3MDL(imu_sensor.IMUSensor):
     def __init__(self, i2c):
+        self.last_reading_gauss = [None, None, None]
         super().__init__(i2c, _DEFAULT_ADDR)
 
     def detect(self):
@@ -94,9 +95,15 @@ class LIS3MDL(imu_sensor.IMUSensor):
         # STATUS_REG.ZYXDA
         return bool(self._read_reg(_STATUS_REG) & 0x80)
 
+    def axis_to_gauss(self, axis_raw):
+        return axis_raw / self._sensitivity
+
     def to_gauss(self, raw):
-        return [x / self._sensitivity for x in raw]
+        return [self.axis_to_gauss(x) for x in raw]
 
     def read(self):
         self.last_reading_raw = self._read_axes_s16(_OUT_X_L)
-        self.last_reading_gauss = self.to_gauss(self.last_reading_raw)
+        # Updating the converted readings in-place is more memory-efficient than
+        # using to_gauss():
+        for i in range(3):
+            self.last_reading_gauss[i] = self.axis_to_gauss(self.last_reading_raw[i])
