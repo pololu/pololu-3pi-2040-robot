@@ -1,6 +1,6 @@
 from machine import I2C, Pin
-from zumo_2040_robot import robot
-from zumo_2040_robot.extras.menu import Menu
+from pololu_3pi_2040_robot import robot
+from pololu_3pi_2040_robot.extras.menu import Menu
 
 i2c = I2C(id=0, scl=Pin(5), sda=Pin(4), freq=400_000)
 # Send low pulses on SCL to fix devices that are stuck
