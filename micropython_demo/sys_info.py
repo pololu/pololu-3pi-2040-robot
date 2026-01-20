@@ -17,8 +17,8 @@ gc.collect()
 # MicroPython v1.20.0-62-g4e4bdbd19
 # MicroPython v1.21.0
 match = re.search("MicroPython (v\S+?)( |(-|\.)(g\S+))", sys.version)
-version1 = match.group(1)
-version2 = match.group(4)
+version1 = match.group(1) or ""
+version2 = match.group(4) or ""
 
 file_stats = os.statvfs('//')
 disk_free_kb = file_stats[0]*file_stats[3]/1024
@@ -46,13 +46,13 @@ while True:
         pass
 
     display.fill(0)
-    display.text("mpy: "+version1, 0, 0)
+    display.text("mpy: " + version1, 0, 0)
     display.text(version2, 0, 10)
     display.text("dsk: {:.01f}k/{:.0f}M".format(disk_used_kb, disk_total_kb/1024), 0, 23)
     display.text("RAM: {:.01f}k/{:.0f}k".format(ram_used_kb, ram_total_kb), 0, 33)
     display.text("Press B...", 0, 57)
     display.show()
-    
+
     while not button_b.check():
         pass
 
