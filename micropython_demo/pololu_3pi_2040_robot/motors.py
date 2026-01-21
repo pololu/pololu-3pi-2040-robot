@@ -1,4 +1,4 @@
-from machine import Pin, PWM, mem16, mem32
+from machine import Pin, PWM, mem16, mem32, freq
 from micropython import const
 
 MAX_SPEED = const(6000)
@@ -13,13 +13,26 @@ class Motors:
         self.left_motor_dir = Pin(11, Pin.OUT, value=0)
         self.right_motor_pwm_pin = Pin(14, Pin.OUT, value=0)
         self.left_motor_pwm_pin = Pin(15, Pin.OUT, value=0)
+        
+        # Initialize the PWM to reasonable values (we will override some of these later)
         self.right_motor_pwm = PWM(self.right_motor_pwm_pin, freq=20833, duty_u16=0)
         self.left_motor_pwm = PWM(self.left_motor_pwm_pin, freq=20833, duty_u16=0)
 
         # Make sure there are 6000 different speeds, even if the
         # RP2040 is running at a non-standard frequency.
-        mem32[_CH7_DIV] = 16             # do not divide clock
-        mem32[_CH7_TOP] = MAX_SPEED - 1  # 6000 different speeds, 20833 Hz
+        mem32[_CH7_TOP] = MAX_SPEED - 1
+        
+        # Set the clock divider appropriately for the clock speed.
+        if freq() >= 200000000:
+            # divide clock by 26/16 = 13/8
+            # 20513 Hz @ 200 MHz
+            mem32[_CH7_DIV] = 26
+        else:
+            # do not divide clock
+            # 20833 Hz @ 125 MHz
+            # 22167 Hz @ 133 MHz
+            # 33333 Hz @ 199.999999 MHz
+            mem32[_CH7_DIV] = 16 
 
         # You can edit these lines if your motors are reversed.
         self._flip_left_motor = False
