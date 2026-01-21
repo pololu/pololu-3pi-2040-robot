@@ -5,9 +5,26 @@ from time import ticks_us, sleep_us
 
 class Button():
     def __init__(self):
-        self.last_event = False
-        self.last_t = ticks_us() - 10*1000*1000
-        self.debounce_ms = 10 # configurable
+        # Initialize to the current pressed/not-pressed
+        # state so that check() will not immediately
+        # return true.
+        self.last_event = self.is_pressed()
+        self.last_t = ticks_us()
+        self.long_pressed_start = None
+
+        # confirgurable parameters
+        self.debounce_ms = 10
+        self.long_press_ms = 750
+
+    def is_long_pressed(self):
+        t = ticks_us()
+        if self.is_pressed():
+            if not self.long_pressed_start:
+                self.long_pressed_start = t
+            if t - self.long_pressed_start > self.long_press_ms*1000:
+                return True
+        else:
+            self.long_pressed_start = None
 
     def check(self):
         s = self.is_pressed()

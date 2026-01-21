@@ -10,8 +10,6 @@ import time
 
 motors = robot.Motors()
 encoders = robot.Encoders()
-button_a = robot.ButtonA()
-button_c = robot.ButtonC()
 display = robot.Display()
 yellow_led = robot.YellowLED()
 
@@ -35,6 +33,12 @@ elif edition == "Hyper":
 max_speed = standard_turn_speed * 1.5
 ke = 15
 
+# Buttons must be initialized afterward or button_b.check() will
+# immediately return true, exiting the demo.
+button_a = robot.ButtonA()
+button_b = robot.ButtonB()
+button_c = robot.ButtonC()
+
 drive_motors = False
 ax = ay = 0
 tilted = False
@@ -50,6 +54,7 @@ def draw_text():
         display.text("A: Stop motors", 0, 0, 1)
     else:
         display.text("A: Start motors", 0, 0, 1)
+    display.text("B: Exit", 0, 10)
     display.text(f"ax:", 0, 24, 1)
     display.text(f"ay:", 0, 32, 1)
     display.text(f"enc:", 0, 40, 1)
@@ -76,6 +81,10 @@ while True:
         if drive_motors: time.sleep_ms(250)
         draw_text()
         encoders.get_counts(reset=True)
+
+    if button_b.check() == True:
+        motors.off()
+        break
 
     # Update the display.
     display.fill_rect(48, 24, 72, 24, 0)

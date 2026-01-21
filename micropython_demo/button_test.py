@@ -36,10 +36,14 @@ while True:
     if bump_sensors.left.check(): buffer += "L"
     if bump_sensors.right.check(): buffer += "R"
 
+    if button_b.is_long_pressed():
+        break
+
     if len(buffer) > 16:
         buffer = buffer[16:]
-    display.text("Debounced output", 0, 28)
-    display.text("with A at 500ms:", 0, 36)
-    display.text(buffer, 0, 48)
+    display.text("Hold B to exit.", 0, 28)
+    display.text("Debounced output", 0, 36)
+    display.text("with A at 500ms:", 0, 44)
+    display.text(buffer, 0, 56)
 
     display.show()

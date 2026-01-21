@@ -16,8 +16,6 @@ angle_to_turn = 90
 
 motors = robot.Motors()
 encoders = robot.Encoders()
-button_a = robot.ButtonA()
-button_c = robot.ButtonC()
 display = robot.Display()
 yellow_led = robot.YellowLED()
 
@@ -44,6 +42,12 @@ elif edition == "Hyper":
     kp = 140
     kd = 4
 
+# Buttons must be initialized afterward or button_b.check() will
+# immediately return true, exiting the demo.
+button_a = robot.ButtonA()
+button_b = robot.ButtonB()
+button_c = robot.ButtonC()
+
 drive_motors = False
 last_time_gyro_reading = None
 turn_rate = 0.0     # degrees per second
@@ -59,8 +63,9 @@ def draw_text():
     else:
         display.text(f"A: Turn {angle_to_turn} deg", 0, 0, 1)
         display.text(f"C: Turn {-angle_to_turn} deg", 0, 8, 1)
+    display.text("Press B to exit", 0, 56)
     display.text(f"Angle:", 0, 32, 1)
-    display.text(edition, 0, 56, 1)
+    display.text(edition, 0, 40, 1)
 
 def handle_turn_or_stop(button, angle):
     global target_angle, drive_motors
@@ -96,6 +101,10 @@ while True:
         handle_turn_or_stop(button_a, angle_to_turn)
     if button_c.check() == True:
         handle_turn_or_stop(button_c, -angle_to_turn)
+
+    if button_b.check() == True:
+        motors.off()
+        break
 
     # Decide whether to stop the motors.
     if drive_motors:

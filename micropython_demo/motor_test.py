@@ -16,8 +16,9 @@ button_c = robot.ButtonC()
 motors = robot.Motors()
 encoders = robot.Encoders()
 
-display.text("Hold=run", 32, 0)
-display.text("Tap=flip", 32, 8)
+display.text("Hold A/C=run", 18, 0)
+display.text("Tap A/C=flip", 18, 8)
+display.text("B to exit", 28, 16)
 display.text("A", 8, 28)
 display.text("C", 112, 28)
 display.text("L: ", 24, 48)
@@ -36,6 +37,9 @@ while True:
     # Update the LCD and motors every 50 ms.
     if time.ticks_diff(time.ticks_ms(), last_update_time) > 50:
         last_update_time = time.ticks_ms()
+
+        if button_b.check():
+            break
 
         if button_a.is_pressed():
             if button_count_a < 4:
@@ -80,3 +84,5 @@ while True:
         display.text(f"{right_encoder:>8}", 40, 56)
 
         display.show()
+
+motors.off()

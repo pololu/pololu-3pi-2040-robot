@@ -3,8 +3,15 @@
 from pololu_3pi_2040_robot import robot
 import time
 
+display = robot.Display()
+button_b = robot.ButtonB()
 rgb_leds = robot.RGBLEDs()
 buzzer = robot.Buzzer()
+
+display.fill(0)
+display.text("Siren demo", 0, 0)
+display.text("Press B to exit", 0, 56)
+display.show()
 
 def tri(x, min, max, t1, t2, period):
     x = x % period
@@ -46,5 +53,8 @@ def siren1():
     rgb_leds.set(5, [p1,0,p4])
     rgb_leds.show()
 
-while True:
+while not button_b.check():
     siren1()
+
+rgb_leds.off()
+buzzer.off()

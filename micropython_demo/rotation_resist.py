@@ -19,8 +19,6 @@ from pololu_3pi_2040_robot.extras import editions
 import time
 
 motors = robot.Motors()
-button_a = robot.ButtonA()
-button_c = robot.ButtonC()
 display = robot.Display()
 yellow_led = robot.YellowLED()
 
@@ -46,6 +44,11 @@ elif edition == "Hyper":
     max_speed = 1500
     kp = 140
     kd = 4
+
+# Buttons must be initialized afterward or button_b.check() will
+# immediately return true, exiting the demo.
+button_a = robot.ButtonA()
+button_b = robot.ButtonB()
 
 display.fill(0)
 display.text("Calibrating...", 0, 0, 1)
@@ -73,11 +76,12 @@ def draw_text():
     else:
         display.text("A: Start motors", 0, 0, 1)
     display.text(f"Angle:", 0, 32, 1)
-    display.text(edition, 0, 56, 1)
+    display.text(edition, 0, 46, 1)
+    display.text("Press B to exit", 0, 56)
 
 draw_text()
 
-while True:
+while not button_b.check():
     # Update the angle and the turn rate.
     if imu.gyro.data_ready():
         imu.gyro.read()
@@ -116,3 +120,6 @@ while True:
         motors.off()
 
     yellow_led.value(drive_motors)
+
+motors.off()
+yellow_led.off()
