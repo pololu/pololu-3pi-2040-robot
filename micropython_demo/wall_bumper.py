@@ -24,12 +24,24 @@ elif edition == "Hyper":
     motors.flip_left(True)
     motors.flip_right(True)
 
+# Buttons must be initialized afterward or button_b.check() will
+# immediately return true, exiting the demo.
+button_b = robot.ButtonB()
+
 display.fill(0)
 display.show()
 
 bump_sensors.calibrate()
 
 time.sleep_ms(1000)
+
+def reset_display():
+    display.fill(0)
+    display.text("Wall Bumper", 0, 0)
+    display.text("Press B to exit", 0, 56)
+    display.show()
+
+reset_display()
 
 while True:
     motors.set_speeds(max_speed, max_speed)
@@ -39,8 +51,7 @@ while True:
         yellow_led.on()
         motors.set_speeds(0, 0)
         buzzer.play("a32")
-        display.fill(0)
-        display.text("Left", 0, 0)
+        display.text("Left", 0, 32)
         display.show()
 
         motors.set_speeds(max_speed, -max_speed)
@@ -50,15 +61,13 @@ while True:
         buzzer.play("b32")
         yellow_led.off()
 
-        display.fill(0)
-        display.show()
+        reset_display()
 
     if bump_sensors.right_is_pressed():
         yellow_led.on()
         motors.set_speeds(0, 0)
         buzzer.play("e32")
-        display.fill(0)
-        display.text("Right", 88, 0)
+        display.text("Right", 88, 32)
         display.show()
 
         motors.set_speeds(-max_speed, max_speed)
@@ -68,5 +77,8 @@ while True:
         buzzer.play("f32")
         yellow_led.off()
 
-        display.fill(0)
-        display.show()
+        reset_display()
+
+    if button_b.check() == True:
+        motors.off()
+        break

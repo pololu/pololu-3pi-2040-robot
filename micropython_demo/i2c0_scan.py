@@ -23,13 +23,17 @@ for a in addrs:
     line = f"0x{a:02X}{device_descriptions.get(a, '')}"
     print(line)
     options += [line]
+options += ["Exit"]
 
 menu = Menu(options)
-menu.top_message = 'I2C0: (^A Cv)'
+menu.top_message = 'I2C0: (^A B Cv)'
 menu.display = robot.Display()
 menu.buzzer = robot.Buzzer()
 menu.previous_button = robot.ButtonA()
+menu.select_button = robot.ButtonB()
 menu.next_button = robot.ButtonC()
 
 while True:
-    menu.update()
+    i = menu.update()
+    if i and options[i] == "Exit":
+        break
