@@ -1,38 +1,47 @@
 from machine import Pin
 import machine
 import rp2
-from time import ticks_us, sleep_us
+from time import ticks_us, sleep_us, ticks_diff
 
 class Button():
     def __init__(self):
-        # Initialize to the current pressed/not-pressed
-        # state so that check() will not immediately
-        # return true.
+        # Initialize to the current pressed/not-pressed state
+        # so that check() will not immediately return True.
         self.last_event = self.is_pressed()
-        self.last_t = ticks_us()
-        self.long_pressed_start = None
+        self.last_event_t = ticks_us()
 
-        # confirgurable parameters
+        # Ensure that is_long_pressed() does not immediately return True.
+        self.not_pressed_t = ticks_us()
+
+        # configurable parameters
         self.debounce_ms = 10
         self.long_press_ms = 750
 
+    # Call this method periodically to check for long presses.
+    # Returns True if the button has been held down for
+    # more than long_press_ms milliseconds.
     def is_long_pressed(self):
-        t = ticks_us()
-        if self.is_pressed():
-            if not self.long_pressed_start:
-                self.long_pressed_start = t
-            if t - self.long_pressed_start > self.long_press_ms*1000:
-                return True
-        else:
-            self.long_pressed_start = None
+        if not self.is_pressed():
+            self.not_pressed_t = ticks_us()
+        elif self.not_pressed_t is not None:
+            if ticks_diff(ticks_us(), self.not_pressed_t) > self.long_press_ms * 1000:
+                self.not_pressed_t = None
+        return self.not_pressed_t is None
 
+    # Call this method periodically to check for debounced button events.
+    # Returns True once for each button press.
+    # Returns False once for each button release.
+    # Returns None if there is no new event.
     def check(self):
-        s = self.is_pressed()
-        t = ticks_us()
-        if s != self.last_event and t - self.last_t > self.debounce_ms*1000:
-            self.last_event = s
-            self.last_t = t
-            return s
+        if self.last_event_t is not None:
+            if ticks_diff(ticks_us(), self.last_event_t) > self.debounce_ms * 1000:
+                self.last_event_t = None
+        if self.last_event_t is None:
+            s = self.is_pressed()
+            if s != self.last_event:
+                self.last_event = s
+                self.last_event_t = ticks_us()
+                return s
 
 class ButtonA(Button):
     def is_pressed(self):
