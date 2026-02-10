@@ -10,6 +10,10 @@ volume_levels = [0, 1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 24, 32, 64, 128]
 
 class Buzzer:
     def __init__(self):
+        # reset callback on initialization to avoid unexpected interactions
+        global user_callback
+        user_callback = lambda i: None
+
         global pwm
         self.pwm = pwm
         self.off()
